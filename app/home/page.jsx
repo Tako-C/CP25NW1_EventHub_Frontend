@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 // import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { FormatDate } from "@/utils/format";
+import { getData } from "@/libs/fetch";
 
 // Test data
 const mockEventData = {
@@ -62,11 +63,11 @@ export default function Page() {
   );
 
   const fetchData = async () => {
-    const res = await fetch("http://takosv.trueddns.com:26483/api/events")
-    const data = await res.json()
-    console.log(data)
-    setEventData(data)
+    const res = await getData("events")
+    console.log(res)
+    setEventData(res.data)
   }
+
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -6,20 +6,17 @@ import { MapPin, Calendar, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { FormatDate } from "@/utils/format";
 import { useRouter } from "next/navigation";
+import { getData } from "@/libs/fetch";
 
 export default function Page() {
   const { id } = useParams();
   const router = useRouter();
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(true);
   const [eventData, setEventData] = useState(null);
-  const fetchData = async () => {
-    const res = await fetch(
-      `http://takosv.trueddns.com:26483/api/events/${id}`
-    );
-    const data = await res.json();
 
-    setEventData(data);
-    // console.log(data);
+  const fetchData = async () => {
+    const res = await getData(`events/${id}`);
+    setEventData(res.data);
   };
 
   useEffect(() => {

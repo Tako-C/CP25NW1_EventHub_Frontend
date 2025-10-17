@@ -2,33 +2,44 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { registerRequest } from "@/libs/fetch";
+import Cookie from "js-cookie";
 
-export default function SignUpPage({
-  isOpen,
-  setIsSignInOpen,
-  setIsSignUpOpen,
-}) {
+export default function Page() {
   const [formData, setFormData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
-    phoneNumber: "",
+    // phoneNumber: "",
     password: "",
     confirmPassword: "",
   });
+  const router = useRouter();
   const [agreeTerms, setAgreeTerms] = useState(false);
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleSubmit = () => {
-    console.log("Sign up submitted", formData);
+  const handleSubmit = async (e) => {
+    const res = await registerRequest(
+      formData?.firstName,
+      formData?.lastName,
+      formData?.email,
+      formData?.password
+    );
+    console.log(res);
+    if (res.statusCode === 200) {
+      // e.preventDefault();
+      // sessionStorage.setItem("signupData", JSON.stringify(formData));
+      Cookie.set("signupData", formData)
+      router.push("/sign-up/verify-otp");
+    }
   };
-    const handleSignIn = () => {
-    setIsSignUpOpen(false)
-    setIsSignInOpen(true)
+  const handleSignIn = () => {
+    router.push("/login");
   };
-  if (!isOpen) return null;
 
   return (
     <div className="flex items-center justify-center py-20 px-4 mt-18">
@@ -40,17 +51,34 @@ export default function SignUpPage({
         <div className="bg-white rounded-3xl shadow-lg p-8">
           <div className="mb-4">
             <label
-              htmlFor="fullName"
+              htmlFor="firstName"
               className="block text-gray-700 font-medium mb-2"
             >
-              Full Name
+              First Name
             </label>
             <input
-              id="fullName"
+              id="firstName"
               type="text"
-              placeholder="Enter your full name"
+              placeholder="Enter your first name"
               value={formData.fullName}
-              onChange={(e) => handleInputChange("fullName", e.target.value)}
+              onChange={(e) => handleInputChange("firstName", e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label
+              htmlFor="lastName"
+              className="block text-gray-700 font-medium mb-2"
+            >
+              Last Name
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              placeholder="Enter your last name"
+              value={formData.fullName}
+              onChange={(e) => handleInputChange("lastName", e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           </div>
@@ -72,7 +100,7 @@ export default function SignUpPage({
             />
           </div>
 
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <label
               htmlFor="phone"
               className="block text-gray-700 font-medium mb-2"
@@ -87,7 +115,7 @@ export default function SignUpPage({
               onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
-          </div>
+          </div> */}
 
           <div className="mb-4">
             <label

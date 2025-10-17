@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { token } from "@/libs/auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,15 +20,19 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const user = token();
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-      <Navbar user={null}/>
-      {/* <Navbar user={{ name: "Chaiyo", role: "visitor" }} /> */}
+        {user ? (
+          <Navbar user={{ name: user?.firstName, role: user?.role?.name }} />
+        ) : (
+          <Navbar user={null} />
+        )}
         {children}
-      <Footer/>  
+        <Footer />
       </body>
     </html>
   );

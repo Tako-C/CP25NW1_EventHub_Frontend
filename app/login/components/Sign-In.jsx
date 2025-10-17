@@ -1,22 +1,29 @@
 "use client";
 
+import Cookie from "js-cookie";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { loginPassWord } from "@/libs/fetch";
 
 export default function SignInPage({
   isOpen,
   setIsSignInOpen,
   setIsSignInOTPOpen,
-  setIsSignUpOpen,
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = () => {
-    console.log("Login submitted", { email, password, rememberMe });
+  const handleSubmit = async () => {
+    const res = await loginPassWord(email, password);
+    console.log(res?.data.token);
+    if (res.statusCode === 200) {
+      Cookie.set("token", res?.data.token);
+      // router.push("/home");
+      window.location.href = "/home";
+    }
   };
 
   const handleOTPLogin = () => {
@@ -24,8 +31,7 @@ export default function SignInPage({
     setIsSignInOTPOpen(true);
   };
   const handleSignUp = () => {
-    setIsSignInOpen(false);
-    setIsSignUpOpen(true);
+    router.push("/sign-up");
   };
   if (!isOpen) return null;
   return (
