@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { registerOTP } from "@/libs/fetch";
+import { registerOTP, loginPassWord } from "@/libs/fetch";
 import { useRouter } from "next/navigation";
 import Cookie from "js-cookie";
 
@@ -12,8 +12,7 @@ export default function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    // const stored = sessionStorage.getItem("signupData");
-    const stored = Cookie.get("signupData")
+    const stored = JSON.parse(Cookie.get("signupData"));
     if (stored) setData(stored);
   }, []);
 
@@ -39,9 +38,12 @@ export default function Page() {
     const otpCode = otp.join("");
     if (otpCode.length === 6) {
       const res = await registerOTP(data?.email, otpCode, data?.password);
-      console.log(res);
       if (res.statusCode === 200) {
-        router.push("/home");
+        const resLogin = await loginPassWord(data?.email, data?.password);
+        Cookie.set("token", resLogin?.data.token);
+        // router.push("/home");
+        window.location.href = "/home";
+
       } else {
         alert("Please enter correct OTP");
       }

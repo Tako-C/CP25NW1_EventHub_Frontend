@@ -3,17 +3,18 @@
 import { useState, useRef, useEffect } from "react";
 import { loginOTPVerify } from "@/libs/fetch";
 import { useRouter } from "next/navigation";
-import Cookie from "js-cookie";
+import Cookies from "js-cookie";
 
 export default function Page() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef([]);
   const [data, setData] = useState(null);
-  const router = useRouter()
+  const router = useRouter();
 
   useEffect(() => {
     // const stored = sessionStorage.getItem("signinData");
-    const email = Cookie.get("signinData")
+    const email = JSON.parse(Cookies.get("signinData"));
+    console.log(email);
     if (email) setData(email);
   }, []);
 
@@ -37,15 +38,17 @@ export default function Page() {
 
   const handleContinue = async () => {
     const otpCode = otp.join("");
+    console.log(otpCode);
     if (otpCode.length === 6) {
       //   alert(`OTP entered: ${otpCode}`);
       const res = await loginOTPVerify(data, otpCode);
-      console.log(res);
-      if(res.status === 200) {
+      console.log("res",res);
+      if (res.statusCode === 200) {
         // router.push('/home')
+        Cookies.set("token", res?.data.token);
         window.location.href = "/home";
       } else {
-      alert("Please enter correct OTP");
+        alert("Please enter correct OTP");
       }
     } else {
       alert("Please enter complete OTP");

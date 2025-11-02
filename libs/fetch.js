@@ -13,6 +13,7 @@ const getData = async (path) => {
 };
 
 const loginPassWord = async (email, password) => {
+  console.log(url)
   const res = await fetch(`${url}/auth/login`, {
     method: "POST",
     headers: {
@@ -88,5 +89,7 @@ const loginOTPVerify = async (email, otp) => {
 
   return res.json()
 };
+
+
 
 export { getData, loginPassWord, registerRequest, registerOTP, loginOTPRequest, loginOTPVerify };

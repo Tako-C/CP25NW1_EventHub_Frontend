@@ -1,12 +1,42 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, User } from "lucide-react";
+import { Search, User, LogOut, UserCircle } from "lucide-react";
+import Cookies from "js-cookie";
 
 export default function Navbar({ user, onLogout }) {
   const router = useRouter();
   const pathName = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    }
+
+    if (isProfileOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isProfileOpen]);
+
+  const handleProfileClick = () => {
+    setIsProfileOpen(false);
+    handleNavigation("/profile");
+  };
+  const handleSignOut = () => {
+    Cookies.remove("token");
+    setIsProfileOpen(false);
+    handleNavigation("/login");
+  };
 
   const handleNavigation = (path) => {
     // router.push(path);
@@ -28,6 +58,7 @@ export default function Navbar({ user, onLogout }) {
         }
       }
     } else {
+      console.log(path);
       router.push(path);
     }
   };
@@ -81,7 +112,7 @@ export default function Navbar({ user, onLogout }) {
       <nav className="fixed top-0 left-0 w-full bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b shadow-md z-50">
         <div
           className="flex items-center gap-2 cursor-pointer z-50"
-          onClick={() => handleNavigation("/")}
+          onClick={() => handleNavigation("/login")}
         >
           <span className="text-xl md:text-2xl font-bold text-purple-600">
             EXPO HUB
@@ -118,15 +149,36 @@ export default function Navbar({ user, onLogout }) {
               Join | Log in
             </button>
           ) : (
-            <button
-              onClick={() => handleNavigation("/")}
-              className="flex items-center gap-2 text-gray-700 hover:text-purple-600 transition"
-            >
-              <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <User />
-              </span>
-              <span className="hidden xl:inline">{user.name}</span>
-            </button>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-2 text-gray-700 hover:text-purple-600 transition"
+              >
+                <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <User />
+                </span>
+                <span className="hidden xl:inline">{user.name}</span>
+              </button>
+
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <button
+                    onClick={handleProfileClick}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition text-left"
+                  >
+                    <UserCircle className="w-5 h-5" />
+                    <span>Profile</span>
+                  </button>
+                  <button
+                    onClick={() => handleSignOut()}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition text-left"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -199,6 +251,12 @@ export default function Navbar({ user, onLogout }) {
               </button>
             )}
           </div>
+          <button
+            onClick={() => handleNavigation("/login")}
+            className="w-full text-center bg-red-600 text-white py-2 px-4 rounded-full hover:bg-red-700 transition"
+          >
+            Log out
+          </button>
         </div>
       </div>
     </>

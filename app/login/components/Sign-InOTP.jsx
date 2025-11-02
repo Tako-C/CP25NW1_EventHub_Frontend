@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginOTPRequest } from "@/libs/fetch";
-import Cookie from "js-cookie";
+import Cookies from "js-cookie";
 
 export default function SignInPageOTP({
   isOpen,
@@ -20,7 +20,7 @@ export default function SignInPageOTP({
     if (res.statusCode === 200) {
       // e.preventDefault();
       // sessionStorage.setItem("signinData", JSON.stringify(email));
-      Cookie.set("signinData", email);
+      Cookies.set("signinData", JSON.stringify(email));
       router.push("/login/otp");
     }
   };

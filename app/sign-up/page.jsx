@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { registerRequest } from "@/libs/fetch";
-import Cookie from "js-cookie";
+import Cookies from "js-cookie";
+import { getData } from "@/libs/fetch";
 
 export default function Page() {
   const [formData, setFormData] = useState({
@@ -23,6 +24,13 @@ export default function Page() {
   };
 
   const handleSubmit = async (e) => {
+    const email = formData?.email;
+
+    if (!email.includes("@") || !email.endsWith(".com")) {
+      alert("Please enter a valid email address with '@' and '.com'");
+      return;
+    }
+
     const res = await registerRequest(
       formData?.firstName,
       formData?.lastName,
@@ -31,10 +39,13 @@ export default function Page() {
     );
     console.log(res);
     if (res.statusCode === 200) {
-      // e.preventDefault();
-      // sessionStorage.setItem("signupData", JSON.stringify(formData));
-      Cookie.set("signupData", formData)
+      Cookies.set("signupData", JSON.stringify(formData), {
+        secure: true,
+        sameSite: "strict",
+      });
       router.push("/sign-up/verify-otp");
+    } else if (res.statusCode === 400) {
+      window.alert("This Email is already registered!")
     }
   };
   const handleSignIn = () => {
