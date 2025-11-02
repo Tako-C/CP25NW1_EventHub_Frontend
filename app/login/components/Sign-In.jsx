@@ -17,12 +17,18 @@ export default function SignInPage({
   const router = useRouter();
 
   const handleSubmit = async () => {
+    if (!email.includes("@") || !email.endsWith(".com")) {
+      alert("Please enter a valid email address with '@' and '.com'");
+      return;
+    }
     const res = await loginPassWord(email, password);
-    console.log(res?.data.token);
+    // console.log(res?.data.token);
     if (res.statusCode === 200) {
       Cookie.set("token", res?.data.token);
       // router.push("/home");
       window.location.href = "/home";
+    } else if (res.statusCode === 401) {
+      window.alert("Email or Password is incorrect")
     }
   };
 

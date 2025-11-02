@@ -13,7 +13,6 @@ const getData = async (path) => {
 };
 
 const loginPassWord = async (email, password) => {
-  console.log(url)
   const res = await fetch(`${url}/auth/login`, {
     method: "POST",
     headers: {

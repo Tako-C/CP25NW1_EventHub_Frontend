@@ -14,14 +14,18 @@ export default function SignInPageOTP({
   const router = useRouter();
 
   const handleSubmit = async (e) => {
-    console.log(email);
+    if (!email.includes("@") || !email.endsWith(".com")) {
+      alert("Please enter a valid email address with '@' and '.com'");
+      return;
+    }
     const res = await loginOTPRequest(email);
-    console.log(res);
     if (res.statusCode === 200) {
       // e.preventDefault();
       // sessionStorage.setItem("signinData", JSON.stringify(email));
       Cookies.set("signinData", JSON.stringify(email));
       router.push("/login/otp");
+    } else if (res.statusCode === 500) {
+      window.alert("This email has not been registered.")
     }
   };
 
