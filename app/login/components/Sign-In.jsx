@@ -15,10 +15,14 @@ export default function SignInPage({
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
+  const [errors, setErrors] = useState({});
 
   const handleSubmit = async () => {
-    if (!email.includes("@") || !email.endsWith(".com")) {
-      alert("Please enter a valid email address with '@' and '.com'");
+    // if (!email.includes("@") || !email.endsWith(".com")) {
+    //   alert("Please enter a valid email address with '@' and '.com'");
+    //   return;
+    // }
+    if (!validateForm()) {
       return;
     }
     const res = await loginPassWord(email, password);
@@ -28,8 +32,41 @@ export default function SignInPage({
       // router.push("/home");
       window.location.href = "/home";
     } else if (res.statusCode === 401) {
-      window.alert("Email or Password is incorrect")
+      window.alert("Email or Password is incorrect");
     }
+  };
+
+  // ✅ ตรวจแต่ละช่องแบบเรียลไทม์
+  const validateField = (field, value) => {
+    switch (field) {
+      case "email":
+        if (!value.trim()) return "* กรุณากรอกอีเมล";
+        if (!value.includes("@") || !value.endsWith(".com"))
+          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
+        return "";
+      case "password":
+        if (!value.trim()) return "* กรุณากรอกรหัสผ่าน";
+        if (value.length < 8) return "* รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
+        return "";
+      default:
+        return "";
+    }
+  };
+
+  // ✅ ตรวจทั้งฟอร์มก่อน submit
+  const validateForm = () => {
+    const newErrors = {};
+    const emailErr = validateField("email", email);
+    if (emailErr) {
+      newErrors.email = emailErr;
+    }
+    const passwordErr = validateField("password", password);
+    if (passwordErr) {
+      newErrors.password = passwordErr;
+    }
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleOTPLogin = () => {
@@ -63,6 +100,9 @@ export default function SignInPage({
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
             <div className="mb-4">
               <label
@@ -79,6 +119,9 @@ export default function SignInPage({
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
             </div>
             <div className="flex items-center justify-between mb-6">
               <label className="flex items-center gap-2 cursor-pointer">
