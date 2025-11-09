@@ -35,7 +35,8 @@ export default function Navbar({ user, onLogout }) {
   const handleSignOut = () => {
     Cookies.remove("token");
     setIsProfileOpen(false);
-    handleNavigation("/login");
+    // handleNavigation("/login");
+    window.location.href = "/login";
   };
 
   const handleNavigation = (path) => {
@@ -213,7 +214,7 @@ export default function Navbar({ user, onLogout }) {
               placeholder="Search"
               className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            {/* <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" /> */}
           </div>
 
           {menuItems.map((item) => (
@@ -252,7 +253,7 @@ export default function Navbar({ user, onLogout }) {
             )}
           </div>
           <button
-            onClick={() => handleNavigation("/login")}
+            onClick={() => handleSignOut()}
             className="w-full text-center bg-red-600 text-white py-2 px-4 rounded-full hover:bg-red-700 transition"
           >
             Log out

@@ -1,35 +1,131 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { registerRequest } from "@/libs/fetch";
 import Cookies from "js-cookie";
 import { getData } from "@/libs/fetch";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Page() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    // phoneNumber: "",
     password: "",
     confirmPassword: "",
   });
   const router = useRouter();
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // ✅ โหลดค่า cooldown จาก localStorage เมื่อเข้าเพจ
+  useEffect(() => {
+    if (!formData.email) return;
+    const key = `otp_end_time_${formData.email}`;
+    const savedEnd = localStorage.getItem(key);
+    if (savedEnd) {
+      const remaining = Math.floor((savedEnd - Date.now()) / 1000);
+      if (remaining > 0) setCooldown(remaining);
+      else localStorage.removeItem(key);
+    }
+  }, [formData.email]);
+
+  // ✅ นับเวลาลดลงทุกวินาที
+  useEffect(() => {
+    if (cooldown <= 0 || !formData.email) return;
+    const key = `otp_end_time_${formData.email}`;
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          localStorage.removeItem(key);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown, formData.email]);
+
+  // ✅ ตรวจแต่ละช่องแบบเรียลไทม์
+  const validateField = (field, value) => {
+    switch (field) {
+      case "firstName":
+        return value.trim() ? "" : "* กรุณากรอกชื่อจริง";
+      case "lastName":
+        return value.trim() ? "" : "* กรุณากรอกนามสกุล";
+      case "email":
+        if (!value.trim()) return "* กรุณากรอกอีเมล";
+        if (!value.includes("@") || !value.endsWith(".com"))
+          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
+        return "";
+      case "password":
+        return value.trim() ? "" : "* กรุณากรอกรหัสผ่าน";
+      case "confirmPassword":
+        if (!value.trim()) return "* กรุณายืนยันรหัสผ่าน";
+        if (value !== formData.password) return "* รหัสผ่านไม่ตรงกัน";
+        return "";
+      default:
+        return "";
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleSubmit = async (e) => {
-    const email = formData?.email;
+  // ✅ ตรวจทั้งฟอร์มก่อน submit
+  const validateForm = () => {
+    const newErrors = {};
+    Object.keys(formData).forEach((key) => {
+      const err = validateField(key, formData[key]);
+      if (err) newErrors[key] = err;
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    if (!email.includes("@") || !email.endsWith(".com")) {
-      alert("Please enter a valid email address with '@' and '.com'");
+const handleSubmit = async (e) => {
+  e.preventDefault(); 
+  
+  const email = formData?.email;
+
+  if (!validateForm() || !agreeTerms) {
+    if (!agreeTerms) {
+      console.log("Please agree to the Terms & Conditions.");
+    }
+    return;
+  }
+
+  const key = `otp_end_time_${email}`;
+
+  try {
+    setLoading(true);
+
+    Cookies.set("signupData", JSON.stringify(formData), {
+      secure: true,
+      sameSite: "strict",
+    });
+
+    const savedEnd = localStorage.getItem(key);
+    const remaining = savedEnd
+      ? Math.floor((savedEnd - Date.now()) / 1000)
+      : 0;
+
+    if (remaining > 0) {
+      setCooldown(remaining);
+      router.push("/sign-up/verify-otp");
       return;
     }
+
+    const endTime = Date.now() + 60 * 1000;
+    localStorage.setItem(key, endTime);
+    setCooldown(60);
 
     const res = await registerRequest(
       formData?.firstName,
@@ -37,17 +133,28 @@ export default function Page() {
       formData?.email,
       formData?.password
     );
-    console.log(res);
+
     if (res.statusCode === 200) {
-      Cookies.set("signupData", JSON.stringify(formData), {
-        secure: true,
-        sameSite: "strict",
-      });
       router.push("/sign-up/verify-otp");
     } else if (res.statusCode === 400) {
-      window.alert("This Email is already registered!")
+      localStorage.removeItem(key); 
+      setCooldown(0);
+      window.alert("This Email is already registered!");
+    } else {
+      localStorage.removeItem(key);
+      setCooldown(0);
+      window.alert(`Registration failed: ${res.message || "Unknown error"}`);
     }
-  };
+      
+  } catch (error) {
+    console.error("Error during registration:", error);
+    localStorage.removeItem(key); 
+    setCooldown(0);
+    window.alert("An unexpected error occurred. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
   const handleSignIn = () => {
     router.push("/login");
   };
@@ -73,8 +180,13 @@ export default function Page() {
               placeholder="Enter your first name"
               value={formData.fullName}
               onChange={(e) => handleInputChange("firstName", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className={`w-full px-4 py-3 border ${
+                errors.firstName ? "border-red-500" : "border-gray-300"
+              } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
             />
+            {errors.firstName && (
+              <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -90,8 +202,13 @@ export default function Page() {
               placeholder="Enter your last name"
               value={formData.fullName}
               onChange={(e) => handleInputChange("lastName", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className={`w-full px-4 py-3 border ${
+                errors.lastName ? "border-red-500" : "border-gray-300"
+              } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
             />
+            {errors.lastName && (
+              <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -107,26 +224,14 @@ export default function Page() {
               placeholder="Enter your email"
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className={`w-full px-4 py-3 border ${
+                errors.email ? "border-red-500" : "border-gray-300"
+              } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
             />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
-
-          {/* <div className="mb-4">
-            <label
-              htmlFor="phone"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Phone Number
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              placeholder="Enter your phone number"
-              value={formData.phoneNumber}
-              onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          </div> */}
 
           <div className="mb-4">
             <label
@@ -135,14 +240,30 @@ export default function Page() {
             >
               Password
             </label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Create a password"
-              value={formData.password}
-              onChange={(e) => handleInputChange("password", e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create a password"
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                className={`w-full px-4 py-3 border ${
+                  errors.password ? "border-red-500" : "border-gray-300"
+                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
           </div>
 
           <div className="mb-6">
@@ -152,16 +273,36 @@ export default function Page() {
             >
               Confirm Password
             </label>
-            <input
-              id="confirmPassword"
-              type="password"
-              placeholder="Confirm your password"
-              value={formData.confirmPassword}
-              onChange={(e) =>
-                handleInputChange("confirmPassword", e.target.value)
-              }
-              className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  handleInputChange("confirmPassword", e.target.value)
+                }
+                className={`w-full px-4 py-3 border ${
+                  errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.confirmPassword}
+              </p>
+            )}
           </div>
 
           <div className="mb-6">

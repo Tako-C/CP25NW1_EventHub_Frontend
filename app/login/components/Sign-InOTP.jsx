@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { loginOTPRequest } from "@/libs/fetch";
 import Cookies from "js-cookie";
@@ -12,20 +12,75 @@ export default function SignInPageOTP({
 }) {
   const [email, setEmail] = useState("");
   const router = useRouter();
+  const [cooldown, setCooldown] = useState(0);
+  const [errors, setErrors] = useState({});
+
+  // ✅ โหลดค่า cooldown จาก localStorage เมื่อเข้าเพจ
+  useEffect(() => {
+    if (!email) return;
+    const key = `otp_end_time_${email}`;
+    const savedEnd = localStorage.getItem(key);
+    if (savedEnd) {
+      const remaining = Math.floor((savedEnd - Date.now()) / 1000);
+      if (remaining > 0) setCooldown(remaining);
+      else localStorage.removeItem(key);
+    }
+  }, [email]);
+
+  // ✅ นับเวลาลดลงทุกวินาที
+  useEffect(() => {
+    if (cooldown <= 0 || !email) return;
+    const key = `otp_end_time_${email}`;
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          localStorage.removeItem(key);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown, email]);
 
   const handleSubmit = async (e) => {
-    if (!email.includes("@") || !email.endsWith(".com")) {
-      alert("Please enter a valid email address with '@' and '.com'");
+    if (!validateForm()) {
       return;
     }
-    const res = await loginOTPRequest(email);
-    if (res.statusCode === 200) {
-      // e.preventDefault();
-      // sessionStorage.setItem("signinData", JSON.stringify(email));
+
+    const key = `otp_end_time_${email}`;
+
+    try {
       Cookies.set("signinData", JSON.stringify(email));
-      router.push("/login/otp");
-    } else if (res.statusCode === 500) {
-      window.alert("This email has not been registered.")
+
+      const savedEnd = localStorage.getItem(key);
+      const remaining = savedEnd
+        ? Math.floor((savedEnd - Date.now()) / 1000)
+        : 0;
+
+      if (remaining > 0) {
+        setCooldown(remaining);
+        router.push("/login/otp");
+        return;
+      }
+
+      const endTime = Date.now() + 60 * 1000;
+      localStorage.setItem(key, endTime);
+      setCooldown(60);
+
+      const res = await loginOTPRequest(email);
+
+      if (res.statusCode === 200) {
+        Cookies.set("signinData", JSON.stringify(email));
+        router.push("/login/otp");
+      } else if (res.statusCode === 500) {
+        window.alert("This email has not been registered.");
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      localStorage.removeItem(key);
+      setCooldown(0);
+      window.alert("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -37,6 +92,30 @@ export default function SignInPageOTP({
     router.push("/sign-up");
   };
   if (!isOpen) return null;
+
+  // ✅ ตรวจแต่ละช่องแบบเรียลไทม์
+  const validateField = (field, value) => {
+    switch (field) {
+      case "email":
+        if (!value.trim()) return "* กรุณากรอกอีเมล";
+        if (!value.includes("@") || !value.endsWith(".com"))
+          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
+        return "";
+      default:
+        return "";
+    }
+  };
+
+  // ✅ ตรวจทั้งฟอร์มก่อน submit
+  const validateForm = () => {
+    const newErrors = {};
+    const err = validateField("email", email);
+    if (err) {
+      newErrors.email = err;
+    }
+    setErrors(newErrors);
+    return !newErrors.email;
+  };
 
   return (
     <>
@@ -61,6 +140,9 @@ export default function SignInPageOTP({
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
             </div>
 
             <button

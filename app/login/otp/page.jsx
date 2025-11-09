@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { loginOTPVerify } from "@/libs/fetch";
+import { loginOTPVerify, loginOTPRequest } from "@/libs/fetch";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 
@@ -10,6 +10,10 @@ export default function Page() {
   const inputRefs = useRef([]);
   const [data, setData] = useState(null);
   const router = useRouter();
+  const [cooldown, setCooldown] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(true);
+  const [errors, setErrors] = useState("");
 
   useEffect(() => {
     // const stored = sessionStorage.getItem("signinData");
@@ -18,12 +22,56 @@ export default function Page() {
     if (email) setData(email);
   }, []);
 
+  // ✅ โหลด cooldown จาก localStorage
+  useEffect(() => {
+    if (!data) return;
+    const key = `otp_end_time_${data}`;
+    const savedEnd = localStorage.getItem(key);
+    if (savedEnd) {
+      const remaining = Math.floor((savedEnd - Date.now()) / 1000);
+      if (remaining > 0) setCooldown(remaining);
+      else localStorage.removeItem(key);
+    }
+  }, [data]);
+
+  // ✅ นับถอยหลัง
+  useEffect(() => {
+    if (cooldown <= 0 || !data) return;
+    const key = `otp_end_time_${data}`;
+    const timer = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          localStorage.removeItem(key);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown, data]);
+
+  const handleResend = async () => {
+    if (cooldown > 0 || !data) return;
+
+    setLoading(true);
+    setCooldown(60);
+    const newEnd = Date.now() + 60 * 1000;
+    localStorage.setItem(`otp_end_time_${data}`, newEnd);
+
+    const res = await loginOTPRequest(data);
+
+    setTimeout(() => setLoading(false), 500);
+  };
+
   const handleOtpChange = (index, value) => {
     if (isNaN(value)) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
+
+    setIsDisabled(newOtp.join("").length !== 6);
+    setErrors("");
 
     if (value !== "" && index < 5) {
       inputRefs.current[index + 1]?.focus();
@@ -40,18 +88,15 @@ export default function Page() {
     const otpCode = otp.join("");
     console.log(otpCode);
     if (otpCode.length === 6) {
-      //   alert(`OTP entered: ${otpCode}`);
       const res = await loginOTPVerify(data, otpCode);
-      console.log("res",res);
+      console.log("res", res);
       if (res.statusCode === 200) {
         // router.push('/home')
         Cookies.set("token", res?.data.token);
         window.location.href = "/home";
       } else {
-        alert("Please enter correct OTP");
+        setErrors("ใส่ OTP ให้ถูกต้อง");
       }
-    } else {
-      alert("Please enter complete OTP");
     }
   };
 
@@ -81,15 +126,28 @@ export default function Page() {
             ))}
           </div>
 
+          {errors && (
+            <p className="text-red-500 text-sm text-center mb-4">{errors}</p>
+          )}
+
           <div className="text-center mb-6">
-            <button className="text-sm text-gray-600 underline hover:text-purple-600">
-              Resend code
+            <button
+              onClick={handleResend}
+              disabled={cooldown > 0 || loading}
+              className="text-sm text-gray-600 underline hover:text-purple-600 disabled:text-gray-400"
+            >
+              {cooldown > 0 ? `รอ ${cooldown} วินาที` : "Resend code"}
             </button>
           </div>
 
           <button
             onClick={handleContinue}
-            className="w-full bg-blue-900 text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors"
+            disabled={isDisabled}
+            className={`w-full py-3 rounded-lg font-medium transition-colors ${
+              isDisabled
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-blue-900 text-white hover:bg-blue-800"
+            }`}
           >
             Continue
           </button>
