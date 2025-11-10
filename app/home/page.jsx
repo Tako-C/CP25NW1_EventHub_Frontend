@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-// import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from "next/navigation";
 import { FormatDate } from "@/utils/format";
 import { getData } from "@/libs/fetch";
@@ -11,9 +10,9 @@ const mockEventData = {
   location: "BANGKOK, THAILAND",
   date: "26 - 30 May 2025",
   images: [
-    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=1200&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=1200&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=600&fit=crop", 
+    "https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=1200&h=600&fit=crop", 
+    "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=1200&h=600&fit=crop", 
   ],
 };
 
@@ -36,38 +35,70 @@ const mockFeedbackData = [
 ];
 
 export default function Page() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [slides, setSlides] = useState([]);
-  const [eventData, setEventData] = useState(null);
+  const [currentEventIndex, setCurrentEventIndex] = useState(0); 
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [eventData, setEventData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("Foods");
   const [feedbackData, setFeedbackData] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
-    fetchData()
-    setTimeout(() => {
-      setSlides(mockEventData.images || []);
-      setFeedbackData(mockFeedbackData);
-      setLoading(false);
-    }, 500);
-  }, []);
+    fetchData();
+  }, []); 
 
+  const nextEvent = () => {
+    if (eventData.length === 0) return;
+    setCurrentEventIndex((prev) => (prev + 1) % eventData.length);
+    setCurrentImageIndex(0);
+  };
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % slides.length);
-  const prevSlide = () =>
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  const prevEvent = () => {
+    if (eventData.length === 0) return;
+    setCurrentEventIndex(
+      (prev) => (prev - 1 + eventData.length) % eventData.length
+    );
+    setCurrentImageIndex(0);
+  };
+
+  const nextImage = () => {
+    if (mockEventData.images.length === 0) return;
+    setCurrentImageIndex((prev) => (prev + 1) % mockEventData.images.length);
+  };
+
+  const prevImage = () => {
+    if (mockEventData.images.length === 0) return;
+    setCurrentImageIndex(
+      (prev) =>
+        (prev - 1 + mockEventData.images.length) % mockEventData.images.length
+    );
+  };
 
   const filteredFeedback = feedbackData.filter(
     (feedback) => feedback.category === selectedCategory
   );
 
   const fetchData = async () => {
-    const res = await getData("events")
-    console.log(res)
-    setEventData(res.data)
-  }
+    setLoading(true);
+    try {
+      const res = await getData("events");
+      const fetchedEvents = res.data || [];
+      console.log(fetchedEvents)
+      setEventData(fetchedEvents);
+      setFeedbackData(mockFeedbackData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setEventData([]);
+      setFeedbackData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  const currentImageUrl =
+    mockEventData.images.length > 0
+      ? mockEventData.images[currentImageIndex]
+      : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,17 +116,21 @@ export default function Page() {
             ) : (
               <>
                 <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 whitespace-pre-line">
-                  {eventData[0]?.eventName || "null"}
+                  {eventData[currentEventIndex]?.eventName || "Event Title"}
                 </h1>
                 <div className="flex items-center justify-center gap-2 md:gap-4 mb-2">
                   <div className="h-0.5 w-12 md:w-24 bg-gray-800"></div>
                   <p className="text-base md:text-xl font-semibold text-gray-800">
-                    {eventData[0]?.location || "null"}
+                    {eventData[currentEventIndex]?.location || "Event Location"}
                   </p>
                   <div className="h-0.5 w-12 md:w-24 bg-gray-800"></div>
                 </div>
                 <p className="text-lg md:text-2xl text-gray-700 mt-4">
-                  {`${FormatDate(eventData[0]?.startDate)} - ${FormatDate(eventData[0]?.endDate)}` || "null"}
+                  {eventData[currentEventIndex]
+                    ? `${FormatDate(
+                        eventData[currentEventIndex]?.startDate
+                      )} - ${FormatDate(eventData[currentEventIndex]?.endDate)}`
+                    : "Date Unavailable"}
                 </p>
               </>
             )}
@@ -109,10 +144,10 @@ export default function Page() {
                     Loading...
                   </span>
                 </div>
-              ) : slides.length > 0 ? (
+              ) : currentImageUrl ? (
                 <>
                   <img
-                    src={slides[currentSlide]}
+                    src={currentImageUrl}
                     alt="Expo event"
                     className="w-full h-64 md:h-80 object-cover"
                     onError={(e) => {
@@ -122,41 +157,43 @@ export default function Page() {
                   />
                   <div className="w-full h-64 md:h-80 bg-gray-300 hidden items-center justify-center">
                     <span className="text-gray-500 text-base md:text-lg">
-                      null
+                      Image Error
                     </span>
                   </div>
                 </>
               ) : (
                 <div className="w-full h-64 md:h-80 bg-gray-300 flex items-center justify-center">
                   <span className="text-gray-500 text-base md:text-lg">
-                    null
+                    No Image Available
                   </span>
                 </div>
               )}
 
-              {slides.length > 1 && (
+              {mockEventData.images.length > 1 && (
                 <>
                   <button
-                    onClick={prevSlide}
+                    onClick={prevImage}
                     className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-blue-900 hover:bg-blue-800 text-white rounded-full p-2 md:p-3 shadow-lg transition"
                   >
                     ◀
                   </button>
 
                   <button
-                    onClick={nextSlide}
+                    onClick={nextImage}
                     className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-blue-900 hover:bg-blue-800 text-white rounded-full p-2 md:p-3 shadow-lg transition"
                   >
                     ▶
                   </button>
 
                   <div className="absolute bottom-2 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    {slides.map((_, idx) => (
+                    {mockEventData.images.map((_, idx) => (
                       <button
                         key={idx}
-                        onClick={() => setCurrentSlide(idx)}
+                        onClick={() => setCurrentImageIndex(idx)}
                         className={`w-2 h-2 rounded-full transition ${
-                          idx === currentSlide ? "bg-white w-6" : "bg-white/50"
+                          idx === currentImageIndex
+                            ? "bg-white w-6"
+                            : "bg-white/50"
                         }`}
                       />
                     ))}
@@ -166,9 +203,28 @@ export default function Page() {
             </div>
           </div>
         </div>
+        {eventData.length > 1 && (
+          <div className="max-w-7xl mx-auto flex justify-between mt-8">
+            <button
+              onClick={prevEvent}
+              className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors"
+            >
+              Previous Event
+            </button>
+            <button
+              onClick={nextEvent}
+              className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg shadow-md transition-colors"
+            >
+              Next Event
+            </button>
+          </div>
+        )}
       </section>
 
-      <section id="events" className="max-w-7xl mx-auto py-8 md:py-16 px-4 md:px-8">
+      <section
+        id="events"
+        className="max-w-7xl mx-auto py-8 md:py-16 px-4 md:px-8"
+      >
         <div className="text-center mb-6 md:mb-8 mt-10">
           <div className="inline-block">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -194,48 +250,29 @@ export default function Page() {
             eventData?.map((event, idx) => (
               <div
                 key={idx}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition"
+                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition flex flex-col"
               >
-                {/* {event.image ? (
-                  <img
-                    src={mockEventData.images[0]}
-                    alt={event.eventName || "Event"}
-                    className="h-48 w-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.nextSibling.style.display = "flex";
-                    }}
-                  />
-                ) : null} */}
-
-                  <img
-                    src={"https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=1200&h=600&fit=crop"}
-                    alt={event.eventName || "Event"}
-                    className="h-48 w-full object-cover"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.nextSibling.style.display = "flex";
-                    }}
-                  />
-
-                {/* <div
-                  className={`bg-gray-300 h-48 w-full ${
-                    event.image ? "hidden" : "flex"
-                  } items-center justify-center`}
-                >
-                  <span className="text-gray-500 text-base md:text-lg">
-                    No Image
-                  </span>
-                </div> */}
-
-                <div className="p-4 md:p-5">
+                <img
+                  src={
+                    "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=1200&h=600&fit-crop"
+                  }
+                  alt={event.eventName || "Event"}
+                  className="h-48 w-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
+                  }}
+                />
+                <div className="p-4 md:p-5 flex flex-col flex-1">
                   <p className="text-xs md:text-sm text-gray-600 mb-1">
-                    {`${FormatDate(event.startDate)} - ${FormatDate(event.endDate)}` || "null"}
+                    {`${FormatDate(event.startDate)} - ${FormatDate(
+                      event.endDate
+                    )}` || "null"}
                   </p>
                   <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2 md:mb-3 line-clamp-2">
                     {event.eventName || "null"}
                   </h3>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-auto">
                     <p className="text-xs md:text-sm text-gray-600 line-clamp-1">
                       Location : {event.location || "No Location"}
                     </p>
@@ -365,7 +402,6 @@ export default function Page() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }
