@@ -1,7 +1,39 @@
 const url = process.env.NEXT_PUBLIC_API_URL;
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
 const getData = async (path) => {
-  const res = await fetch(`${url}/${path}`);
+  const token = getCookie("token");
+    const res = await fetch(`${url}/${path}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    return error;
+  }
+
+  const data = await res.json();
+  return data;
+};
+
+const regisEvents = async (path) => {
+  const token = getCookie("token");
+  const res = await fetch(`${url}/${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+  });
 
   if (!res.ok) {
     const error = await res.json();
@@ -91,4 +123,4 @@ const loginOTPVerify = async (email, otp) => {
 
 
 
-export { getData, loginPassWord, registerRequest, registerOTP, loginOTPRequest, loginOTPVerify };
+export { getData, loginPassWord, registerRequest, registerOTP, loginOTPRequest, loginOTPVerify, regisEvents };
