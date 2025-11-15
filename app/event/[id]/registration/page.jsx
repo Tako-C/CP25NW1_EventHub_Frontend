@@ -96,13 +96,11 @@ export default function ExpoRegisterForm() {
         <div className="absolute inset-0 bg-gray-100 bg-opacity-20"></div>
 
         <div className="relative max-w-4xl mx-auto px-4 py-12 mt-18">
-          {/* Title Card */}
           <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl p-8 md:p-12 mb-8 border border-gray-100 overflow-hidden relative">
-            {/* Decorative gradient overlay */}
+
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-teal-400/10 to-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
             <div className="relative z-10">
-              {/* Header with badge */}
               <div className="flex flex-col items-center mb-8">
                 <div className="inline-flex items-center gap-2 bg-teal-100 text-teal-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
                   <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
@@ -117,12 +115,9 @@ export default function ExpoRegisterForm() {
                 </h2>
               </div>
 
-              {/* Divider */}
               <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-blue-500 mx-auto rounded-full mb-8"></div>
 
-              {/* Event Details */}
               <div className="space-y-6">
-                {/* Description */}
                 {eventDetail?.eventDesc && (
                   <div className="flex items-start gap-4 bg-white/50 backdrop-blur-sm p-5 rounded-2xl border border-gray-100">
                     <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-xl flex items-center justify-center">
@@ -139,9 +134,7 @@ export default function ExpoRegisterForm() {
                   </div>
                 )}
 
-                {/* Date Range */}
                 <div className="grid md:grid-cols-2 gap-4">
-                  {/* Start Date */}
                   <div className="flex items-start gap-4 bg-white/50 backdrop-blur-sm p-5 rounded-2xl border border-gray-100">
                     <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
                       <Calendar className="w-5 h-5 text-white" />
@@ -156,7 +149,6 @@ export default function ExpoRegisterForm() {
                     </div>
                   </div>
 
-                  {/* End Date */}
                   <div className="flex items-start gap-4 bg-white/50 backdrop-blur-sm p-5 rounded-2xl border border-gray-100">
                     <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
                       <Calendar className="w-5 h-5 text-white" />
@@ -175,9 +167,7 @@ export default function ExpoRegisterForm() {
             </div>
           </div>
 
-          {/* Registration Form */}
           <div className="space-y-6">
-            {/* First Name */}
             <div className="bg-white rounded-3xl shadow-lg p-8">
               <label className="block text-gray-900 font-medium mb-3">
                 First Name / ชื่อ
@@ -192,7 +182,6 @@ export default function ExpoRegisterForm() {
               />
             </div>
 
-            {/* Last Name */}
             <div className="bg-white rounded-3xl shadow-lg p-8">
               <label className="block text-gray-900 font-medium mb-3">
                 Last Name / นามสกุล
@@ -207,7 +196,6 @@ export default function ExpoRegisterForm() {
               />
             </div>
 
-            {/* Email */}
             <div className="bg-white rounded-3xl shadow-lg p-8">
               <label className="block text-gray-900 font-medium mb-3">
                 Email / อีเมล
@@ -222,7 +210,6 @@ export default function ExpoRegisterForm() {
               />
             </div>
 
-            {/* Product Selection */}
             <div className="bg-white rounded-3xl shadow-lg p-8">
               <label className="block text-gray-900 font-medium mb-4">
                 Please select product that you are looking for – Select all that
@@ -252,7 +239,6 @@ export default function ExpoRegisterForm() {
               </div>
             </div>
 
-            {/* How did you hear */}
             <div className="bg-white rounded-3xl shadow-lg p-8">
               <label className="block text-gray-900 font-medium mb-4">
                 How did you hear about the show?
@@ -279,7 +265,6 @@ export default function ExpoRegisterForm() {
               </div>
             </div>
 
-            {/* Terms Agreement */}
             <div className="flex items-start px-4">
               <input
                 type="checkbox"
@@ -299,7 +284,6 @@ export default function ExpoRegisterForm() {
               </label>
             </div>
 
-            {/* Submit Button */}
             <div className="flex justify-center pt-4 pb-8">
               <button
                 onClick={handleSubmit}
