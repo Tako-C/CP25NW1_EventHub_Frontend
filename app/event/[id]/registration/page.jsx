@@ -77,10 +77,9 @@ export default function ExpoRegisterForm() {
       return;
     }
     console.log("Form submitted:", formData);
-    // const res = await regisEvents(`events/${id}/register`);
-    // console.log(res);
+    const res = await regisEvents(`events/${id}/register`);
+    console.log(res);
     setIsSuccess(true)
-    // alert("Registration submitted successfully!");
   };
 
   return (
