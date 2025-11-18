@@ -2,8 +2,8 @@
 import { cookies } from "next/headers";
 import { jwtDecode } from "jwt-decode";
 
-const token = () => {
-  const cookieStore = cookies();
+const token = async () => {
+  const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
   if (!token) {
     console.warn("No token found");
