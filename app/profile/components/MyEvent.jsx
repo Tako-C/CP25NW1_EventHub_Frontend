@@ -1,5 +1,5 @@
-import { QrCode } from "lucide-react";
 import { FormatDate } from "@/utils/format";
+import { EventCardImage, QrCodeImage } from "@/utils/getImage";
 
 export default function MyEventPage({ events }) {
   return (
@@ -13,18 +13,10 @@ export default function MyEventPage({ events }) {
           {events.map((event, index) => (
             <div key={index} className="bg-gray-50 rounded-lg p-6 flex gap-6">
               <div className="flex-shrink-0 w-64 h-48 bg-white rounded-lg flex items-center justify-center border-2 border-gray-200">
-                <span className="text-gray-500 font-semibold text-lg">Event Pic</span>
-                {/* {event.imageCard ? (
-                  <img
-                    src={event.imageCard}
-                    alt={event.eventName}
-                    className="w-full h-full object-cover" 
-                  />
-                ) : (
-                  <span className="text-gray-500 font-semibold text-lg">
-                    Event Pic
-                  </span>
-                )} */}
+                <EventCardImage
+                  imageCard={event.imageCard}
+                  eventName={event.eventName}
+                />
               </div>
 
               <div className="flex-1 flex flex-col justify-between">
@@ -64,20 +56,10 @@ export default function MyEventPage({ events }) {
               </div>
 
               <div className="flex-shrink-0 w-32 flex flex-col items-center justify-center">
-                {event.isEnded ? (
-                  <>
-                    <div className="opacity-30 mb-2">
-                      <QrCode size={80} className="text-gray-800" />
-                    </div>
-                    <span className="text-red-600 font-bold text-xl">
-                      Expired
-                    </span>
-                  </>
-                ) : (
-                  <div className="border-4 border-black p-2 bg-white">
-                    <QrCode size={80} className="text-black" />
-                  </div>
-                )}
+                <QrCodeImage
+                  qrCodeUrl={event.qrCodeUrl}
+                  isEnded={event.isEnded}
+                />
               </div>
             </div>
           ))}
