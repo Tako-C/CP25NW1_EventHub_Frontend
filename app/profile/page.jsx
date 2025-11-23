@@ -66,7 +66,9 @@ export default function Page() {
   const fetchEventData = async () => {
     const res = await getData("users/me/registered-events");
     console.log("res", res);
-    setEvent(res?.data)
+    if(res?.statusCode === 200){
+       setEvent(res?.data) 
+    }
   };
 
   useEffect(() => {
