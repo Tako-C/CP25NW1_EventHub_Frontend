@@ -1,6 +1,5 @@
-// Navbar.jsx
-
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -14,7 +13,7 @@ import {
 import Cookies from "js-cookie";
 import { getData } from "@/libs/fetch";
 
-export default function Navbar() {
+export default function Navbar({token}) {
   const router = useRouter();
   const pathName = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -85,13 +84,16 @@ export default function Navbar() {
   };
 
   const fetchData = async () => {
+    if(token){
     const resUser = await getData("users/me/profile");
     const resEventRegis = await getData("users/me/registered-events");
 
     setUser(resUser?.data);
     let mergeData = { user: resUser?.data, event: resEventRegis?.data };
-    console.log(mergeData)
-    setData(mergeData);
+    // console.log(mergeData);
+    setData(mergeData);      
+    }
+
   };
 
   useEffect(() => {
