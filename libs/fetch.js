@@ -3,16 +3,16 @@ const url = process.env.NEXT_PUBLIC_API_URL;
 function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+  if (parts.length === 2) return parts.pop().split(";").shift();
 }
 
 const getData = async (path) => {
   const token = getCookie("token");
-    const res = await fetch(`${url}/${path}`, {
+  const res = await fetch(`${url}/${path}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -25,13 +25,36 @@ const getData = async (path) => {
   return data;
 };
 
+const getImage = async (path) => {
+  const token = getCookie("token");
+  const res = await fetch(`${url}/${path}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+
+  if (!res.ok) {
+    const error = await res.json();
+    return error;
+  }
+
+  const imageBlob = await res.blob();
+  const imageUrl = URL.createObjectURL(imageBlob);
+
+  // window.open(imageUrl, '_blank');
+  return imageUrl;
+};
+
 const regisEvents = async (path) => {
   const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -56,7 +79,7 @@ const loginPassWord = async (email, password) => {
     }),
   });
 
-  return res.json()
+  return res.json();
 };
 
 const registerRequest = async (fname, lname, email, password) => {
@@ -73,10 +96,10 @@ const registerRequest = async (fname, lname, email, password) => {
     }),
   });
 
-  return res.json()
+  return res.json();
 };
 
-const registerOTP = async ( email, otp, password) => {
+const registerOTP = async (email, otp, password) => {
   const res = await fetch(`${url}/auth/register/otp/verify`, {
     method: "POST",
     headers: {
@@ -89,7 +112,7 @@ const registerOTP = async ( email, otp, password) => {
     }),
   });
 
-  return res.json()
+  return res.json();
 };
 
 const loginOTPRequest = async (email) => {
@@ -103,7 +126,7 @@ const loginOTPRequest = async (email) => {
     }),
   });
 
-  return res.json()
+  return res.json();
 };
 
 const loginOTPVerify = async (email, otp) => {
@@ -118,9 +141,16 @@ const loginOTPVerify = async (email, otp) => {
     }),
   });
 
-  return res.json()
+  return res.json();
 };
 
-
-
-export { getData, loginPassWord, registerRequest, registerOTP, loginOTPRequest, loginOTPVerify, regisEvents };
+export {
+  getData,
+  loginPassWord,
+  registerRequest,
+  registerOTP,
+  loginOTPRequest,
+  loginOTPVerify,
+  regisEvents,
+  getImage,
+};
