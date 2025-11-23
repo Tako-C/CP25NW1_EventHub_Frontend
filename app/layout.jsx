@@ -21,16 +21,13 @@ export const metadata = {
 
 export default async function RootLayout({ children }) {
   const user = await token();
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {user ? (
-          <Navbar user={{ name: user?.firstName, role: user?.role?.name }} />
-        ) : (
-          <Navbar user={null} />
-        )}
+          <Navbar token={user}/>
         {children}
         <Footer />
       </body>
