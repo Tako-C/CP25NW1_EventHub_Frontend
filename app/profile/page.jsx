@@ -5,9 +5,16 @@ import { ChevronRight } from "lucide-react";
 import ProfilePage from "./components/MyProfile";
 import MyEventPage from "./components/MyEvent";
 import { getData } from "@/libs/fetch";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function Page() {
-  const [activePage, setActivePage] = useState("account");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
+  //   const [activePage, setActivePage] = useState("account");
+  const [activePage, setActivePage] = useState(
+    tab === "events" ? "events" : "account"
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
     name: "",
@@ -23,31 +30,31 @@ export default function Page() {
     postCode: "",
   });
 
-//   const [events, setEvent] = useState([
-//     {
-//       name: "Event Name 1",
-//       dateStart: "11/11/01 | 10:00:00",
-//       isEnded: false,
-//       feedbackSubmitted: false,
-//     },
-//     {
-//       name: "Event Name 2",
-//       dateStart: "",
-//       isEnded: true,
-//       feedbackSubmitted: true,
-//     },
-//     {
-//       name: "Event Name 3",
-//       dateStart: "15/11/01 | 10:00:00",
-//       isEnded: false,
-//       feedbackSubmitted: false,
-//     },
-//   ]);
+  //   const [events, setEvent] = useState([
+  //     {
+  //       name: "Event Name 1",
+  //       dateStart: "11/11/01 | 10:00:00",
+  //       isEnded: false,
+  //       feedbackSubmitted: false,
+  //     },
+  //     {
+  //       name: "Event Name 2",
+  //       dateStart: "",
+  //       isEnded: true,
+  //       feedbackSubmitted: true,
+  //     },
+  //     {
+  //       name: "Event Name 3",
+  //       dateStart: "15/11/01 | 10:00:00",
+  //       isEnded: false,
+  //       feedbackSubmitted: false,
+  //     },
+  //   ]);
   const [events, setEvent] = useState([]);
 
   const fetchUserData = async () => {
-    const res = await getData("users/me/profile")
-    console.log('user', res)
+    const res = await getData("users/me/profile");
+    console.log("user", res);
     setProfile({
       name: res?.data?.firstName || "",
       role: "",
@@ -61,19 +68,22 @@ export default function Page() {
       address: "",
       postCode: "",
     });
-  }
+  };
 
   const fetchEventData = async () => {
     const res = await getData("users/me/registered-events");
     console.log("res", res);
-    if(res?.statusCode === 200){
-       setEvent(res?.data) 
+    if (res?.statusCode === 200) {
+      setEvent(res?.data);
     }
   };
 
   useEffect(() => {
     fetchUserData();
     fetchEventData();
+    if (tab) {
+      router.replace("/profile", { scroll: false });
+    }
   }, []);
   return (
     <div className="min-h-screen bg-gray-50 mt-20">
