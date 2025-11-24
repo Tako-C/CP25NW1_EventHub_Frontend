@@ -25,6 +25,19 @@ const getData = async (path) => {
   return data;
 };
 
+const getDataNoToken = async (path) => {
+  const token = getCookie("token");
+  const res = await fetch(`${url}/${path}`);
+
+  if (!res.ok) {
+    const error = await res.json();
+    return error;
+  }
+
+  const data = await res.json();
+  return data;
+};
+
 const getImage = async (path) => {
   const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
@@ -153,4 +166,5 @@ export {
   loginOTPVerify,
   regisEvents,
   getImage,
+  getDataNoToken
 };
