@@ -157,6 +157,28 @@ const loginOTPVerify = async (email, otp) => {
   return res.json();
 };
 
+const qrCodefetch = async (qrcode) => {
+  const token = getCookie("token");
+  const res = await fetch(`${url}/qr/check-in`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      qrContent: qrcode,
+    }),
+  });
+
+  const data = await res.json()
+  if (!res.ok) {
+    const errorMessage = data.message || `HTTP Error: ${res.status}`;
+    throw new Error(errorMessage);
+  }
+
+  return data;
+};
+
 export {
   getData,
   loginPassWord,
@@ -166,5 +188,6 @@ export {
   loginOTPVerify,
   regisEvents,
   getImage,
-  getDataNoToken
+  getDataNoToken,
+  qrCodefetch
 };
