@@ -6,7 +6,7 @@ import { MapPin, Calendar, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { FormatDate } from "@/utils/format";
 import { useRouter } from "next/navigation";
-import { getData } from "@/libs/fetch";
+import { getData, getDataNoToken } from "@/libs/fetch";
 
 export default function Page() {
   const { id } = useParams();
@@ -15,7 +15,7 @@ export default function Page() {
   const [eventData, setEventData] = useState(null);
 
   const fetchData = async () => {
-    const res = await getData(`events/${id}`);
+    const res = await getDataNoToken(`events/${id}`);
     setEventData(res.data);
   };
 

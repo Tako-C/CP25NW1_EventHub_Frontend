@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FormatDate } from "@/utils/format";
-import { getData } from "@/libs/fetch";
+import { getData, getDataNoToken } from "@/libs/fetch";
 
 // Test data
 const mockEventData = {
@@ -81,7 +81,7 @@ export default function Page() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await getData("events");
+      const res = await getDataNoToken("events");
       const fetchedEvents = res.data || [];
       console.log(fetchedEvents)
       setEventData(fetchedEvents);
