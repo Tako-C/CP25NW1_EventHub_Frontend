@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, Input, Table, Tag, Skeleton } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import dynamic from "next/dynamic";
-import { getData, getListUser } from "@/libs/fetch";
+import { getData, getListUser, getListUserByEvent } from "@/libs/fetch";
 import { useParams } from "next/navigation";
 import { FormatDate } from "@/utils/format";
 
@@ -154,8 +154,8 @@ export default function ExhibitionDashboard() {
 const fetchData = async () => {
     try {
       const res = await getData("users/me/profile");
-      const resListUser = await getListUser("list/check-in", id, res?.data?.id);
-      
+      const resListUser = await getListUserByEvent("list/check-in", id, res?.data?.id);
+      console.log("res", res?.data);
       console.log("resListUser", resListUser?.data);
 
       if (Array.isArray(resListUser?.data)) {

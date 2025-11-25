@@ -39,12 +39,12 @@ const getDataNoToken = async (path) => {
 };
 
 const getImage = async (path) => {
-  const token = getCookie("token");
+  // const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      // Authorization: `Bearer ${token}`,
     },
   });
 
@@ -179,6 +179,75 @@ const qrCodefetch = async (qrcode) => {
   return data;
 };
 
+const getListUser = async (path, email, eventId) => {
+  const token = getCookie("token");
+  const res = await fetch(`${url}/${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      email: email,
+      eventId: eventId,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    return error;
+  }
+
+  const data = await res.json();
+  return data;
+};
+
+const getListUserByEvent = async (path, userId, eventId) => {
+  const token = getCookie("token");
+  const res = await fetch(`${url}/${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      eventId: eventId,
+      userId: userId
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    return error;
+  }
+
+  const data = await res.json();
+  return data;
+};
+
+const userCheckIn = async (path, eventId, userId) => {
+  const token = getCookie("token");
+  const res = await fetch(`${url}/${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      eventId: eventId,
+      userId: userId,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    return error;
+  }
+
+  const data = await res.json();
+  return data;
+};
+
 export {
   getData,
   loginPassWord,
@@ -189,5 +258,8 @@ export {
   regisEvents,
   getImage,
   getDataNoToken,
-  qrCodefetch
+  qrCodefetch,
+  getListUser,
+  userCheckIn,
+  getListUserByEvent
 };
