@@ -22,7 +22,6 @@ export default function ExpoRegisterForm() {
 
   const fetchData = async () => {
     const res = await getData(`users/me/profile`);
-    console.log(res);
     if (res?.statusCode === 200) {
       setFormData({
         firstName: res?.data?.firstName,

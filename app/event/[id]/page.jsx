@@ -17,7 +17,6 @@ export default function Page() {
 
   const fetchData = async () => {
     const res = await getDataNoToken(`events/${id}`);
-    console.log(res?.data)
     setEventData(res.data);
   };
 
@@ -27,13 +26,6 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="relative h-[600px] bg-gradient-to-r from-gray-200 to-gray-300">
-        {/* <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200')",
-          }}
-        /> */}
 
         <div className="absolute inset-0 opacity-40">
           {eventData && (
