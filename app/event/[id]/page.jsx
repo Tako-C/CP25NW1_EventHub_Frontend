@@ -7,6 +7,7 @@ import Link from "next/link";
 import { FormatDate } from "@/utils/format";
 import { useRouter } from "next/navigation";
 import { getData, getDataNoToken } from "@/libs/fetch";
+import { EventCardImage } from "@/utils/getImage";
 
 export default function Page() {
   const { id } = useParams();
@@ -16,6 +17,7 @@ export default function Page() {
 
   const fetchData = async () => {
     const res = await getDataNoToken(`events/${id}`);
+    console.log(res?.data)
     setEventData(res.data);
   };
 
@@ -25,19 +27,35 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="relative h-[600px] bg-gradient-to-r from-gray-200 to-gray-300">
-        <div
+        {/* <div
           className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{
             backgroundImage:
               "url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200')",
           }}
-        />
+        /> */}
+
+        <div className="absolute inset-0 opacity-40">
+          {eventData && (
+            <div className="w-full h-full relative">
+              <EventCardImage
+                imageCard={
+                  eventData?.images?.imgDetail
+                }
+                eventName={eventData?.eventName}
+              />
+            </div>
+          )}
+        </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
           <div className="flex items-center justify-center h-full gap-8">
-            <div className="bg-white rounded-3xl shadow-2xl w-96 h-96 p-8">
-              <div className="w-full h-full bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400">
-                <span className="text-sm">Image Placeholder</span>
+            <div className="bg-white rounded-3xl shadow-2xl w-96 h-96 p-4 flex-shrink-0">
+              <div className="w-full h-full bg-gray-100 rounded-2xl overflow-hidden relative">
+                <EventCardImage
+                  imageCard={eventData?.images?.imgDetail}
+                  eventName={eventData?.eventName}
+                />
               </div>
             </div>
 
