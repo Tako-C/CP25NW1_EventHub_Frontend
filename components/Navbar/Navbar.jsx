@@ -68,14 +68,14 @@ export default function Navbar({token}) {
         const eventRole = event.eventRole.toLowerCase().trim();
 
         if (isEventActiveToday(event)) {
-          console.log(
-            `Event: ${event.eventName} is ACTIVE today. Role: ${eventRole}`
-          ); 
+          // console.log(
+          //   `Event: ${event.eventName} is ACTIVE today. Role: ${eventRole}`
+          // ); 
           if (rolePriority[eventRole] > rolePriority[highestRole]) {
             highestRole = eventRole;
           }
         } else {
-          console.log(`Event: ${event.eventName} is INACTIVE today.`); 
+          // console.log(`Event: ${event.eventName} is INACTIVE today.`); 
         }
       });
     }
@@ -130,7 +130,7 @@ export default function Navbar({token}) {
     if (user && data) {
       const calculatedRole = calculateActiveRole(user, data.event);
       setActiveRole(calculatedRole);
-      console.log("Calculated Active Role:", calculatedRole);
+      // console.log("Calculated Active Role:", calculatedRole);
     } else {
       setActiveRole("default");
     }
@@ -168,7 +168,7 @@ export default function Navbar({token}) {
         }
       }
     } else {
-      console.log(path);
+      // console.log(path);
       router.push(path);
     }
   };

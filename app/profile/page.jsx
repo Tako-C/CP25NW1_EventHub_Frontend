@@ -54,7 +54,7 @@ export default function Page() {
 
   const fetchUserData = async () => {
     const res = await getData("users/me/profile");
-    console.log("user", res);
+    // console.log("user", res);
     setProfile({
       name: res?.data?.firstName || "",
       role: "",
@@ -72,7 +72,7 @@ export default function Page() {
 
   const fetchEventData = async () => {
     const res = await getData("users/me/registered-events");
-    console.log("res", res);
+    // console.log("res", res);
     if (res?.statusCode === 200) {
       setEvent(res?.data);
     }
