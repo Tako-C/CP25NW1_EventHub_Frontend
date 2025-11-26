@@ -1,13 +1,19 @@
-import { QrCode, X } from "lucide-react";
-import { getImage } from "@/libs/fetch";
-import { useState, useEffect } from "react";
+import { QrCode, X } from 'lucide-react';
+import { getImage, getQrImage } from '@/libs/fetch';
+import { useState, useEffect } from 'react';
 
 function QrCodeModal({ isOpen, onClose, image, qrCodeUrl }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-lg p-8 max-w-md relative" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg p-8 max-w-md relative"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -18,19 +24,24 @@ function QrCodeModal({ isOpen, onClose, image, qrCodeUrl }) {
           <h3 className="text-xl font-bold mb-4">QR Code</h3>
           <div className="border-4 border-black p-4 bg-white">
             {image ? (
-              <img src={image} alt="QR Code" className="w-64 h-64 object-contain" />
+              <img
+                src={image}
+                alt="QR Code"
+                className="w-64 h-64 object-contain"
+              />
             ) : (
               <QrCode size={256} className="text-black" />
             )}
           </div>
-          <p className="mt-4 text-sm text-gray-500">Scan this QR code to check-in</p>
+          <p className="mt-4 text-sm text-gray-500">
+            Scan this QR code to check-in
+          </p>
           <DownloadQrButton qrUrl={image} />
         </div>
       </div>
     </div>
   );
 }
-
 
 // export function QrCodeImage({ qrCodeUrl, isEnded }) {
 //   const [image, setImage] = useState(null);
@@ -136,12 +147,12 @@ export function QrCodeImage({ qrCodeUrl, isEnded }) {
     if (qrCodeUrl) {
       const fetchImage = async () => {
         try {
-          const res = await getImage(
-            qrCodeUrl.startsWith("/") ? qrCodeUrl.substring(1) : qrCodeUrl
+          const res = await getQrImage(
+            qrCodeUrl.startsWith('/') ? qrCodeUrl.substring(1) : qrCodeUrl
           );
           setImage(res);
         } catch (error) {
-          console.error("Error fetching QR code image:", error);
+          console.error('Error fetching QR code image:', error);
           setImage(null);
         } finally {
           setIsLoading(false);
@@ -163,12 +174,12 @@ export function QrCodeImage({ qrCodeUrl, isEnded }) {
     return (
       <div
         className={`w-20 h-20 flex items-center justify-center ${
-          isEnded ? "opacity-30" : "border-4 border-black p-2 bg-white"
+          isEnded ? 'opacity-30' : 'border-4 border-black p-2 bg-white'
         }`}
       >
         <QrCode
           size={80}
-          className={`${isEnded ? "text-gray-800" : "text-black"}`}
+          className={`${isEnded ? 'text-gray-800' : 'text-black'}`}
         />
       </div>
     );
@@ -194,25 +205,27 @@ export function QrCodeImage({ qrCodeUrl, isEnded }) {
   } else {
     return (
       <>
-        <div 
+        <div
           className="border-4 border-black p-2 bg-white cursor-pointer hover:shadow-lg transition-shadow"
           onClick={() => setIsModalOpen(true)}
         >
           {currentImageSource ? (
-            <img 
-              src={currentImageSource} 
-              alt="QR Code" 
-              className="w-20 h-20 object-contain" 
+            <img
+              src={currentImageSource}
+              alt="QR Code"
+              className="w-20 h-20 object-contain"
             />
           ) : (
             <QrCode size={80} className="text-black" />
           )}
         </div>
-        <p className="text-xs text-gray-500 mt-2 text-center">Click to enlarge</p>
-        <QrCodeModal 
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          Click to enlarge
+        </p>
+        <QrCodeModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          image={currentImageSource} 
+          image={currentImageSource}
           qrCodeUrl={qrCodeUrl}
         />
       </>
@@ -228,13 +241,13 @@ export function EventCardImage({ imageCard, eventName }) {
     if (imageCard) {
       const fetchImage = async () => {
         try {
-          const path = imageCard.startsWith("/")
+          const path = imageCard.startsWith('/')
             ? imageCard.substring(1)
             : imageCard;
           const res = await getImage(`upload/events/${path}`);
           setImage(res);
         } catch (error) {
-          console.error("Error fetching event card image:", error);
+          console.error('Error fetching event card image:', error);
           setImage(null);
         } finally {
           setIsLoading(false);

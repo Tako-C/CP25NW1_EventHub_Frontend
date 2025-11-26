@@ -1,43 +1,47 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Scanner } from "@yudiel/react-qr-scanner";
-import { X } from "lucide-react";
-import { qrCodefetch } from "@/libs/fetch";
+import { useState } from 'react';
+import { Scanner } from '@yudiel/react-qr-scanner';
+import { X } from 'lucide-react';
+import { qrCodefetch } from '@/libs/fetch';
 
 export default function QRScannerCheckin() {
   const [isScanning, setIsScanning] = useState(true);
   const [scanResult, setScanResult] = useState();
   const [showNotification, setShowNotification] = useState(false);
   const [error, setError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleScanSuccess = async (results) => {
     if (!results || results.length === 0) return;
-    console.log("result", results);
+    console.log('result', results);
     setIsScanning(false);
 
     const data = results[0].rawValue;
     const desiredValue = data.slice(1, -1);
 
     const now = new Date();
-    const timeString = now.toLocaleTimeString("en-US", {
+    const timeString = now.toLocaleTimeString('en-US', {
       hour12: true,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
     });
-    const dateString = now.toLocaleDateString("en-GB");
+    const dateString = now.toLocaleDateString('en-GB');
 
-    setScanResult(data);
+    setScanResult({
+      date: dateString,
+      time: timeString,
+    });
+
     try {
-      console.log("yoo");
+      console.log('yoo');
       const res = await qrCodefetch(desiredValue);
       console.log(res?.message);
 
       setShowNotification(true);
     } catch (error) {
-      console.error("Check-in failed:", error.message);
+      console.error('Check-in failed:', error.message);
       setError(true);
       setErrorMessage(error.message);
     }
@@ -66,7 +70,7 @@ export default function QRScannerCheckin() {
               <X size={14} />
             </button>
             <p className="text-gray-800">
-              <b>{scanResult.name}</b> scanned at {scanResult.date} —{" "}
+              <b>{scanResult.name}</b> scanned at {scanResult.date} —{' '}
               <span className="text-red-500 font-semibold">
                 {scanResult.time}
               </span>
@@ -100,11 +104,11 @@ export default function QRScannerCheckin() {
                     audio: false, // ← ปิดระบบเสียงทั้งหมด
                   }}
                   styles={{
-                    container: { width: "100%", height: "100%" },
+                    container: { width: '100%', height: '100%' },
                     video: {
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
                     },
                   }}
                 />
