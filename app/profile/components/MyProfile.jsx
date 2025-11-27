@@ -1,244 +1,228 @@
-import { useState } from 'react';
-import { User } from 'lucide-react';
+'use client';
+import {
+  User,
+  Mail,
+  Briefcase,
+  MapPin,
+  Phone,
+  UserCircle,
+  Building2,
+  Flag,
+} from 'lucide-react';
 
-export default function ProfilePage({ isEditing, setIsEditing, profile, setProfile }) {
+export default function ProfilePage({
+  isEditing,
+  setIsEditing,
+  profile,
+  setProfile,
+}) {
   const handleChange = (field, value) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
+    setProfile((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSave = () => {
-    setIsEditing(false);
-  };
-
-  const handleCancel = () => {
+    // update profile logic here
     setIsEditing(false);
   };
 
   return (
-    <div className="flex-1 bg-white rounded-lg shadow-sm p-8">
-      <div className="flex gap-8">
+    <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+      <div className="mb-8 border-b border-gray-100 pb-4 flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">My Account</h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Manage your personal information
+          </p>
+        </div>
+        {!isEditing && (
+          <button
+            disabled
+            onClick={() => setIsEditing(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+          >
+            Edit Profile
+          </button>
+        )}
+      </div>
 
-        <div className="flex-shrink-0">
-          <div className="w-48 h-48 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
-            <User size={96} className="text-white" strokeWidth={1.5} />
+      <div className="flex flex-col lg:flex-row gap-10">
+        <div className="flex-shrink-0 flex flex-col items-center space-y-4">
+          <div className="relative group">
+            <div className="w-40 h-40 rounded-full bg-purple-50 border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
+              <User size={80} className="text-purple-300" />
+            </div>
+            {isEditing && (
+              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-white text-xs font-medium">
+                  Change Photo
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="text-center">
+            <h3 className="font-bold text-xl text-gray-900">
+              {profile.name} {profile.lastName}
+            </h3>
+            <span className="inline-block mt-2 px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full uppercase tracking-wide">
+              {profile.role || 'User'}
+            </span>
           </div>
         </div>
 
-        <div className="flex-1 space-y-6">
+        <div className="flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField
+                label="First Name"
+                value={profile.name}
+                onChange={(v) => handleChange('name', v)}
+                isEditing={isEditing}
+                icon={<User size={18} />}
+              />
+              <InputField
+                label="Last Name"
+                value={profile.lastName}
+                onChange={(v) => handleChange('lastName', v)}
+                isEditing={isEditing}
+              />
+            </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block font-semibold mb-2">Name :</label>
+            <InputField
+              label="Email Address"
+              value={profile.email}
+              onChange={(v) => handleChange('email', v)}
+              isEditing={isEditing}
+              type="email"
+              icon={<Mail size={18} />}
+              disabled={true}
+            />
+            <InputField
+              label="Phone Number"
+              value={profile.phone}
+              onChange={(v) => handleChange('phone', v)}
+              isEditing={isEditing}
+              type="tel"
+              icon={<Phone size={18} />}
+            />
+
+            <InputField
+              label="Job"
+              value={profile.jobTitle}
+              onChange={(v) => handleChange('jobTitle', v)}
+              isEditing={isEditing}
+              icon={<Briefcase size={18} />}
+            />
+
+            <InputField
+              label="Country"
+              value={profile.country}
+              onChange={(v) => handleChange('country', v)}
+              isEditing={isEditing}
+              icon={<Flag size={18} />}
+            />
+            <InputField
+              label="City / Province"
+              value={profile.city}
+              onChange={(v) => handleChange('city', v)}
+              isEditing={isEditing}
+              icon={<MapPin size={18} />}
+            />
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
+                Address
+              </label>
               {isEditing ? (
-                <input
-                  type="text"
-                  value={profile.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  className="w-full px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-purple-600"
+                <textarea
+                  value={profile.address}
+                  onChange={(e) => handleChange('address', e.target.value)}
+                  rows="3"
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700"
                 />
               ) : (
-                <div className="w-full px-4 py-2 border-b-2 border-gray-300 text-gray-700">
-                  {profile.name}
+                <div className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-700 min-h-[50px] flex items-center border border-transparent">
+                  {profile.address || '-'}
                 </div>
               )}
             </div>
-            <div>
-              <label className="block font-semibold mb-2">Role :</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profile.role}
-                  onChange={(e) => handleChange('role', e.target.value)}
-                  className="w-full px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-purple-600"
-                />
-              ) : (
-                <div className="w-full px-4 py-2 border-b-2 border-gray-300 text-gray-700">
-                  {profile.role}
-                </div>
-              )}
-            </div>
+
+            <InputField
+              label="Post Code"
+              value={profile.postCode}
+              onChange={(v) => handleChange('postCode', v)}
+              isEditing={isEditing}
+            />
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block font-semibold mb-2">Email :</label>
-              {isEditing ? (
-                <input
-                  type="email"
-                  value={profile.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                  className="w-full px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-purple-600"
-                />
-              ) : (
-                <div className="w-full px-4 py-2 border-b-2 border-gray-300 text-gray-700">
-                  {profile.email}
-                </div>
-              )}
-            </div>
-            <div>
-              <label className="block font-semibold mb-2">Age :</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profile.age}
-                  onChange={(e) => handleChange('age', e.target.value)}
-                  className="w-full px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-purple-600"
-                />
-              ) : (
-                <div className="w-full px-4 py-2 border-b-2 border-gray-300 text-gray-700">
-                  {profile.age}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-2">Phone Number :</label>
-            {isEditing ? (
-              <input
-                type="tel"
-                value={profile.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                className="w-full px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-purple-600"
-              />
-            ) : (
-              <div className="w-full px-4 py-2 border-b-2 border-gray-300 text-gray-700">
-                {profile.phone}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-2">Job Title :</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={profile.jobTitle}
-                onChange={(e) => handleChange('jobTitle', e.target.value)}
-                className="w-full px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-purple-600"
-              />
-            ) : (
-              <div className="w-full px-4 py-2 border-b-2 border-gray-300 text-gray-700">
-                {profile.jobTitle}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-2">Company Name :</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={profile.companyName}
-                onChange={(e) => handleChange('companyName', e.target.value)}
-                className="w-full px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-purple-600"
-              />
-            ) : (
-              <div className="w-full px-4 py-2 border-b-2 border-gray-300 text-gray-700">
-                {profile.companyName}
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block font-semibold mb-2">Country :</label>
-              {isEditing ? (
-                <select
-                  value={profile.country}
-                  onChange={(e) => handleChange('country', e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-                >
-                  <option value="Thailand">Thailand</option>
-                  <option value="USA">USA</option>
-                  <option value="Japan">Japan</option>
-                  <option value="Singapore">Singapore</option>
-                </select>
-              ) : (
-                <div className="w-full px-4 py-2 bg-gray-200 rounded text-gray-700">
-                  {profile.country}
-                </div>
-              )}
-            </div>
-            <div>
-              <label className="block font-semibold mb-2">City / Province / :</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profile.city}
-                  onChange={(e) => handleChange('city', e.target.value)}
-                  className="w-full px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-purple-600"
-                />
-              ) : (
-                <div className="w-full px-4 py-2 border-b-2 border-gray-300 text-gray-700">
-                  {profile.city}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-2">Address :</label>
-            {isEditing ? (
-              <textarea
-                value={profile.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-                rows="3"
-                className="w-full px-4 py-2 bg-gray-100 rounded focus:outline-none focus:ring-2 focus:ring-purple-600"
-              />
-            ) : (
-              <div className="w-full px-4 py-2 bg-gray-100 rounded text-gray-700 min-h-[80px]">
-                {profile.address}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-2">Post Code :</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={profile.postCode}
-                onChange={(e) => handleChange('postCode', e.target.value)}
-                className="w-full px-4 py-2 border-b-2 border-gray-300 focus:outline-none focus:border-purple-600"
-              />
-            ) : (
-              <div className="w-full px-4 py-2 border-b-2 border-gray-300 text-gray-700">
-                {profile.postCode}
-              </div>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-4 pt-4">
-            {isEditing ? (
-              <>
-                <button 
-                  onClick={handleCancel}
-                  className="bg-gray-400 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-500 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleSave}
-                  className="bg-blue-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-800 transition-colors"
-                >
-                  Save
-                </button>
-              </>
-            ) : (
-              <button 
-                onClick={handleEdit}
-                className="bg-blue-900 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-800 transition-colors"
+          {isEditing && (
+            <div className="flex justify-end gap-3 mt-10 pt-6 border-gray-100">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-6 py-2.5 rounded-full font-medium text-gray-600 hover:bg-gray-100 transition-colors"
               >
-                Edit Profile
+                Cancel
               </button>
-            )}
-          </div>
+              <button
+                onClick={handleSave}
+                className="px-8 py-2.5 rounded-full font-medium bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg transition-all"
+              >
+                Save Changes
+              </button>
+            </div>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+function InputField({
+  label,
+  value,
+  onChange,
+  isEditing,
+  type = 'text',
+  icon,
+  disabled = false,
+}) {
+  return (
+    <div className="flex flex-col">
+      <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
+        {label}
+      </label>
+      <div className="relative">
+        {isEditing ? (
+          <div className="relative">
+            {icon && (
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                {icon}
+              </div>
+            )}
+            <input
+              type={type}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              disabled={disabled}
+              className={`w-full ${
+                icon ? 'pl-10' : 'pl-4'
+              } pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 ${
+                disabled ? 'opacity-60 cursor-not-allowed' : ''
+              }`}
+            />
+          </div>
+        ) : (
+          <div
+            className={`w-full ${
+              icon ? 'pl-10' : 'pl-4'
+            } pr-4 py-2.5 bg-white border-b border-gray-200 text-gray-800 font-medium flex items-center`}
+          >
+            {icon && (
+              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400">
+                {icon}
+              </div>
+            )}
+            {value || '-'}
+          </div>
+        )}
       </div>
     </div>
   );

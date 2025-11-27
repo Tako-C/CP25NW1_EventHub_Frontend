@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { getData } from "@/libs/fetch";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getData } from '@/libs/fetch';
+import { useRouter } from 'next/navigation';
 
 export default function ExhibitionSummary() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [data, setData] = useState([]);
   const itemsPerPage = 5;
@@ -18,43 +18,43 @@ export default function ExhibitionSummary() {
   const router = useRouter();
 
   const formatDateAndDuration = (start, end) => {
-    if (!start || !end) return { dateStr: "-", days: 0 };
+    if (!start || !end) return { dateStr: '-', days: 0 };
 
     const startDate = new Date(start);
     const endDate = new Date(end);
 
     const diffTime = Math.abs(endDate - startDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-    const options = { day: "2-digit", month: "short", year: "numeric" };
-    const startStr = startDate.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
+    const options = { day: '2-digit', month: 'short', year: 'numeric' };
+    const startStr = startDate.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
     });
-    const endStr = endDate.toLocaleDateString("en-GB", options);
+    const endStr = endDate.toLocaleDateString('en-GB', options);
 
     return {
-      dateStr: `${startStr} - ${endStr}`, 
+      dateStr: `${startStr} - ${endStr}`,
       days: diffDays,
     };
   };
 
   const fetchData = async () => {
     try {
-      const res = await getData("users/me/registered-events");
+      const res = await getData('users/me/registered-events');
       const organizer_event =
-        res?.data.filter((event) => event?.eventRole === "ORGANIZER") || [];
+        res?.data.filter((event) => event?.eventRole === 'ORGANIZER') || [];
 
       setData(organizer_event);
-      console.log(organizer_event)
+      console.log(organizer_event);
 
       setTotalCount({
         count_exhibition: organizer_event.length,
-        count_exhibitior: 0, 
-        count_visitor: 0, 
+        count_exhibitior: 0,
+        count_visitor: 0,
       });
     } catch (error) {
-      console.error("Failed to fetch data:", error);
+      console.error('Failed to fetch data:', error);
     }
   };
 
@@ -80,7 +80,7 @@ export default function ExhibitionSummary() {
           Summary Data
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-2xl border-2 border-gray-300 p-6">
             <h2 className="text-xl font-bold mb-4">Total Exhibition</h2>
             <p className="text-5xl font-bold text-indigo-600 text-right">
@@ -99,10 +99,9 @@ export default function ExhibitionSummary() {
               {totalCount?.count_visitor || 0}
             </p>
           </div>
-          {/* ส่วน Exhibitor/Visitor ซ่อนไว้ก่อนเนื่องจากไม่มีข้อมูลใน JSON ชุดใหม่ */}
-        </div>
+        </div> */}
 
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-2 mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -151,7 +150,11 @@ export default function ExhibitionSummary() {
                       <tr
                         key={item.eventId || index}
                         className="hover:bg-gray-50"
-                        onClick={() => router.push(`/organizer/dashboard/${item.eventId}/detail`)}
+                        onClick={() =>
+                          router.push(
+                            `/organizer/dashboard/${item.eventId}/detail`
+                          )
+                        }
                       >
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <div className="font-medium">{dateStr}</div>
@@ -196,7 +199,7 @@ export default function ExhibitionSummary() {
           <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
             <div className="text-sm text-gray-600">
               Show: <span className="font-medium">{itemsPerPage}</span> 1-
-              {Math.min(itemsPerPage, filteredExhibitions.length)} of{" "}
+              {Math.min(itemsPerPage, filteredExhibitions.length)} of{' '}
               {filteredExhibitions.length}
             </div>
             <div className="flex items-center gap-2">
@@ -213,8 +216,8 @@ export default function ExhibitionSummary() {
                   onClick={() => setCurrentPage(i + 1)}
                   className={`w-8 h-8 rounded ${
                     currentPage === i + 1
-                      ? "bg-indigo-600 text-white"
-                      : "hover:bg-gray-100 text-gray-700"
+                      ? 'bg-indigo-600 text-white'
+                      : 'hover:bg-gray-100 text-gray-700'
                   }`}
                 >
                   {i + 1}

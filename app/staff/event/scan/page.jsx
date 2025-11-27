@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
-import { X } from 'lucide-react';
+import { X, ScanLine } from 'lucide-react';
 import { qrCodefetch } from '@/libs/fetch';
 
 export default function QRScannerCheckin() {
@@ -58,7 +58,7 @@ export default function QRScannerCheckin() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       {/* Notification */}
       {showNotification && scanResult && (
         <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
@@ -70,7 +70,7 @@ export default function QRScannerCheckin() {
               <X size={14} />
             </button>
             <p className="text-gray-800">
-              <b>{scanResult.name}</b> scanned at {scanResult.date} —{' '}
+              <b>{scanResult.name}</b> Scanned at {scanResult.date} —{' '}
               <span className="text-red-500 font-semibold">
                 {scanResult.time}
               </span>
@@ -82,12 +82,15 @@ export default function QRScannerCheckin() {
       {/* Main Content */}
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-8">
         <div className="bg-white rounded-3xl shadow-lg p-8 max-w-md w-full">
-          <h1 className="text-3xl font-bold text-center mb-2">
-            Scanner Check-in
-          </h1>
-          <p className="text-center text-gray-600 mb-8">
-            FOODS AND BEVERAGES ASIA EXPO
-          </p>
+          <div className="text-center mb-6">
+            <h1 className="text-xl font-bold text-gray-800 flex items-center justify-center gap-2">
+              <ScanLine size={22} className="text-purple-600" />
+              QR Scanner
+            </h1>
+            <p className="text-gray-400 text-xs mt-1">
+              Scan visitor ticket for admission
+            </p>
+          </div>
 
           {/* Scanner Area */}
           <div className="relative bg-gray-100 rounded-2xl p-6 mb-6 border-4 border-gray-800">

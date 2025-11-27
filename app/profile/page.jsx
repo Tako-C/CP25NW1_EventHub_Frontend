@@ -1,33 +1,33 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { ChevronRight } from "lucide-react";
-import ProfilePage from "./components/MyProfile";
-import MyEventPage from "./components/MyEvent";
-import { getData } from "@/libs/fetch";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { ChevronRight } from 'lucide-react';
+import ProfilePage from './components/MyProfile';
+import MyEventPage from './components/MyEvent';
+import { getData } from '@/libs/fetch';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab");
+  const tab = searchParams.get('tab');
   //   const [activePage, setActivePage] = useState("account");
   const [activePage, setActivePage] = useState(
-    tab === "events" ? "events" : "account"
+    tab === 'events' ? 'events' : 'account'
   );
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
-    name: "",
-    role: "",
-    email: "",
-    age: "",
-    phone: "",
-    jobTitle: "",
-    companyName: "",
-    country: "",
-    city: "",
-    address: "",
-    postCode: "",
+    name: '',
+    role: '',
+    email: '',
+    age: '',
+    phone: '',
+    jobTitle: '',
+    companyName: '',
+    country: '',
+    city: '',
+    address: '',
+    postCode: '',
   });
 
   //   const [events, setEvent] = useState([
@@ -53,25 +53,29 @@ export default function Page() {
   const [events, setEvent] = useState([]);
 
   const fetchUserData = async () => {
-    const res = await getData("users/me/profile");
+    const res = await getData('users/me/profile');
     // console.log("user", res);
-    setProfile({
-      name: res?.data?.firstName || "",
-      role: "",
-      email: res?.data?.email || "",
-      age: "",
-      phone: "",
-      jobTitle: "",
-      companyName: "",
-      country: "",
-      city: "",
-      address: "",
-      postCode: "",
-    });
+
+    if (res?.statusCode === 200) {
+      const userData = res.data;
+      setProfile({
+        name: userData?.firstName || '',
+        lastName: userData?.lastName || '',
+        email: userData?.email || '',
+        phone: userData?.phone || '',
+        role: userData?.role?.roleName || 'User',
+        jobTitle: userData?.job?.jobName || '',
+        country: userData?.country?.countryName || '',
+        city: userData?.city?.cityName || '',
+        postCode: userData?.postCode || '',
+        companyName: '',
+        address: '',
+      });
+    }
   };
 
   const fetchEventData = async () => {
-    const res = await getData("users/me/registered-events");
+    const res = await getData('users/me/registered-events');
     // console.log("res", res);
     if (res?.statusCode === 200) {
       setEvent(res?.data);
@@ -82,7 +86,7 @@ export default function Page() {
     fetchUserData();
     fetchEventData();
     if (tab) {
-      router.replace("/profile", { scroll: false });
+      router.replace('/profile', { scroll: false });
     }
   }, []);
   return (
@@ -91,9 +95,9 @@ export default function Page() {
         <div className="flex gap-6">
           <div className="w-80 space-y-4">
             <button
-              onClick={() => setActivePage("account")}
+              onClick={() => setActivePage('account')}
               className={`w-full p-4 rounded-lg shadow-sm flex justify-between items-center hover:shadow-md transition-shadow ${
-                activePage === "account" ? "bg-gray-300" : "bg-white"
+                activePage === 'account' ? 'bg-gray-300' : 'bg-white'
               }`}
             >
               <span className="font-semibold text-lg">My Account</span>
@@ -101,27 +105,27 @@ export default function Page() {
             </button>
 
             <button
-              onClick={() => setActivePage("events")}
+              onClick={() => setActivePage('events')}
               className={`w-full p-4 rounded-lg shadow-sm flex justify-between items-center hover:shadow-md transition-shadow ${
-                activePage === "events" ? "bg-gray-300" : "bg-white"
+                activePage === 'events' ? 'bg-gray-300' : 'bg-white'
               }`}
             >
               <span className="font-semibold text-lg">My Events</span>
               <ChevronRight size={24} />
             </button>
 
-            <button
-              onClick={() => setActivePage("rewards")}
+            {/* <button
+              onClick={() => setActivePage('rewards')}
               className={`w-full p-4 rounded-lg shadow-sm flex justify-between items-center hover:shadow-md transition-shadow ${
-                activePage === "rewards" ? "bg-gray-300" : "bg-white"
+                activePage === 'rewards' ? 'bg-gray-300' : 'bg-white'
               }`}
             >
               <span className="font-semibold text-lg">My Rewards</span>
               <ChevronRight size={24} />
-            </button>
+            </button> */}
           </div>
 
-          {activePage === "account" && (
+          {activePage === 'account' && (
             <ProfilePage
               isEditing={isEditing}
               setIsEditing={setIsEditing}
@@ -130,7 +134,7 @@ export default function Page() {
             />
           )}
 
-          {activePage === "events" && <MyEventPage events={events} />}
+          {activePage === 'events' && <MyEventPage events={events} />}
 
           {/* {activePage === 'rewards' && (
                         <div className="flex-1 bg-white rounded-lg shadow-sm p-8">

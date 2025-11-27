@@ -9,11 +9,26 @@ import {
   UserCircle,
   Users,
   Briefcase,
+  ChevronDown,
+  Home as HomeIcon,
+  Calendar,
+  ScanLine,
+  LayoutDashboard,
+  Shield,
 } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { getData } from '@/libs/fetch';
 
 export default function Navbar({ token }) {
+  const iconMap = {
+    Home: <HomeIcon size={18} />,
+    Events: <Calendar size={18} />,
+    'Check-in': <ScanLine size={18} />,
+    Admin: <Shield size={18} />,
+    Organizer: <Briefcase size={18} />,
+    Staff: <Users size={18} />,
+    Dashboard: <LayoutDashboard size={18} />,
+  };
   const router = useRouter();
   const pathName = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -192,14 +207,14 @@ export default function Navbar({ token }) {
         return [
           { label: 'Home', path: '#home' },
           { label: 'Events', path: '#events' },
-          { label: 'Staff', path: '/staff', hasDropdown: true },
-          { label: 'Organizer', path: '/organizer', hasDropdown: true },
+          { label: 'Check-in', path: '/staff', hasDropdown: true },
+          { label: 'Dashboard', path: '/organizer/dashboard' },
         ];
       case 'staff':
         return [
           { label: 'Home', path: '#home' },
           { label: 'Events', path: '#events' },
-          { label: 'Staff', path: '/staff', hasDropdown: true },
+          { label: 'Check-in', path: '/staff', hasDropdown: true },
         ];
       case 'user':
         return [
@@ -225,7 +240,7 @@ export default function Navbar({ token }) {
 
   const staffOptions = [
     { label: 'Scan QR', path: '/staff/event/scan' },
-    { label: 'Check-in List', path: '/staff/event/check-in' },
+    { label: 'Manual Check-in', path: '/staff/event/check-in' },
   ];
 
   const organizerOptions = [
@@ -241,26 +256,33 @@ export default function Navbar({ token }) {
           className="flex items-center gap-2 cursor-pointer z-50"
           onClick={() => handleNavigation('/login')}
         >
-          <span className="text-xl md:text-2xl font-bold text-purple-600">
-            EXPO HUB
-          </span>
+          <div
+            className="flex items-center gap-4 cursor-pointer z-50 group"
+            onClick={() => handleNavigation('/login')}
+          >
+            <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 tracking-tight">
+              EXPO HUB
+            </span>
+          </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-4 flex-1 justify-center max-w-md mx-4">
-          <div className="relative flex-1">
+        <div className="hidden md:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4">
+          <div className="relative flex-1 group transition-all duration-300 focus-within:scale-105">
             <input
               type="text"
-              placeholder="Search"
-              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+              placeholder="Search for events..."
+              className="w-full pl-5 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-full focus:outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-300 focus:bg-white transition-all shadow-sm group-hover:shadow-md"
             />
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <button className="absolute right-1.5 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors shadow-sm">
+              <Search size={16} />
+            </button>
           </div>
         </div>
 
         <div className="hidden lg:flex items-center gap-6">
           {menuItems.map((item) => {
-            // Staff dropdown
-            if (item.label === 'Staff' && item.hasDropdown) {
+            // 1. dropdown staff
+            if (item.label === 'Check-in' && item.hasDropdown) {
               return (
                 <div
                   key={item.label}
@@ -269,20 +291,23 @@ export default function Navbar({ token }) {
                 >
                   <button
                     onClick={() => setIsStaffOpen(!isStaffOpen)}
-                    className="text-gray-700 hover:text-purple-600 transition"
+                    className="flex items-center gap-2 px-2 py-2 rounded-full text-gray-600 font-medium hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 group"
                   >
-                    {item.label}
+                    <span className="opacity-70 group-hover:opacity-100">
+                      {iconMap[item.label]}
+                    </span>
+                    <span>{item.label}</span>
                   </button>
 
                   {isStaffOpen && (
-                    <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-fade-in">
                       {staffOptions.map((option) => (
                         <button
                           key={option.label}
                           onClick={() => handleNavigation(option.path)}
-                          className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition text-left"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition text-left"
                         >
-                          <Users className="w-5 h-5" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-purple-300"></div>
                           <span>{option.label}</span>
                         </button>
                       ))}
@@ -292,7 +317,7 @@ export default function Navbar({ token }) {
               );
             }
 
-            // Organizer dropdown
+            // 2. dropdown organizer
             if (item.label === 'Organizer' && item.hasDropdown) {
               return (
                 <div
@@ -302,20 +327,23 @@ export default function Navbar({ token }) {
                 >
                   <button
                     onClick={() => setIsOrganizerOpen(!isOrganizerOpen)}
-                    className="text-gray-700 hover:text-purple-600 transition"
+                    className="flex items-center gap-2 px-2 py-2 rounded-full text-gray-600 font-medium hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 group"
                   >
-                    {item.label}
+                    <span className="opacity-70 group-hover:opacity-100">
+                      {iconMap[item.label]}
+                    </span>
+                    <span>{item.label}</span>
                   </button>
 
                   {isOrganizerOpen && (
-                    <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-fade-in">
                       {organizerOptions.map((option) => (
                         <button
                           key={option.label}
                           onClick={() => handleNavigation(option.path)}
-                          className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition text-left"
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition text-left"
                         >
-                          <Briefcase className="w-5 h-5" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-purple-300"></div>
                           <span>{option.label}</span>
                         </button>
                       ))}
@@ -325,14 +353,17 @@ export default function Navbar({ token }) {
               );
             }
 
-            // Regular menu item
+            // 3. visitor
             return (
               <button
                 key={item.label}
                 onClick={() => handleNavigation(item.path)}
-                className="text-gray-700 hover:text-purple-600 transition"
+                className="flex items-center gap-2 px-2 py-2 rounded-full text-gray-600 font-medium hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 group"
               >
-                {item.label}
+                <span className="opacity-70 group-hover:opacity-100">
+                  {iconMap[item.label]}
+                </span>
+                <span>{item.label}</span>
               </button>
             );
           })}
@@ -348,28 +379,45 @@ export default function Navbar({ token }) {
             <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-2 text-gray-700 hover:text-purple-600 transition"
+                className="flex items-center gap-3 pl-2 pr-4 py-1.5 rounded-full border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-200 group"
               >
-                <span className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <User />
+                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 group-hover:bg-purple-200 transition-colors">
+                  <User size={15} />
+                </div>
+
+                <span className="hidden xl:inline text-sm font-medium text-gray-700 group-hover:text-purple-700">
+                  {user.firstName}
                 </span>
-                <span className="hidden xl:inline">{user.firstName}</span>
+
+                <ChevronDown
+                  size={16}
+                  className="text-gray-400 group-hover:text-purple-500"
+                />
               </button>
 
               {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animation-fade-in">
+                  <div className="px-4 py-3 border-b border-gray-100 mb-1">
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {user.email}
+                    </p>
+                  </div>
+
                   <button
                     onClick={handleProfileClick}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition text-left"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition text-left"
                   >
-                    <UserCircle className="w-5 h-5" />
+                    <UserCircle className="w-4 h-4" />
                     <span>Profile</span>
                   </button>
                   <button
                     onClick={() => handleSignOut()}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition text-left"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition text-left"
                   >
-                    <LogOut className="w-5 h-5" />
+                    <LogOut className="w-4 h-4" />
                     <span>Sign Out</span>
                   </button>
                 </div>
