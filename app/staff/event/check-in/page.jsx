@@ -163,7 +163,7 @@ export default function CheckInStaff() {
           </p>
 
           <div className="mb-6">
-            <label className="block text-gray-700 font-medium mb-2 flex items-center gap-2">
+            <label className="text-gray-700 font-medium mb-2 items-center gap-2">
               <Calendar className="w-4 h-4" /> Select Event
             </label>
             <select
