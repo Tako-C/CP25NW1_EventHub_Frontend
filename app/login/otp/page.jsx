@@ -94,6 +94,8 @@ export default function Page() {
       if (res.statusCode === 200) {
         // router.push('/home')
         Cookies.set("token", res?.data.token);
+        Cookies.remove('signinData');
+
         window.location.href = "/home";
       } else {
         setErrors("ใส่ OTP ให้ถูกต้อง");
@@ -144,11 +146,10 @@ export default function Page() {
           <button
             onClick={handleContinue}
             disabled={isDisabled}
-            className={`w-full py-3 rounded-lg font-medium transition-colors ${
-              isDisabled
+            className={`w-full py-3 rounded-lg font-medium transition-colors ${isDisabled
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-blue-900 text-white hover:bg-blue-800"
-            }`}
+              }`}
           >
             Continue
           </button>

@@ -106,6 +106,7 @@ export default function Page() {
       if (res.statusCode === 200) {
         const resLogin = await loginPassWord(data?.email, data?.password);
         Cookie.set("token", resLogin?.data.token);
+        Cookie.remove("signupData")
         // router.push("/home");
         window.location.href = "/home";
       } else {
