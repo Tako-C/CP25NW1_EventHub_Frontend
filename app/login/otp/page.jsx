@@ -17,12 +17,14 @@ export default function Page() {
 
   useEffect(() => {
     // const stored = sessionStorage.getItem("signinData");
-    const email = JSON.parse(Cookies.get("signinData"));
-    console.log(email);
-    if (email) setData(email);
+    const data = Cookies.get("signinData");
+    if (data !== null || data !== undefined) {
+      const email = JSON?.parse(Cookies.get("signinData"));
+      console.log(email);
+      if (email) setData(email);
+    }
   }, []);
 
-  // ✅ โหลด cooldown จาก localStorage
   useEffect(() => {
     if (!data) return;
     const key = `otp_end_time_${data}`;
@@ -34,7 +36,6 @@ export default function Page() {
     }
   }, [data]);
 
-  // ✅ นับถอยหลัง
   useEffect(() => {
     if (cooldown <= 0 || !data) return;
     const key = `otp_end_time_${data}`;
