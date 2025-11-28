@@ -268,6 +268,28 @@ const userCheckIn = async (path, eventId, userId) => {
   return data;
 };
 
+const getUserInfo = async (qrContent) => {
+  const token = getCookie('token');
+  const res = await fetch(`${url}/qr/user-info`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      qrContent: qrContent,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json();
+    return error;
+  }
+
+  const data = await res.json();
+  return data;
+};
+
 export {
   getData,
   loginPassWord,
@@ -283,4 +305,5 @@ export {
   userCheckIn,
   getListUserByEvent,
   getQrImage,
+  getUserInfo,
 };
