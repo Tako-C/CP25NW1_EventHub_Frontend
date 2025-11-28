@@ -267,7 +267,7 @@ export default function Navbar({ token }) {
         </div>
 
         <div className="hidden md:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4">
-          <div className="relative flex-1 group transition-all duration-300 focus-within:scale-105">
+          {/* <div className="relative flex-1 group transition-all duration-300 focus-within:scale-105">
             <input
               type="text"
               placeholder="Search for events..."
@@ -276,7 +276,7 @@ export default function Navbar({ token }) {
             <button className="absolute right-1.5 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors shadow-sm">
               <Search size={16} />
             </button>
-          </div>
+          </div> */}
         </div>
 
         <div className="hidden lg:flex items-center gap-6">
@@ -452,11 +452,11 @@ export default function Navbar({ token }) {
       >
         <div className="flex flex-col p-6 pt-20 gap-4">
           <div className="mb-4">
-            <input
+            {/* <input
               type="text"
               placeholder="Search"
               className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
-            />
+            /> */}
           </div>
 
           {menuItems.map((item) => (
