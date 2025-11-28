@@ -15,7 +15,6 @@ export default function Page() {
   const [isDisabled, setIsDisabled] = useState(true);
   const [errors, setErrors] = useState("");
 
-
   // useEffect(() => {
   //   const stored = JSON.parse(Cookie.get("signupData"));
   //   if (stored) setData(stored);
@@ -97,24 +96,25 @@ export default function Page() {
     }
   };
 
-const handleContinue = async () => {
+  const handleContinue = async () => {
     const otpCode = otp.join("");
-    
+
     if (otpCode.length === 6) {
       try {
         const res = await registerOTP(data?.email, otpCode, data?.password);
         if (res.statusCode === 200) {
           const resLogin = await loginPassWord(data?.email, data?.password);
           if (resLogin?.statusCode === 200 || resLogin?.data?.token) {
-             Cookie.set("token", resLogin?.data.token);
-             Cookie.remove("signupData");
-              const signupData = Cookie.get("signupDataFromRegis")
-             if (signupData) {
-                window.location.href = `/event/${signupData?.eventId}/registration`; 
-                Cookie.remove("signupDataFromRegis");
-                return;
-             }
-             window.location.href = "/home";
+            Cookie.set("token", resLogin?.data.token);
+            Cookie.remove("signupData");
+            const signupDataStr = Cookie.get("signupDataFromRegis");
+            if (signupDataStr) {
+              const signupData = JSON.parse(signupDataStr);
+              window.location.href = `/event/${signupData?.eventId}/registration`;
+              Cookie.remove("signupDataFromRegis");
+              return;
+            }
+            window.location.href = "/home";
           }
         } else {
           setErrors("รหัส OTP ไม่ถูกต้อง");
