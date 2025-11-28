@@ -23,7 +23,6 @@ export default function QRScannerCheckin() {
     message: '',
   });
   const [error, setError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [confirmData, setConfirmData] = useState(null);
   const [userImage, setUserImage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -57,7 +56,7 @@ export default function QRScannerCheckin() {
         if (user.imgPath) {
           fetchUserImage(user.imgPath);
         } else {
-          setUserImage(null);
+          fetchUserImage(null);
         }
       } else {
         throw new Error(res?.message || 'User not found');
@@ -74,7 +73,7 @@ export default function QRScannerCheckin() {
       const imgUrl = await getImage(`upload/users/${cleanPath}`);
       setUserImage(imgUrl);
     } catch (err) {
-      console.error('Error loading user image', err);
+      // console.error('Error loading user image', err);
     }
   };
 
@@ -259,13 +258,11 @@ export default function QRScannerCheckin() {
                     : 'bg-green-500/20 text-green-400'
                 }`}
               >
-                {error ? <X size={28} /> : <ScanLine size={28} />}
+                <ScanLine size={28} />
               </div>
-              <p className="font-semibold text-base mb-1">
-                {error ? 'Error' : 'Scan Complete'}
-              </p>
+              <p className="font-semibold text-base mb-1">'Scan Complete'</p>
               <p className="text-gray-400 text-xs mb-5 px-4">
-                {error ? errorMessage : 'Check-in process finished.'}
+                'Check-in process finished.'
               </p>
 
               <button
