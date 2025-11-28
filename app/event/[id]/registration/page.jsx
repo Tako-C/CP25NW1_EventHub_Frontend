@@ -1,18 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Calendar, MapPin, Info } from 'lucide-react';
-import { getData, regisEvents, getDataNoToken } from '@/libs/fetch';
-import { useParams } from 'next/navigation';
-import SuccessPage from '@/components/Notification/Success_Regis_Page';
-import { FormatDate } from '@/utils/format';
+import { useState, useEffect } from "react";
+import { Calendar, MapPin, Info } from "lucide-react";
+import { getData, regisEvents, getDataNoToken } from "@/libs/fetch";
+import { useParams } from "next/navigation";
+import SuccessPage from "@/components/Notification/Success_Regis_Page";
+import { FormatDate } from "@/utils/format";
+import Cookies from "js-cookie";
 
 export default function ExpoRegisterForm() {
   const { id } = useParams();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
+    firstName: "",
+    lastName: "",
+    email: "",
     products: [],
     source: [],
     agreeTerms: false,
@@ -41,8 +42,13 @@ export default function ExpoRegisterForm() {
   };
 
   useEffect(() => {
-    fetchData();
-    fetchEventDetail();
+    const token = Cookies.get("token");
+    console.log(token)
+    if (token) {
+      fetchData();
+    }
+      fetchEventDetail();
+
   }, []);
 
   const handleInputChange = (e) => {
@@ -68,14 +74,14 @@ export default function ExpoRegisterForm() {
 
   const handleSubmit = async () => {
     if (!formData.firstName || !formData.lastName || !formData.email) {
-      alert('Please fill in all required fields');
+      alert("Please fill in all required fields");
       return;
     }
     if (!formData.agreeTerms) {
-      alert('Please agree to the terms');
+      alert("Please agree to the terms");
       return;
     }
-    console.log('Form submitted:', formData);
+    console.log("Form submitted:", formData);
     const res = await regisEvents(`events/${id}/register`);
     console.log(res);
     setIsSuccess(true);
@@ -110,7 +116,7 @@ export default function ExpoRegisterForm() {
                     Register for
                   </h1>
                   <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent mt-2 text-center">
-                    {eventDetail?.eventName || '-'}
+                    {eventDetail?.eventName || "-"}
                   </h2>
                 </div>
 
@@ -215,7 +221,7 @@ export default function ExpoRegisterForm() {
                   that applies (กลุ่มสินค้าที่ท่านสนใจหาในงาน - เลือกได้หลายตัว
                 </label>
                 <div className="space-y-3">
-                  {['Multiple 1', 'Multiple 2', 'Multiple 3', 'Multiple 4'].map(
+                  {["Multiple 1", "Multiple 2", "Multiple 3", "Multiple 4"].map(
                     (option) => (
                       <label
                         key={option}
@@ -225,7 +231,7 @@ export default function ExpoRegisterForm() {
                           type="checkbox"
                           checked={formData.products.includes(option)}
                           onChange={() =>
-                            handleCheckboxChange('products', option)
+                            handleCheckboxChange("products", option)
                           }
                           className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600"
                         />
@@ -243,7 +249,7 @@ export default function ExpoRegisterForm() {
                   How did you hear about the show?
                 </label>
                 <div className="space-y-3">
-                  {['Multiple 1', 'Multiple 2', 'Multiple 3', 'Multiple 4'].map(
+                  {["Multiple 1", "Multiple 2", "Multiple 3", "Multiple 4"].map(
                     (option) => (
                       <label
                         key={option}
@@ -253,7 +259,7 @@ export default function ExpoRegisterForm() {
                           type="checkbox"
                           checked={formData.source.includes(option)}
                           onChange={() =>
-                            handleCheckboxChange('source', option)
+                            handleCheckboxChange("source", option)
                           }
                           className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600"
                         />
@@ -279,7 +285,7 @@ export default function ExpoRegisterForm() {
                   className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600 mt-1"
                 />
                 <label className="ml-3 text-gray-700">
-                  By checking this box, I hereby agree that my{' '}
+                  By checking this box, I hereby agree that my{" "}
                   <span className="underline">information</span> will be shared
                   to our website.
                 </label>
