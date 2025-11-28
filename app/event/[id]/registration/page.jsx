@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import { Calendar, MapPin, Info } from "lucide-react";
 import { getData, regisEvents, getDataNoToken } from "@/libs/fetch";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import SuccessPage from "@/components/Notification/Success_Regis_Page";
 import { FormatDate } from "@/utils/format";
 import Cookies from "js-cookie";
 
 export default function ExpoRegisterForm() {
+  const token = Cookies.get("token");
+  const router = useRouter();
   const { id } = useParams();
   const [formData, setFormData] = useState({
     firstName: "",
@@ -42,13 +44,10 @@ export default function ExpoRegisterForm() {
   };
 
   useEffect(() => {
-    const token = Cookies.get("token");
-    console.log(token)
     if (token) {
       fetchData();
     }
-      fetchEventDetail();
-
+    fetchEventDetail();
   }, []);
 
   const handleInputChange = (e) => {
@@ -81,10 +80,23 @@ export default function ExpoRegisterForm() {
       alert("Please agree to the terms");
       return;
     }
-    console.log("Form submitted:", formData);
-    const res = await regisEvents(`events/${id}/register`);
-    console.log(res);
-    setIsSuccess(true);
+    if (!token) {
+      console.log(formData);
+      router.push("/sign-up");
+      const signupData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        eventId: id
+      }
+      Cookies.set("signupDataFromRegis", JSON.stringify(signupData))
+    }
+    if (token) {
+      console.log("Form submitted:", formData);
+      const res = await regisEvents(`events/${id}/register`);
+      console.log(res);
+      setIsSuccess(true);
+    }
   };
 
   return (
