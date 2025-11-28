@@ -24,7 +24,6 @@ export default function Page() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // ✅ โหลดค่า cooldown จาก localStorage เมื่อเข้าเพจ
   useEffect(() => {
     if (!formData.email) return;
     const key = `otp_end_time_${formData.email}`;
@@ -36,7 +35,6 @@ export default function Page() {
     }
   }, [formData.email]);
 
-  // ✅ นับเวลาลดลงทุกวินาที
   useEffect(() => {
     if (cooldown <= 0 || !formData.email) return;
     const key = `otp_end_time_${formData.email}`;
@@ -52,7 +50,20 @@ export default function Page() {
     return () => clearInterval(timer);
   }, [cooldown, formData.email]);
 
-  // ✅ ตรวจแต่ละช่องแบบเรียลไทม์
+  useEffect(() => {
+    const raw = Cookies.get("signupDataFromRegis");
+    if (raw) {
+      const data = JSON.parse(raw);
+      console.log(data);
+      setFormData((prev) => ({
+        ...prev,
+        firstName: data?.firstName,
+        lastName: data?.lastName,
+        email: data?.email,
+      }));
+    }
+  }, []);
+
   const validateField = (field, value) => {
     switch (field) {
       case "firstName":
@@ -79,7 +90,6 @@ export default function Page() {
     setFormData({ ...formData, [field]: value });
   };
 
-  // ✅ ตรวจทั้งฟอร์มก่อน submit
   const validateForm = () => {
     const newErrors = {};
     Object.keys(formData).forEach((key) => {
@@ -90,71 +100,70 @@ export default function Page() {
     return Object.keys(newErrors).length === 0;
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault(); 
-  
-  const email = formData?.email;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!validateForm() || !agreeTerms) {
-    if (!agreeTerms) {
-      console.log("Please agree to the Terms & Conditions.");
-    }
-    return;
-  }
+    const email = formData?.email;
 
-  const key = `otp_end_time_${email}`;
-
-  try {
-    setLoading(true);
-
-    Cookies.set("signupData", JSON.stringify(formData), {
-      secure: true,
-      sameSite: "strict",
-    });
-
-    const savedEnd = localStorage.getItem(key);
-    const remaining = savedEnd
-      ? Math.floor((savedEnd - Date.now()) / 1000)
-      : 0;
-
-    if (remaining > 0) {
-      setCooldown(remaining);
-      router.push("/sign-up/verify-otp");
+    if (!validateForm() || !agreeTerms) {
+      if (!agreeTerms) {
+        console.log("Please agree to the Terms & Conditions.");
+      }
       return;
     }
 
-    const endTime = Date.now() + 60 * 1000;
-    localStorage.setItem(key, endTime);
-    setCooldown(60);
+    const key = `otp_end_time_${email}`;
 
-    const res = await registerRequest(
-      formData?.firstName,
-      formData?.lastName,
-      formData?.email,
-      formData?.password
-    );
+    try {
+      setLoading(true);
 
-    if (res.statusCode === 200) {
-      router.push("/sign-up/verify-otp");
-    } else if (res.statusCode === 400) {
-      localStorage.removeItem(key); 
-      setCooldown(0);
-      window.alert("This Email is already registered!");
-    } else {
+      Cookies.set("signupData", JSON.stringify(formData), {
+        secure: true,
+        sameSite: "strict",
+      });
+
+      const savedEnd = localStorage.getItem(key);
+      const remaining = savedEnd
+        ? Math.floor((savedEnd - Date.now()) / 1000)
+        : 0;
+
+      if (remaining > 0) {
+        setCooldown(remaining);
+        router.push("/sign-up/verify-otp");
+        return;
+      }
+
+      const endTime = Date.now() + 60 * 1000;
+      localStorage.setItem(key, endTime);
+      setCooldown(60);
+
+      const res = await registerRequest(
+        formData?.firstName,
+        formData?.lastName,
+        formData?.email,
+        formData?.password
+      );
+
+      if (res.statusCode === 200) {
+        router.push("/sign-up/verify-otp");
+      } else if (res.statusCode === 400) {
+        localStorage.removeItem(key);
+        setCooldown(0);
+        window.alert("This Email is already registered!");
+      } else {
+        localStorage.removeItem(key);
+        setCooldown(0);
+        window.alert(`Registration failed: ${res.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error during registration:", error);
       localStorage.removeItem(key);
       setCooldown(0);
-      window.alert(`Registration failed: ${res.message || "Unknown error"}`);
+      window.alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
-      
-  } catch (error) {
-    console.error("Error during registration:", error);
-    localStorage.removeItem(key); 
-    setCooldown(0);
-    window.alert("An unexpected error occurred. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   const handleSignIn = () => {
     router.push("/login");
   };
@@ -178,7 +187,7 @@ const handleSubmit = async (e) => {
               id="firstName"
               type="text"
               placeholder="Enter your first name"
-              value={formData.fullName}
+              value={formData.firstName}
               onChange={(e) => handleInputChange("firstName", e.target.value)}
               className={`w-full px-4 py-3 border ${
                 errors.firstName ? "border-red-500" : "border-gray-300"
@@ -200,7 +209,7 @@ const handleSubmit = async (e) => {
               id="lastName"
               type="text"
               placeholder="Enter your last name"
-              value={formData.fullName}
+              value={formData.lastName}
               onChange={(e) => handleInputChange("lastName", e.target.value)}
               className={`w-full px-4 py-3 border ${
                 errors.lastName ? "border-red-500" : "border-gray-300"

@@ -32,7 +32,6 @@ export default function Page() {
     }
   }, []);
 
-  // ✅ โหลด cooldown จาก localStorage
   useEffect(() => {
     if (!data?.email) return;
     const key = `otp_end_time_${data.email}`;
@@ -44,7 +43,6 @@ export default function Page() {
     }
   }, [data?.email]);
 
-  // ✅ นับถอยหลัง
   useEffect(() => {
     if (cooldown <= 0 || !data?.email) return;
     const key = `otp_end_time_${data.email}`;
@@ -99,18 +97,31 @@ export default function Page() {
     }
   };
 
-  const handleContinue = async () => {
+const handleContinue = async () => {
     const otpCode = otp.join("");
+    
     if (otpCode.length === 6) {
-      const res = await registerOTP(data?.email, otpCode, data?.password);
-      if (res.statusCode === 200) {
-        const resLogin = await loginPassWord(data?.email, data?.password);
-        Cookie.set("token", resLogin?.data.token);
-        Cookie.remove("signupData")
-        // router.push("/home");
-        window.location.href = "/home";
-      } else {
-        setErrors("ใส่ OTP ให้ถูกต้อง");
+      try {
+        const res = await registerOTP(data?.email, otpCode, data?.password);
+        if (res.statusCode === 200) {
+          const resLogin = await loginPassWord(data?.email, data?.password);
+          if (resLogin?.statusCode === 200 || resLogin?.data?.token) {
+             Cookie.set("token", resLogin?.data.token);
+             Cookie.remove("signupData");
+              const signupData = Cookie.get("signupDataFromRegis")
+             if (signupData) {
+                window.location.href = `/event/${signupData?.eventId}/registration`; 
+                Cookie.remove("signupDataFromRegis");
+                return;
+             }
+             window.location.href = "/home";
+          }
+        } else {
+          setErrors("รหัส OTP ไม่ถูกต้อง");
+        }
+      } catch (error) {
+        console.error("Error confirming OTP:", error);
+        setErrors("เกิดข้อผิดพลาด กรุณาลองใหม่");
       }
     }
   };
