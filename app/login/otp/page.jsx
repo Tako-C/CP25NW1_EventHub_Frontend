@@ -18,7 +18,7 @@ export default function Page() {
   useEffect(() => {
     // const stored = sessionStorage.getItem("signinData");
     const data = Cookies.get("signinData");
-    if (data !== null || data !== undefined) {
+    if (data) {
       const email = JSON?.parse(Cookies.get("signinData"));
       console.log(email);
       if (email) setData(email);
