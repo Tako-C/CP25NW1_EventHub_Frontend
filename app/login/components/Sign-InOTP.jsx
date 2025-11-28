@@ -15,7 +15,6 @@ export default function SignInPageOTP({
   const [cooldown, setCooldown] = useState(0);
   const [errors, setErrors] = useState({});
 
-  // ✅ โหลดค่า cooldown จาก localStorage เมื่อเข้าเพจ
   useEffect(() => {
     if (!email) return;
     const key = `otp_end_time_${email}`;
@@ -27,7 +26,6 @@ export default function SignInPageOTP({
     }
   }, [email]);
 
-  // ✅ นับเวลาลดลงทุกวินาที
   useEffect(() => {
     if (cooldown <= 0 || !email) return;
     const key = `otp_end_time_${email}`;
@@ -44,42 +42,42 @@ export default function SignInPageOTP({
   }, [cooldown, email]);
 
   const handleSubmit = async (e) => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
-    const key = `otp_end_time_${email}`;
+    const OTP_COOLDOWN_SEC = 60;
+    const STORAGE_KEY = `otp_end_time_${email}`;
+    const now = Date.now();
 
     try {
-      Cookies.set("signinData", JSON.stringify(email));
-
-      const savedEnd = localStorage.getItem(key);
-      const remaining = savedEnd
-        ? Math.floor((savedEnd - Date.now()) / 1000)
-        : 0;
-
-      if (remaining > 0) {
+      const savedEndTime = localStorage.getItem(STORAGE_KEY);
+      if (savedEndTime && savedEndTime > now) {
+        const remaining = Math.floor((savedEndTime - now) / 1000);
         setCooldown(remaining);
         router.push("/login/otp");
         return;
       }
 
-      const endTime = Date.now() + 60 * 1000;
-      localStorage.setItem(key, endTime);
-      setCooldown(60);
-
       const res = await loginOTPRequest(email);
 
       if (res.statusCode === 200) {
+        const newEndTime = Date.now() + OTP_COOLDOWN_SEC * 1000;
+        localStorage.setItem(STORAGE_KEY, newEndTime);
+
+        setCooldown(OTP_COOLDOWN_SEC);
         Cookies.set("signinData", JSON.stringify(email));
+
         router.push("/login/otp");
       } else if (res.statusCode === 500) {
         window.alert("This email has not been registered.");
+      } else {
+        throw new Error(`Unexpected status code: ${res.statusCode}`);
       }
     } catch (error) {
       console.error("Error during login:", error);
-      localStorage.removeItem(key);
+
+      localStorage.removeItem(STORAGE_KEY);
       setCooldown(0);
+
       window.alert("An unexpected error occurred. Please try again.");
     }
   };
@@ -93,7 +91,6 @@ export default function SignInPageOTP({
   };
   if (!isOpen) return null;
 
-  // ✅ ตรวจแต่ละช่องแบบเรียลไทม์
   const validateField = (field, value) => {
     switch (field) {
       case "email":
@@ -106,7 +103,6 @@ export default function SignInPageOTP({
     }
   };
 
-  // ✅ ตรวจทั้งฟอร์มก่อน submit
   const validateForm = () => {
     const newErrors = {};
     const err = validateField("email", email);
