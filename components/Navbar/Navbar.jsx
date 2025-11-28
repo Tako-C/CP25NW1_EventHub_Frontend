@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
   User,
@@ -15,15 +15,15 @@ import {
   ScanLine,
   LayoutDashboard,
   Shield,
-} from 'lucide-react';
-import Cookies from 'js-cookie';
-import { getData } from '@/libs/fetch';
+} from "lucide-react";
+import Cookies from "js-cookie";
+import { getData } from "@/libs/fetch";
 
 export default function Navbar({ token }) {
   const iconMap = {
     Home: <HomeIcon size={18} />,
     Events: <Calendar size={18} />,
-    'Check-in': <ScanLine size={18} />,
+    "Check-in": <ScanLine size={18} />,
     Admin: <Shield size={18} />,
     Organizer: <Briefcase size={18} />,
     Staff: <Users size={18} />,
@@ -35,9 +35,13 @@ export default function Navbar({ token }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isStaffOpen, setIsStaffOpen] = useState(false);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
+
+  // เพิ่ม state สำหรับจัดการ dropdown ในมือถือ
+  const [mobileActiveDropdown, setMobileActiveDropdown] = useState(null);
+
   const [user, setUser] = useState();
   const [data, setData] = useState();
-  const [activeRole, setActiveRole] = useState('default');
+  const [activeRole, setActiveRole] = useState("default");
 
   const profileDropdownRef = useRef(null);
   const staffDropdownRef = useRef(null);
@@ -60,7 +64,7 @@ export default function Navbar({ token }) {
 
   const calculateActiveRole = (userData, eventData) => {
     if (!userData) {
-      return 'default';
+      return "default";
     }
 
     const rolePriority = {
@@ -74,7 +78,7 @@ export default function Navbar({ token }) {
 
     let highestRole = userData.role.roleName.toLowerCase().trim();
     if (rolePriority[highestRole] === undefined) {
-      highestRole = 'default';
+      highestRole = "default";
     }
 
     if (eventData && Array.isArray(eventData)) {
@@ -101,8 +105,8 @@ export default function Navbar({ token }) {
 
   const fetchData = async () => {
     if (token) {
-      const resUser = await getData('users/me/profile');
-      const resEventRegis = await getData('users/me/registered-events');
+      const resUser = await getData("users/me/profile");
+      const resEventRegis = await getData("users/me/registered-events");
 
       setUser(resUser?.data);
       let mergeData = { user: resUser?.data, event: resEventRegis?.data };
@@ -135,9 +139,9 @@ export default function Navbar({ token }) {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -147,39 +151,40 @@ export default function Navbar({ token }) {
       setActiveRole(calculatedRole);
       // console.log("Calculated Active Role:", calculatedRole);
     } else {
-      setActiveRole('default');
+      setActiveRole("default");
     }
   }, [user, data]);
 
   const handleProfileClick = () => {
     setIsProfileOpen(false);
-    handleNavigation('/profile');
+    handleNavigation("/profile");
   };
 
   const handleSignOut = () => {
-    Cookies.remove('token');
+    Cookies.remove("token");
     setIsProfileOpen(false);
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
 
   const handleNavigation = (path) => {
     setIsMenuOpen(false);
     setIsStaffOpen(false);
     setIsOrganizerOpen(false);
+    setMobileActiveDropdown(null);
 
-    if (path.startsWith('#')) {
-      if (pathName !== '/' && pathName !== '/home') {
+    if (path.startsWith("#")) {
+      if (pathName !== "/" && pathName !== "/home") {
         router.push(`/home`);
         setTimeout(() => {
           const element = document.querySelector(path);
           if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
           }
         }, 100);
       } else {
         const element = document.querySelector(path);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }
     } else {
@@ -189,37 +194,37 @@ export default function Navbar({ token }) {
   };
 
   const getMenuItems = () => {
-    if (activeRole === 'default') {
+    if (activeRole === "default") {
       return [
-        { label: 'Home', path: '#home' },
-        { label: 'Events', path: '#events' },
+        { label: "Home", path: "#home" },
+        { label: "Events", path: "#events" },
       ];
     }
 
     switch (activeRole) {
-      case 'admin':
+      case "admin":
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
-          { label: 'Admin', path: '/admin' },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "#events" },
+          { label: "Admin", path: "/admin" },
         ];
-      case 'organizer':
+      case "organizer":
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
-          { label: 'Check-in', path: '/staff', hasDropdown: true },
-          { label: 'Dashboard', path: '/organizer/dashboard' },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "#events" },
+          { label: "Check-in", path: "/staff", hasDropdown: true },
+          { label: "Dashboard", path: "/organizer/dashboard" },
         ];
-      case 'staff':
+      case "staff":
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
-          { label: 'Check-in', path: '/staff', hasDropdown: true },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "#events" },
+          { label: "Check-in", path: "/staff", hasDropdown: true },
         ];
-      case 'user':
+      case "user":
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "#events" },
           // { label: "Reward", path: "/reward" },
         ];
       // case "visitor":
@@ -230,8 +235,8 @@ export default function Navbar({ token }) {
       //   ];
       default:
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "#events" },
         ];
     }
   };
@@ -239,12 +244,12 @@ export default function Navbar({ token }) {
   const menuItems = getMenuItems();
 
   const staffOptions = [
-    { label: 'Scan QR', path: '/staff/event/scan' },
-    { label: 'Manual Check-in', path: '/staff/event/check-in' },
+    { label: "Scan QR", path: "/staff/event/scan" },
+    { label: "Manual Check-in", path: "/staff/event/check-in" },
   ];
 
   const organizerOptions = [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
+    { label: "Dashboard", path: "/organizer/dashboard" },
     // { label: 'My Events', path: '/organizer/create' },
     // { label: 'My Feedback', path: '/organizer/events' },
   ];
@@ -254,11 +259,11 @@ export default function Navbar({ token }) {
       <nav className="fixed top-0 left-0 w-full bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b shadow-md z-50">
         <div
           className="flex items-center gap-2 cursor-pointer z-50"
-          onClick={() => handleNavigation('/login')}
+          onClick={() => handleNavigation("/login")}
         >
           <div
             className="flex items-center gap-4 cursor-pointer z-50 group"
-            onClick={() => handleNavigation('/login')}
+            onClick={() => handleNavigation("/login")}
           >
             <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 tracking-tight">
               EXPO HUB
@@ -282,7 +287,7 @@ export default function Navbar({ token }) {
         <div className="hidden lg:flex items-center gap-6">
           {menuItems.map((item) => {
             // 1. dropdown staff
-            if (item.label === 'Check-in' && item.hasDropdown) {
+            if (item.label === "Check-in" && item.hasDropdown) {
               return (
                 <div
                   key={item.label}
@@ -318,7 +323,7 @@ export default function Navbar({ token }) {
             }
 
             // 2. dropdown organizer
-            if (item.label === 'Organizer' && item.hasDropdown) {
+            if (item.label === "Organizer" && item.hasDropdown) {
               return (
                 <div
                   key={item.label}
@@ -370,7 +375,7 @@ export default function Navbar({ token }) {
 
           {!user ? (
             <button
-              onClick={() => handleNavigation('/login')}
+              onClick={() => handleNavigation("/login")}
               className="text-gray-700 hover:text-purple-600 transition whitespace-nowrap"
             >
               Join | Log in
@@ -447,7 +452,7 @@ export default function Navbar({ token }) {
 
       <div
         className={`lg:hidden fixed top-0 right-0 h-full w-64 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-          isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex flex-col p-6 pt-20 gap-4">
@@ -459,27 +464,72 @@ export default function Navbar({ token }) {
             /> */}
           </div>
 
-          {menuItems.map((item) => (
-            <button
-              key={item.label}
-              onClick={() => handleNavigation(item.path)}
-              className="text-left text-gray-700 hover:text-purple-600 py-2 px-4 hover:bg-purple-50 rounded-lg transition"
-            >
-              {item.label}
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            if (item.hasDropdown) {
+              const isExpanded = mobileActiveDropdown === item.label;
+              const subItems =
+                item.label === "Check-in"
+                  ? staffOptions
+                  : item.label === "Organizer"
+                  ? organizerOptions
+                  : [];
+
+              return (
+                <div key={item.label} className="flex flex-col">
+                  <button
+                    onClick={() =>
+                      setMobileActiveDropdown(isExpanded ? null : item.label)
+                    }
+                    className="flex items-center justify-between w-full text-left text-gray-700 hover:text-purple-600 py-2 px-4 hover:bg-purple-50 rounded-lg transition"
+                  >
+                    <span>{item.label}</span>
+                    <ChevronDown
+                      size={16}
+                      className={`transform transition-transform duration-200 ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {isExpanded && (
+                    <div className="flex flex-col bg-gray-50 rounded-lg ml-4 mt-1 border-l-2 border-purple-200">
+                      {subItems.map((sub) => (
+                        <button
+                          key={sub.label}
+                          onClick={() => handleNavigation(sub.path)}
+                          className="w-full text-left text-sm text-gray-600 hover:text-purple-600 py-2 px-4 hover:bg-purple-100 rounded-r-lg transition"
+                        >
+                          {sub.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <button
+                key={item.label}
+                onClick={() => handleNavigation(item.path)}
+                className="text-left text-gray-700 hover:text-purple-600 py-2 px-4 hover:bg-purple-50 rounded-lg transition"
+              >
+                {item.label}
+              </button>
+            );
+          })}
 
           <div className="mt-4 pt-4 border-t border-gray-200">
             {!user ? (
               <button
-                onClick={() => handleNavigation('/login')}
+                onClick={() => handleNavigation("/login")}
                 className="w-full text-center bg-purple-600 text-white py-2 px-4 rounded-full hover:bg-purple-700 transition"
               >
                 Join | Log in
               </button>
             ) : (
               <button
-                onClick={() => handleNavigation('/profile')}
+                onClick={() => handleNavigation("/profile")}
                 className="w-full flex items-center gap-3 text-gray-700 hover:text-purple-600 py-2 px-4 hover:bg-purple-50 rounded-lg transition"
               >
                 <span className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
