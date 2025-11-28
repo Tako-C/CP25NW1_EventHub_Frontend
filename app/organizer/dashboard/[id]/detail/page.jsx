@@ -1,99 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, Input, Table, Tag, Skeleton } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
-import dynamic from 'next/dynamic';
-import { getData, getListUser, getListUserByEvent } from '@/libs/fetch';
+import { Card, Input, Table } from 'antd';
+import { SearchOutlined, UserOutlined, MailOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { getData, getListUserByEvent } from '@/libs/fetch';
 import { useParams } from 'next/navigation';
 import { FormatDate } from '@/utils/format';
-
-// const GenderPieChart = dynamic(() => import('./components/DashboardCharts').then(mod => mod.GenderPieChart), {
-//   ssr: false,
-//   loading: () => <Skeleton active paragraph={{ rows: 6 }} />
-// });
-
-// const AgeBarChart = dynamic(() => import('./components/DashboardCharts').then(mod => mod.AgeBarChart), {
-//   ssr: false,
-//   loading: () => <Skeleton active paragraph={{ rows: 6 }} />
-// });
 
 export default function ExhibitionDashboard() {
   const { id } = useParams();
   const [data, setData] = useState([]);
+  const [searchText, setSearchText] = useState('');
+
   const totalCheckedIn =
     data?.filter((item) => item.status === 'check_in').length || 0;
 
-  const [searchText, setSearchText] = useState('');
-  const genderConfig = {
-    data: [
-      { type: 'Male', value: 68 },
-      { type: 'Female', value: 32 },
-    ],
-    angleField: 'value',
-    colorField: 'type',
-    color: ['#4F46E5', '#A855F7'],
-    radius: 0.8,
-    label: {
-      type: 'inner',
-      offset: '-30%',
-      content: '{percentage}',
-      style: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        fill: '#fff',
-      },
-    },
-    legend: {
-      position: 'bottom',
-      itemName: {
-        style: {
-          fontSize: 14,
-          fontWeight: 'bold',
-        },
-      },
-    },
-    height: 300,
-    statistic: null,
-  };
-  const ageConfig = {
-    data: [
-      { age: '0-5y', value: 12 },
-      { age: '5-10y', value: 16 },
-      { age: '10-15y', value: 17 },
-      { age: '15-20y', value: 17 },
-      { age: '20-25y', value: 14 },
-      { age: '25-30y', value: 10 },
-      { age: '30-35y', value: 6 },
-      { age: '35+y', value: 9 },
-    ],
-    xField: 'age',
-    yField: 'value',
-    color: '#A855F7',
-    label: {
-      position: 'top',
-      style: {
-        fill: '#000',
-        fontSize: 12,
-        fontWeight: 'bold',
-      },
-    },
-    xAxis: {
-      label: {
-        autoHide: false,
-        autoRotate: false,
-      },
-    },
-    height: 300,
-  };
-
-  const occupationData = [
-    { name: 'อาชีพ 1', value: 50 },
-    { name: 'อาชีพ 2', value: 40 },
-    { name: 'อาชีพ 3', value: 30 },
-    { name: 'อาชีพ 4', value: 20 },
-    { name: 'อาชีพ 5', value: 10 },
-  ];
+  const filteredData = data.filter((item) => 
+    String(item.name || '').toLowerCase().includes(searchText.toLowerCase())
+  );
 
   const columns = [
     {
@@ -106,44 +30,23 @@ export default function ExhibitionDashboard() {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
-      filteredValue: [searchText],
-      onFilter: (value, record) => {
-        return String(record.name).toLowerCase().includes(value.toLowerCase());
-      },
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
     },
-    // {
-    //   title: "Gender",
-    //   dataIndex: "gender",
-    //   key: "gender",
-    // },
-    // {
-    //   title: "Age",
-    //   dataIndex: "age",
-    //   key: "age",
-    // },
-    // {
-    //   title: "Date",
-    //   dataIndex: "date",
-    //   key: "date",
-    // },
     {
       title: 'Registration Date',
       dataIndex: 'registration_date',
       key: 'registration_date',
-      render: (date) => {
-        return FormatDate(date, 'datetime');
-      },
+      render: (date) => FormatDate(date, 'datetime'),
     },
     {
       title: 'Check-in Date',
       dataIndex: 'check_in_at',
       key: 'check_in_at',
-      render: (date, record) => {
+      render: (date) => {
         if (date) {
           return (
             <span className="text-green-600 font-medium">
@@ -166,9 +69,6 @@ export default function ExhibitionDashboard() {
         res?.data?.id
       );
 
-      console.log('res', res?.data);
-      console.log('resListUser', resListUser?.data);
-
       if (Array.isArray(resListUser?.data)) {
         const formattedData = resListUser.data.map((item, index) => ({
           ...item,
@@ -190,137 +90,108 @@ export default function ExhibitionDashboard() {
   }, []);
 
   return (
-    <div
-      style={{
-        padding: '24px',
-        backgroundColor: '#f5f5f5',
-        minHeight: '100vh',
-      }}
-      className="max-w-7xl mx-auto"
-    >
-      <h1
-        style={{
-          fontSize: '32px',
-          fontWeight: 'bold',
-          color: '#7C3AED',
-          marginBottom: '24px',
-        }}
-      >
+    <div className="min-h-screen bg-[#f5f5f5] p-4 md:p-6 max-w-7xl mx-auto">
+      <h1 className="text-2xl md:text-3xl font-bold text-[#7C3AED] mb-6">
         Exhibition Name
       </h1>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
-        }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <Card
-          variant="outlined"
-          style={{ borderRadius: '12px', borderWidth: '2px' }}
+          variant="borderless" 
+          className="rounded-xl border-2 border-[#f0f0f0] shadow-sm"
         >
-          <div
-            style={{
-              fontWeight: 'bold',
-              fontSize: '18px',
-              marginBottom: '16px',
-            }}
-          >
+          <div className="font-bold text-base md:text-lg mb-4 text-gray-700">
             Total Registration
           </div>
-          <div
-            style={{
-              fontSize: '48px',
-              fontWeight: 'bold',
-              color: '#6366F1',
-              textAlign: 'right',
-            }}
-          >
+          <div className="text-4xl md:text-5xl font-bold text-[#6366F1] text-right">
             {data?.length || 0}
           </div>
         </Card>
-        {/* <Card
-          variant="outlined"
-          style={{ borderRadius: '12px', borderWidth: '2px' }}
-        >
-          <div
-            style={{
-              fontWeight: 'bold',
-              fontSize: '18px',
-              marginBottom: '16px',
-            }}
-          >
-            Total Exhibitors
-          </div>
-          <div
-            style={{
-              fontSize: '48px',
-              fontWeight: 'bold',
-              color: '#6366F1',
-              textAlign: 'right',
-            }}
-          >
-            0
-          </div>
-        </Card> */}
+
         <Card
-          variant="outlined"
-          style={{ borderRadius: '12px', borderWidth: '2px' }}
+          variant="borderless"
+          className="rounded-xl border-2 border-[#f0f0f0] shadow-sm"
         >
-          <div
-            style={{
-              fontWeight: 'bold',
-              fontSize: '18px',
-              marginBottom: '16px',
-            }}
-          >
+          <div className="font-bold text-base md:text-lg mb-4 text-gray-700">
             Total Checked-in
           </div>
-          <div
-            style={{
-              fontSize: '48px',
-              fontWeight: 'bold',
-              color: '#6366F1',
-              textAlign: 'right',
-            }}
-          >
+          <div className="text-4xl md:text-5xl font-bold text-[#6366F1] text-right">
             {totalCheckedIn}
           </div>
         </Card>
       </div>
 
-      {/* <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        
-        <Card title="Gender Visitor" variant="outlined" style={{ borderRadius: '12px', borderWidth: '2px' }}>
-          <GenderPieChart />
-        </Card>
-
-        <Card title="Age" variant="outlined" style={{ borderRadius: '12px', borderWidth: '2px' }}>
-           <AgeBarChart />
-        </Card>
-
-      </div> */}
-
       <Card
-        title="Participants"
-        variant="outlined"
-        style={{ borderRadius: '12px', borderWidth: '2px' }}
+        variant="borderless" 
+        title={<span className="text-lg font-semibold">Participants</span>}
+        className="rounded-xl border-2 border-[#f0f0f0] shadow-sm"
+        styles={{ body: { padding: '24px' } }} 
       >
-        <Input
-          placeholder="Search ..."
-          prefix={<SearchOutlined />}
-          style={{ marginBottom: '16px', width: '250px', borderRadius: '20px' }}
-          onChange={(e) => setSearchText(e.target.value)}
-          value={searchText}
-        />
-        <Table
-          columns={columns}
-          dataSource={data}
-          pagination={false}
-          bordered
-        />
+        <div className="mb-4">
+          <Input
+            placeholder="Search name..."
+            prefix={<SearchOutlined />}
+            className="w-full md:w-[250px] rounded-full"
+            onChange={(e) => setSearchText(e.target.value)}
+            value={searchText}
+            size="large"
+          />
+        </div>
+
+        <div className="hidden md:block">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            pagination={{ pageSize: 10 }}
+            bordered
+          />
+        </div>
+
+        <div className="md:hidden space-y-4">
+          {filteredData.length > 0 ? (
+            filteredData.map((item) => (
+              <div 
+                key={item.key} 
+                className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col gap-3"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+                      <UserOutlined className="text-purple-500" />
+                      {item.name}
+                    </h3>
+                    <p className="text-gray-500 text-sm flex items-center gap-2 mt-1">
+                      <MailOutlined /> {item.email}
+                    </p>
+                  </div>
+                  <span className="text-gray-400 text-xs font-mono">#{item.no}</span>
+                </div>
+
+                <div className="border-t border-gray-200 pt-3 flex flex-col gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Registered:</span>
+                    <span>{FormatDate(item.registration_date, 'datetime')}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Check-in:</span>
+                    {item.check_in_at ? (
+                      <span className="text-green-600 font-medium flex items-center gap-1">
+                        <CheckCircleOutlined />
+                        {FormatDate(item.check_in_at, 'datetime')}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              No participants found
+            </div>
+          )}
+        </div>
       </Card>
     </div>
   );

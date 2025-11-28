@@ -23,17 +23,17 @@ export default function Page() {
   useEffect(() => {
     fetchData();
   }, []);
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="relative h-[600px] bg-gradient-to-r from-gray-200 to-gray-300">
 
+  return (
+    <div className="min-h-screen bg-gray-50 mt-20">
+
+      <div className="relative h-auto md:h-[600px] bg-gradient-to-r from-gray-200 to-gray-300">
+        
         <div className="absolute inset-0 opacity-40">
           {eventData && (
             <div className="w-full h-full relative">
               <EventCardImage
-                imageCard={
-                  eventData?.images?.imgDetail
-                }
+                imageCard={eventData?.images?.imgDetail}
                 eventName={eventData?.eventName}
               />
             </div>
@@ -41,8 +41,10 @@ export default function Page() {
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-          <div className="flex items-center justify-center h-full gap-8">
-            <div className="bg-white rounded-3xl shadow-2xl w-96 h-96 p-4 flex-shrink-0">
+
+          <div className="flex flex-col md:flex-row items-center justify-center h-full gap-8 py-10 md:py-0">
+            
+            <div className="bg-white rounded-3xl shadow-2xl w-72 h-72 md:w-96 md:h-96 p-4 flex-shrink-0">
               <div className="w-full h-full bg-gray-100 rounded-2xl overflow-hidden relative">
                 <EventCardImage
                   imageCard={eventData?.images?.imgDetail}
@@ -51,23 +53,23 @@ export default function Page() {
               </div>
             </div>
 
-            <div className="flex flex-col items-center space-y-6">
-              <div className="bg-white rounded-3xl shadow-2xl p-10 text-center max-w-lg">
-                <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            <div className="flex flex-col items-center space-y-6 w-full md:w-auto">
+              <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center w-full max-w-lg">
+                <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4 md:mb-6">
                   {eventData?.eventName || "null"}
                 </h1>
 
                 <div className="space-y-4 text-left">
                   <div className="flex items-center gap-3 text-gray-700">
-                    <MapPin className="w-5 h-5 text-gray-400" />
-                    <span className="text-lg font-medium">
+                    <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    <span className="text-base md:text-lg font-medium break-words">
                       {eventData?.location || "null"}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-3 text-gray-700">
-                    <Calendar className="w-5 h-5 text-gray-400" />
-                    <span className="text-lg font-medium">
+                    <Calendar className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    <span className="text-base md:text-lg font-medium">
                       {`${FormatDate(eventData?.startDate)} - ${FormatDate(
                         eventData?.endDate
                       )}` || "null"}
@@ -77,7 +79,7 @@ export default function Page() {
               </div>
 
               <button
-                className="bg-blue-900 hover:bg-blue-800 text-white font-semibold px-32 py-4 rounded-full shadow-lg transition-all transform hover:scale-105"
+                className="w-full md:w-auto bg-blue-900 hover:bg-blue-800 text-white font-semibold px-8 md:px-32 py-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95"
                 onClick={() => router.push(`/event/${id}/registration`)}
               >
                 Register Now
@@ -87,13 +89,13 @@ export default function Page() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
           <button
             onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
             className="flex items-center justify-between w-full"
           >
-            <h2 className="text-2xl font-bold text-gray-900">Description</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">Description</h2>
             <ChevronDown
               className={`w-6 h-6 text-gray-500 transition-transform ${
                 isDescriptionOpen ? "rotate-180" : ""
@@ -102,7 +104,7 @@ export default function Page() {
           </button>
 
           {isDescriptionOpen && (
-            <div className="mt-6 text-gray-700 space-y-4">
+            <div className="mt-6 text-gray-700 space-y-4 text-sm md:text-base leading-relaxed">
               <p>{eventData?.eventDesc}</p>
             </div>
           )}
