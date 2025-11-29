@@ -68,7 +68,7 @@ export default function Navbar({ token }) {
     }
 
     const rolePriority = {
-      admin: 4,
+      // admin: 4,
       organizer: 3,
       staff: 2,
       // visitor: 1,
