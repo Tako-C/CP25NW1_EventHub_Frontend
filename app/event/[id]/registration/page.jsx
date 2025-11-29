@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar, Info } from "lucide-react"; 
+import { Calendar, Info } from "lucide-react";
 import { getData, regisEvents, getDataNoToken } from "@/libs/fetch";
 import { useParams, useRouter } from "next/navigation";
 import SuccessPage from "@/components/Notification/Success_Regis_Page";
 import { FormatDate } from "@/utils/format";
 import Cookies from "js-cookie";
+import Notification from "@/components/Notification/Notification";
 
 export default function ExpoRegisterForm() {
   const token = Cookies.get("token");
@@ -22,6 +23,15 @@ export default function ExpoRegisterForm() {
   });
   const [eventDetail, setEventDetail] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   const fetchData = async () => {
     const res = await getData(`users/me/profile`);
@@ -73,11 +83,19 @@ export default function ExpoRegisterForm() {
 
   const handleSubmit = async () => {
     if (!formData.firstName || !formData.lastName || !formData.email) {
-      alert("Please fill in all required fields");
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: "Please fill in all required fields",
+      });
       return;
     }
     if (!formData.agreeTerms) {
-      alert("Please agree to the terms");
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: "Please agree to the terms",
+      });
       return;
     }
     if (!token) {
@@ -87,30 +105,41 @@ export default function ExpoRegisterForm() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        eventId: id
-      }
-      Cookies.set("signupDataFromRegis", JSON.stringify(signupData))
+        eventId: id,
+      };
+      Cookies.set("signupDataFromRegis", JSON.stringify(signupData));
     }
     if (token) {
       console.log("Form submitted:", formData);
       const res = await regisEvents(`events/${id}/register`);
       console.log(res);
-      setIsSuccess(true);
+      if (res.statusCode === 200) {
+        setIsSuccess(true);
+      } else {
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: res?.message,
+        });
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 mt-20">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
       {isSuccess ? (
         <SuccessPage detail={eventDetail} />
       ) : (
-        <div
-          className="relative min-h-screen bg-cover bg-center bg-no-repeat bg-fixed"
-        >
+        <div className="relative min-h-screen bg-cover bg-center bg-no-repeat bg-fixed">
           <div className="absolute inset-0 bg-gray-100 bg-opacity-30"></div>
 
           <div className="relative max-w-4xl mx-auto px-4 py-8 md:py-12">
-            
             <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl p-6 md:p-12 mb-6 md:mb-8 border border-gray-100 overflow-hidden relative">
               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-teal-400/10 to-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
@@ -227,7 +256,8 @@ export default function ExpoRegisterForm() {
               <div className="bg-white rounded-3xl shadow-lg p-6 md:p-8">
                 <label className="block text-gray-900 font-medium mb-4 leading-relaxed">
                   Please select product that you are looking for – Select all
-                  that applies <br className="hidden md:block"/> (กลุ่มสินค้าที่ท่านสนใจหาในงาน - เลือกได้หลายตัว)
+                  that applies <br className="hidden md:block" />{" "}
+                  (กลุ่มสินค้าที่ท่านสนใจหาในงาน - เลือกได้หลายตัว)
                 </label>
                 <div className="space-y-3">
                   {["Multiple 1", "Multiple 2", "Multiple 3", "Multiple 4"].map(
