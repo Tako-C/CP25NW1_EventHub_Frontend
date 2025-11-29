@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { loginOTPRequest } from "@/libs/fetch";
 import Cookies from "js-cookie";
+import Notification from "@/components/Notification/Notification";
 
 export default function SignInPageOTP({
   isOpen,
@@ -14,6 +15,15 @@ export default function SignInPageOTP({
   const router = useRouter();
   const [cooldown, setCooldown] = useState(0);
   const [errors, setErrors] = useState({});
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   useEffect(() => {
     if (!email) return;
@@ -68,12 +78,26 @@ export default function SignInPageOTP({
 
         router.push("/login/otp");
       } else if (res.statusCode === 500) {
-        window.alert("This email has not been registered.");
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: res?.message,
+        });
       } else {
-        throw new Error(`Unexpected status code: ${res.statusCode}`);
+        // throw new Error(`Unexpected status code: ${res.statusCode}`);
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: res?.message,
+        });
       }
     } catch (error) {
-      console.error("Error during login:", error);
+      // console.error("Error during login:", error);
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: error,
+      });
 
       localStorage.removeItem(STORAGE_KEY);
       setCooldown(0);
@@ -115,6 +139,12 @@ export default function SignInPageOTP({
 
   return (
     <>
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
       <div className="flex items-center justify-center py-20 px-4 mt-18">
         <div className="w-full max-w-md">
           <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">

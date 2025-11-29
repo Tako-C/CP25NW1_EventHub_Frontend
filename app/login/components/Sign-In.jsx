@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loginPassWord } from "@/libs/fetch";
+import Notification from "@/components/Notification/Notification";
 
 export default function SignInPage({
   isOpen,
@@ -16,6 +17,15 @@ export default function SignInPage({
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
   const [errors, setErrors] = useState({});
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   const handleSubmit = async () => {
     // if (!email.includes("@") || !email.endsWith(".com")) {
@@ -26,17 +36,26 @@ export default function SignInPage({
       return;
     }
     const res = await loginPassWord(email, password);
-    // console.log(res?.data.token);
+    console.log(res);
     if (res.statusCode === 200) {
       Cookie.set("token", res?.data.token);
       // router.push("/home");
       window.location.href = "/home";
     } else if (res.statusCode === 401) {
-      window.alert("Email or Password is incorrect");
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: res?.message,
+      });
+    } else {
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: "เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้ง",
+      });
     }
   };
 
-  // ✅ ตรวจแต่ละช่องแบบเรียลไทม์
   const validateField = (field, value) => {
     switch (field) {
       case "email":
@@ -53,7 +72,6 @@ export default function SignInPage({
     }
   };
 
-  // ✅ ตรวจทั้งฟอร์มก่อน submit
   const validateForm = () => {
     const newErrors = {};
     const emailErr = validateField("email", email);
@@ -79,6 +97,12 @@ export default function SignInPage({
   if (!isOpen) return null;
   return (
     <>
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
       <div className="flex items-center justify-center py-20 px-4 mt-18">
         <div className="w-full max-w-md">
           <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
