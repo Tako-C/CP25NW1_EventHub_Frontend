@@ -9,6 +9,26 @@ import { FormatDate } from "@/utils/format";
 import Cookies from "js-cookie";
 import Notification from "@/components/Notification/Notification";
 
+const MOCK_OPTIONS = {
+  sources: [
+    "Facebook / Instagram",
+    "Email Newsletter (จดหมายข่าวทางอีเมล)",
+    "Friend or Colleague (เพื่อนหรือเพื่อนร่วมงานแนะนำ)",
+    "Search Engine / Google (ค้นหาผ่าน Google)",
+    "Online Advertisement (โฆษณาออนไลน์)",
+    "Other (อื่นๆ)",
+  ],
+  expectations: [
+    "Collect information on innovative products, technologies, and solutions for placing orders (รวบรวมข้อมูลสินค้า เทคโนโลยี และบริการโซลูชั่นใหม่เพื่อสั่งซื้อ)",
+    "Explore product/Technology offerings and trends in the market (สำรวจสินค้า เทคโนโลยีและแนวโน้มในตลาด)",
+    "Extend my network (ขยายเครือข่ายทางธุรกิจ)",
+    "Evaluate the show for future participation (ศึกษาข้อมูลเพื่อร่วมออกบูธในงานครั้งต่อไป)",
+    "Meet existing suppliers (พบปะเยี่ยมตัวแทนที่ติดต่อกันอยู่แล้ว)",
+    "Establish new contacts /Seek representative (หาตัวแทน คู่ค้าพันธมิตรรายใหม่)",
+    "Other, please specify (อื่น ๆ - โปรดระบุ)",
+  ],
+};
+
 export default function ExpoRegisterForm() {
   const token = Cookies.get("token");
   const router = useRouter();
@@ -17,7 +37,7 @@ export default function ExpoRegisterForm() {
     firstName: "",
     lastName: "",
     email: "",
-    products: [],
+    expectations: [],
     source: [],
     agreeTerms: false,
   });
@@ -40,7 +60,7 @@ export default function ExpoRegisterForm() {
         firstName: res?.data?.firstName,
         lastName: res?.data?.lastName,
         email: res?.data?.email,
-        products: [],
+        expectations: [],
         source: [],
         agreeTerms: false,
       });
@@ -253,61 +273,57 @@ export default function ExpoRegisterForm() {
                 />
               </div>
 
+              {/* ส่วนที่ 1: Source */}
               <div className="bg-white rounded-3xl shadow-lg p-6 md:p-8">
-                <label className="block text-gray-900 font-medium mb-4 leading-relaxed">
-                  Please select product that you are looking for – Select all
-                  that applies <br className="hidden md:block" />{" "}
-                  (กลุ่มสินค้าที่ท่านสนใจหาในงาน - เลือกได้หลายตัว)
+                <label className="block text-gray-900 font-medium mb-4">
+                  How did you hear about the show? (คุณรู้จักงานนี้ได้อย่างไร)
                 </label>
                 <div className="space-y-3">
-                  {["Multiple 1", "Multiple 2", "Multiple 3", "Multiple 4"].map(
-                    (option) => (
-                      <label
-                        key={option}
-                        className="flex items-center cursor-pointer group"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.products.includes(option)}
-                          onChange={() =>
-                            handleCheckboxChange("products", option)
-                          }
-                          className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600 flex-shrink-0"
-                        />
-                        <span className="ml-3 text-gray-700 group-hover:text-gray-900">
-                          {option}
-                        </span>
-                      </label>
-                    )
-                  )}
+                  {MOCK_OPTIONS.sources.map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-center cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.source.includes(option)}
+                        onChange={() => handleCheckboxChange("source", option)}
+                        className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600 flex-shrink-0"
+                      />
+                      <span className="ml-3 text-gray-700 group-hover:text-gray-900">
+                        {option}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
+              {/* ส่วนที่ 2: Product Expect */}
               <div className="bg-white rounded-3xl shadow-lg p-6 md:p-8">
-                <label className="block text-gray-900 font-medium mb-4">
-                  How did you hear about the show?
+                <label className="block text-gray-900 font-medium mb-4 leading-relaxed">
+                  What do you expect from this event? – Select all that applies{" "}
+                  <br className="hidden md:block" /> (คุณคาดหวังอะไรจากงานนี้ -
+                  เลือกได้หลายตัว)
                 </label>
                 <div className="space-y-3">
-                  {["Multiple 1", "Multiple 2", "Multiple 3", "Multiple 4"].map(
-                    (option) => (
-                      <label
-                        key={option}
-                        className="flex items-center cursor-pointer group"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.source.includes(option)}
-                          onChange={() =>
-                            handleCheckboxChange("source", option)
-                          }
-                          className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600 flex-shrink-0"
-                        />
-                        <span className="ml-3 text-gray-700 group-hover:text-gray-900">
-                          {option}
-                        </span>
-                      </label>
-                    )
-                  )}
+                  {MOCK_OPTIONS.expectations.map((option) => (
+                    <label
+                      key={option}
+                      className="flex items-center cursor-pointer group"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.expectations.includes(option)}
+                        onChange={() =>
+                          handleCheckboxChange("expectations", option)
+                        }
+                        className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600 flex-shrink-0"
+                      />
+                      <span className="ml-3 text-gray-700 group-hover:text-gray-900">
+                        {option}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
