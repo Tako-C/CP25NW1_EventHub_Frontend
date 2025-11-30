@@ -16,6 +16,7 @@ export default function CheckInStaff() {
   const [events, setEvents] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState("");
   const [userId, setUserId] = useState("");
+  const [errors, setErrors] = useState({});
 
   const [notification, setNotification] = useState({
     isVisible: false,
@@ -79,7 +80,9 @@ export default function CheckInStaff() {
   };
 
   const handleSearch = async () => {
-    if (!searchEmail.trim()) return;
+    if (!validateForm()) {
+      return;
+    }
 
     if (!selectedEventId) {
       setNotification({
@@ -102,18 +105,50 @@ export default function CheckInStaff() {
       );
 
       console.log(result);
-      if (Array.isArray(result)) {
-        setVisitors(result);
-      } else if (result) {
-        setVisitors([result]);
+      if (result.statusCode === 200) {
+        if (Array.isArray(result)) {
+          setVisitors(result);
+        } else if (result) {
+          setVisitors([result]);
+        }
+        setUserId(result?.userId);
+      } else {
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: result?.message,
+        });
       }
-      setUserId(result?.userId);
     } catch (error) {
       console.error("Error fetching user:", error);
       setVisitors([]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const validateField = (field, value) => {
+    switch (field) {
+      case "email":
+        if (!value.trim()) return "* กรุณากรอกอีเมล";
+        if (!value.includes("@") || !value.endsWith(".com"))
+          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
+        return "";
+      default:
+        return "";
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    const emailErr = validateField("email", searchEmail);
+    if (emailErr) {
+      newErrors.email = emailErr;
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleReset = () => {
@@ -257,6 +292,9 @@ export default function CheckInStaff() {
               <p className="text-red-500 text-sm mt-2">
                 * กรุณาเลือก Event ด้านบนก่อนเริ่มค้นหา
               </p>
+            )}
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
             )}
           </div>
 
