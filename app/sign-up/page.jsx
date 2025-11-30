@@ -50,20 +50,6 @@ export default function Page() {
     return () => clearInterval(timer);
   }, [cooldown, formData.email]);
 
-  useEffect(() => {
-    const raw = Cookies.get("signupDataFromRegis");
-    if (raw) {
-      const data = JSON.parse(raw);
-      console.log(data);
-      setFormData((prev) => ({
-        ...prev,
-        firstName: data?.firstName,
-        lastName: data?.lastName,
-        email: data?.email,
-      }));
-    }
-  }, []);
-
   const validateField = (field, value) => {
     switch (field) {
       case "firstName":

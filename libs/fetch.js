@@ -290,6 +290,37 @@ const getUserInfo = async (qrContent) => {
   return data;
 };
 
+const regisRequestEmail = async (email, firstName, lastName, id) => {
+  const res = await fetch(`${url}/events/${id}/register/otp/request`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+    }),
+  });
+
+  return res.json();
+};
+
+const regisVerifyEmail = async (email, otp, id) => {
+  const res = await fetch(`${url}/events/${id}/register/otp/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: email,
+      otp: otp
+    }),
+  });
+
+  return res.json();
+};
+
 export {
   getData,
   loginPassWord,
@@ -306,4 +337,6 @@ export {
   getListUserByEvent,
   getQrImage,
   getUserInfo,
+  regisRequestEmail,
+  regisVerifyEmail
 };
