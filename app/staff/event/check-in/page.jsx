@@ -256,7 +256,7 @@ export default function CheckInStaff() {
               <div className="relative flex-1 w-full">
                 <input
                   type="text"
-                  placeholder="Search by email or name..."
+                  placeholder="Search by email"
                   value={searchEmail}
                   onChange={(e) => setSearchEmail(e.target.value)}
                   onKeyDown={handleKeyDown}
