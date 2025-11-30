@@ -1,56 +1,97 @@
-// middleware.js
 import { NextResponse } from "next/server";
-// import { jwtDecode } from "jwt-decode";
-import { decodeToken } from "@/libs/auth";
 
-// กำหนดหน้า/route ที่ต้องล็อกอินก่อนเข้าได้
-const protectedRoutes = ["/dashboard", "/profile", "/settings"];
+export async function middleware(req) {
+  const token = req.cookies.get("token")?.value;
+  const url = req.nextUrl.clone();
+  
+  // 1. เก็บ Path ปัจจุบันไว้เช็ค
+  const pathname = req.nextUrl.pathname;
 
-export function middleware(req) {
-  const token = req.cookies.get("token")?.value; // อ่าน cookie โดยตรง
-  const { pathname } = req.nextUrl;
 
-  // ดักเฉพาะหน้า protected
-  const isProtected = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  try {
+    const res = await fetch("https://cp25nw1.sit.kmutt.ac.th/api/users/me/registered-events", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  if (isProtected) {
-    if (!token) {
-      // ❌ ไม่มี token → redirect ไปหน้า login
-      const loginUrl = new URL("/login", req.url);
-      loginUrl.searchParams.set("from", pathname); // เผื่อส่ง path เดิมกลับ
-      return NextResponse.redirect(loginUrl);
+    if (!res.ok) {
+      url.pathname = "/error";
+      return NextResponse.redirect(url);
     }
 
-    try {
-      // ✅ ตรวจสอบ token ว่าถอดรหัสได้ไหม
-    //   const decoded = jwtDecode(token);
-      const decoded = decodeToken(token);
-      // optional: ตรวจวันหมดอายุ
-      if (decoded.exp * 1000 < Date.now()) {
-        console.warn("Token expired");
-        const loginUrl = new URL("/login", req.url);
-        return NextResponse.redirect(loginUrl);
+    const data = await res.json();
+    const events = data?.data || []; // รับ Array ของ Event ทั้งหมด
+
+    // -----------------------------------------------------------
+    // --- ส่วนที่เพิ่ม: Logic การคำนวณ Role ที่สูงที่สุด (Active Role) ---
+    // -----------------------------------------------------------
+
+    const rolePriority = {
+      // admin: 4,
+      organizer: 3,
+      staff: 2,
+      user: 1,
+      default: 0,
+    };
+
+    let highestRole = "default";
+    
+    // วนลูปเช็คทุก Event เพื่อหา Role ที่ใหญ่ที่สุด
+    if (Array.isArray(events)) {
+      events.forEach((event) => {
+        // แปลงเป็นตัวเล็กเพื่อเทียบกับ priority map
+        const eventRole = event.eventRole?.toLowerCase().trim() || "default";
+
+        // ถ้า Role ใน Event นี้ใหญ่กว่าที่เคยเจอ ให้บันทึกทับ
+        if ((rolePriority[eventRole] || 0) > (rolePriority[highestRole] || 0)) {
+          highestRole = eventRole;
+        }
+      });
+    }
+
+    // แปลงกลับเป็นตัวใหญ่เพื่อใช้เช็คสิทธิ์ด้านล่าง (เช่น "organizer" -> "ORGANIZER")
+    const currentRole = highestRole.toUpperCase(); 
+
+    // -----------------------------------------------------------
+    // --- จบส่วนคำนวณ Role ---
+    // -----------------------------------------------------------
+
+
+    // --- ส่วนเช็ค Permission แยกตาม Path ---
+
+    // กรณีเข้าหน้า Organizer (ต้องเป็น ADMIN หรือ ORGANIZER เท่านั้น)
+    if (pathname.startsWith("/organizer")) {
+      const allowedInOrganizer = ["ADMIN", "ORGANIZER"];
+      
+      if (!allowedInOrganizer.includes(currentRole)) {
+        // ถ้า Role ไม่ถึง จะโดนดีดออก
+        url.pathname = "/error"; 
+        return NextResponse.redirect(url);
       }
-    } catch (err) {
-      console.error("Invalid token:", err);
-      const loginUrl = new URL("/login", req.url);
-      return NextResponse.redirect(loginUrl);
     }
-  }
 
-  // 🔄 ถ้ามี token แล้วพยายามเข้า /login → ส่งกลับหน้าแรก
-  if (pathname === "/login" && token) {
-    const homeUrl = new URL("/", req.url);
-    return NextResponse.redirect(homeUrl);
-  }
+    // กรณีเข้าหน้า Staff (ADMIN, ORGANIZER, STAFF เข้าได้หมด)
+    else if (pathname.startsWith("/staff")) {
+      const allowedInStaff = ["ADMIN", "ORGANIZER", "STAFF"];
 
-  // ✅ ปล่อยให้เข้าได้ปกติ
-  return NextResponse.next();
+      if (!allowedInStaff.includes(currentRole)) {
+        url.pathname = "/error";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // -------------------------------------
+
+    return NextResponse.next();
+
+  } catch (err) {
+    console.log(err);
+    url.pathname = "/home"; 
+    return NextResponse.redirect(url);
+  }
 }
 
-// ตั้งค่า matcher ให้ middleware ทำงานเฉพาะ path ที่เรากำหนด
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/settings/:path*", "/login"],
+  matcher: ["/staff/:path*", "/organizer/:path*"],
 };
