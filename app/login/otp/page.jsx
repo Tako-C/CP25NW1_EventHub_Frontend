@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { loginOTPVerify, loginOTPRequest } from "@/libs/fetch";
+import {
+  loginOTPVerify,
+  loginOTPRequest,
+  regisVerifyEmail,
+} from "@/libs/fetch";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import Notification from "@/components/Notification/Notification";
 
 export default function Page() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -14,6 +19,17 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [isDisabled, setIsDisabled] = useState(true);
   const [errors, setErrors] = useState("");
+  const [eventId, setEventId] = useState();
+
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   useEffect(() => {
     // const stored = sessionStorage.getItem("signinData");
@@ -22,6 +38,39 @@ export default function Page() {
       const email = JSON?.parse(Cookies.get("signinData"));
       console.log(email);
       if (email) setData(email);
+    }
+  }, []);
+
+  useEffect(() => {
+    const raw_up = Cookies.get("signupDataFromRegis");
+    const raw_in = Cookies.get("signinDataFromRegis");
+    if (raw_in) {
+      const data = JSON.parse(raw_in);
+      console.log(data);
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message:
+          "You Have an account, Please Sign in by Enter OTP before registration event",
+      });
+      setData(data?.email);
+      setEventId(data?.eventId);
+      setCooldown(60);
+      Cookies.remove("signinDataFromRegis");
+    }
+    if (raw_up) {
+      const data = JSON.parse(raw_up);
+      console.log(data);
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message:
+          "You Have no an account, Please Sign in by Enter OTP before registration event",
+      });
+      setData(data?.email);
+      setEventId(data?.eventId);
+      setCooldown(60);
+      Cookies.remove("signupDataFromRegis");
     }
   }, []);
 
@@ -52,6 +101,7 @@ export default function Page() {
   }, [cooldown, data]);
 
   const handleResend = async () => {
+    console.log(data);
     if (cooldown > 0 || !data) return;
 
     setLoading(true);
@@ -89,72 +139,91 @@ export default function Page() {
     const otpCode = otp.join("");
     console.log(otpCode);
     if (otpCode.length === 6) {
-      const res = await loginOTPVerify(data, otpCode);
-      console.log("res", res);
-      if (res.statusCode === 200) {
-        // router.push('/home')
-        Cookies.set("token", res?.data.token);
-        Cookies.remove('signinData');
-
-        window.location.href = "/home";
+      if (eventId) {
+        const res = await regisVerifyEmail(data, otpCode, eventId);
+        console.log(res)
+        if (res.statusCode === 200) {
+          Cookies.set("token", res?.data.token);
+          window.location.href = `/profile?tab=events`;
+        }
       } else {
-        setErrors("ใส่ OTP ให้ถูกต้อง");
+        const res = await loginOTPVerify(data, otpCode);
+        console.log("res", res);
+        if (res.statusCode === 200) {
+          // router.push('/home')
+          Cookies.set("token", res?.data.token);
+          Cookies.remove("signinData");
+          window.location.href = "/home";
+        } else {
+          setErrors("ใส่ OTP ให้ถูกต้อง");
+        }
       }
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-semibold text-center mb-8">Verify OTP</h1>
+    <>
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+      <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
+        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+          <h1 className="text-3xl font-semibold text-center mb-8">
+            Verify OTP
+          </h1>
 
-        <div className="mb-6">
-          <h2 className="text-lg font-medium mb-2">Sign IN</h2>
-          <p className="text-sm text-gray-500 mb-6">
-            ส่งรหัส 6 หลักไปยัง {data}
-          </p>
+          <div className="mb-6">
+            <h2 className="text-lg font-medium mb-2">Sign IN</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              ส่งรหัส 6 หลักไปยัง {data}
+            </p>
 
-          <div className="flex gap-2 justify-center mb-4">
-            {otp.map((digit, index) => (
-              <input
-                key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
-                type="text"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleOtpChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-14 text-center text-xl border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
-              />
-            ))}
-          </div>
+            <div className="flex gap-2 justify-center mb-4">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => (inputRefs.current[index] = el)}
+                  type="text"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  className="w-12 h-14 text-center text-xl border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                />
+              ))}
+            </div>
 
-          {errors && (
-            <p className="text-red-500 text-sm text-center mb-4">{errors}</p>
-          )}
+            {errors && (
+              <p className="text-red-500 text-sm text-center mb-4">{errors}</p>
+            )}
 
-          <div className="text-center mb-6">
+            <div className="text-center mb-6">
+              <button
+                onClick={handleResend}
+                disabled={cooldown > 0 || loading}
+                className="text-sm text-gray-600 underline hover:text-purple-600 disabled:text-gray-400"
+              >
+                {cooldown > 0 ? `รอ ${cooldown} วินาที` : "Resend code"}
+              </button>
+            </div>
+
             <button
-              onClick={handleResend}
-              disabled={cooldown > 0 || loading}
-              className="text-sm text-gray-600 underline hover:text-purple-600 disabled:text-gray-400"
+              onClick={handleContinue}
+              disabled={isDisabled}
+              className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                isDisabled
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-900 text-white hover:bg-blue-800"
+              }`}
             >
-              {cooldown > 0 ? `รอ ${cooldown} วินาที` : "Resend code"}
+              Continue
             </button>
           </div>
-
-          <button
-            onClick={handleContinue}
-            disabled={isDisabled}
-            className={`w-full py-3 rounded-lg font-medium transition-colors ${isDisabled
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-900 text-white hover:bg-blue-800"
-              }`}
-          >
-            Continue
-          </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }

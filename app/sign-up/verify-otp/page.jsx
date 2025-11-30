@@ -15,10 +15,6 @@ export default function Page() {
   const [isDisabled, setIsDisabled] = useState(true);
   const [errors, setErrors] = useState("");
 
-  // useEffect(() => {
-  //   const stored = JSON.parse(Cookie.get("signupData"));
-  //   if (stored) setData(stored);
-  // }, []);
   useEffect(() => {
     const raw = Cookie.get("signupData");
     if (raw) {
@@ -107,13 +103,6 @@ export default function Page() {
           if (resLogin?.statusCode === 200 || resLogin?.data?.token) {
             Cookie.set("token", resLogin?.data.token);
             Cookie.remove("signupData");
-            const signupDataStr = Cookie.get("signupDataFromRegis");
-            if (signupDataStr) {
-              const signupData = JSON.parse(signupDataStr);
-              window.location.href = `/event/${signupData?.eventId}/registration`;
-              Cookie.remove("signupDataFromRegis");
-              return;
-            }
             window.location.href = "/home";
           }
         } else {

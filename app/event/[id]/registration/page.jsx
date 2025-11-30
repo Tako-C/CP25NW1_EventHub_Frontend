@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { Calendar, Info } from "lucide-react";
-import { getData, regisEvents, getDataNoToken } from "@/libs/fetch";
+import {
+  getData,
+  regisEvents,
+  getDataNoToken,
+  regisRequestEmail,
+} from "@/libs/fetch";
 import { useParams, useRouter } from "next/navigation";
 import SuccessPage from "@/components/Notification/Success_Regis_Page";
 import { FormatDate } from "@/utils/format";
@@ -120,14 +125,39 @@ export default function ExpoRegisterForm() {
     }
     if (!token) {
       console.log(formData);
-      router.push("/sign-up");
       const signupData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         eventId: id,
       };
-      Cookies.set("signupDataFromRegis", JSON.stringify(signupData));
+      const res = await regisRequestEmail(
+        signupData?.email,
+        signupData?.firstName,
+        signupData?.lastName,
+        signupData?.eventId
+      );
+      console.log(res);
+      if (
+        res?.statusCode === 200 &&
+        res?.message === "Registration OTP has been sent to your email."
+      ) {
+        Cookies.set("signupDataFromRegis", JSON.stringify(signupData));
+        router.push("/login/otp");
+      }
+      if (
+        res?.statusCode === 200 &&
+        res?.message === "Login OTP has been sent to your email."
+      ) {
+        Cookies.set("signinDataFromRegis", JSON.stringify(signupData));
+        router.push("/login/otp");
+      } else {
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: res?.message,
+        });
+      }
     }
     if (token) {
       console.log("Form submitted:", formData);
