@@ -105,7 +105,7 @@ export default function CheckInStaff() {
       );
 
       console.log(result);
-      if (result.statusCode === 200) {
+      if (result?.userId) {
         if (Array.isArray(result)) {
           setVisitors(result);
         } else if (result) {
