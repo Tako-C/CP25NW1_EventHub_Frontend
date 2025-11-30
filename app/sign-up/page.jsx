@@ -7,6 +7,7 @@ import { registerRequest } from "@/libs/fetch";
 import Cookies from "js-cookie";
 import { getData } from "@/libs/fetch";
 import { Eye, EyeOff } from "lucide-react";
+import Notification from "@/components/Notification/Notification";
 
 export default function Page() {
   const [formData, setFormData] = useState({
@@ -23,6 +24,15 @@ export default function Page() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   useEffect(() => {
     if (!formData.email) return;
@@ -135,17 +145,29 @@ export default function Page() {
       } else if (res.statusCode === 400) {
         localStorage.removeItem(key);
         setCooldown(0);
-        window.alert("This Email is already registered!");
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: res?.message,
+        });
       } else {
         localStorage.removeItem(key);
         setCooldown(0);
-        window.alert(`Registration failed: ${res.message || "Unknown error"}`);
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: res?.message,
+        });
       }
     } catch (error) {
       console.error("Error during registration:", error);
       localStorage.removeItem(key);
       setCooldown(0);
-      window.alert("An unexpected error occurred. Please try again.");
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: "An unexpected error occurred. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -155,191 +177,207 @@ export default function Page() {
   };
 
   return (
-    <div className="flex items-center justify-center py-20 px-4 mt-18">
-      <div className="w-full max-w-md">
-        <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
-          Create Account
-        </h1>
-
-        <div className="bg-white rounded-3xl shadow-lg p-8">
-          <div className="mb-4">
-            <label
-              htmlFor="firstName"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              First Name
-            </label>
-            <input
-              id="firstName"
-              type="text"
-              placeholder="Enter your first name"
-              value={formData.firstName}
-              onChange={(e) => handleInputChange("firstName", e.target.value)}
-              className={`w-full px-4 py-3 border ${
-                errors.firstName ? "border-red-500" : "border-gray-300"
-              } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-            />
-            {errors.firstName && (
-              <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
-            )}
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="lastName"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Last Name
-            </label>
-            <input
-              id="lastName"
-              type="text"
-              placeholder="Enter your last name"
-              value={formData.lastName}
-              onChange={(e) => handleInputChange("lastName", e.target.value)}
-              className={`w-full px-4 py-3 border ${
-                errors.lastName ? "border-red-500" : "border-gray-300"
-              } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-            />
-            {errors.lastName && (
-              <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-            )}
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              className={`w-full px-4 py-3 border ${
-                errors.email ? "border-red-500" : "border-gray-300"
-              } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-            />
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-            )}
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Create a password"
-                value={formData.password}
-                onChange={(e) => handleInputChange("password", e.target.value)}
-                className={`w-full px-4 py-3 border ${
-                  errors.password ? "border-red-500" : "border-gray-300"
-                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <label
-              htmlFor="confirmPassword"
-              className="block text-gray-700 font-medium mb-2"
-            >
-              Confirm Password
-            </label>
-            <div className="relative">
-              <input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChange={(e) =>
-                  handleInputChange("confirmPassword", e.target.value)
-                }
-                className={`w-full px-4 py-3 border ${
-                  errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
-                aria-label={
-                  showConfirmPassword ? "Hide password" : "Show password"
-                }
-              >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-
-            {errors.confirmPassword && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.confirmPassword}
-              </p>
-            )}
-          </div>
-
-          <div className="mb-6">
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="w-4 h-4 mt-1 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-              />
-              <span className="text-sm text-gray-600">
-                I agree to the{" "}
-                <Link href="#" className="text-blue-500 hover:text-blue-600">
-                  Terms & Conditions
-                </Link>{" "}
-                and{" "}
-                <Link href="#" className="text-blue-500 hover:text-blue-600">
-                  Privacy Policy
-                </Link>
-              </span>
-            </label>
-          </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={!agreeTerms}
-            className="w-full bg-blue-900 text-white py-3 rounded-full font-semibold hover:bg-blue-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
+    <>
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+      <div className="flex items-center justify-center py-20 px-4 mt-18">
+        <div className="w-full max-w-md">
+          <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
             Create Account
-          </button>
-        </div>
+          </h1>
 
-        <p className="text-center mt-6 text-gray-700">
-          Already have an account?{" "}
-          <button
-            onClick={handleSignIn}
-            className="text-blue-500 hover:text-blue-600 font-medium"
-          >
-            Sign In
-          </button>
-        </p>
+          <div className="bg-white rounded-3xl shadow-lg p-8">
+            <div className="mb-4">
+              <label
+                htmlFor="firstName"
+                className="block text-gray-700 font-medium mb-2"
+              >
+                First Name
+              </label>
+              <input
+                id="firstName"
+                type="text"
+                placeholder="Enter your first name"
+                value={formData.firstName}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                className={`w-full px-4 py-3 border ${
+                  errors.firstName ? "border-red-500" : "border-gray-300"
+                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
+              />
+              {errors.firstName && (
+                <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="lastName"
+                className="block text-gray-700 font-medium mb-2"
+              >
+                Last Name
+              </label>
+              <input
+                id="lastName"
+                type="text"
+                placeholder="Enter your last name"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                className={`w-full px-4 py-3 border ${
+                  errors.lastName ? "border-red-500" : "border-gray-300"
+                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
+              />
+              {errors.lastName && (
+                <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="email"
+                className="block text-gray-700 font-medium mb-2"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                className={`w-full px-4 py-3 border ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="password"
+                className="block text-gray-700 font-medium mb-2"
+              >
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    handleInputChange("password", e.target.value)
+                  }
+                  className={`w-full px-4 py-3 border ${
+                    errors.password ? "border-red-500" : "border-gray-300"
+                  } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-gray-700 font-medium mb-2"
+              >
+                Confirm Password
+              </label>
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChange={(e) =>
+                    handleInputChange("confirmPassword", e.target.value)
+                  }
+                  className={`w-full px-4 py-3 border ${
+                    errors.confirmPassword
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+              </div>
+
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.confirmPassword}
+                </p>
+              )}
+            </div>
+
+            <div className="mb-6">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  className="w-4 h-4 mt-1 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                />
+                <span className="text-sm text-gray-600">
+                  I agree to the{" "}
+                  <Link href="#" className="text-blue-500 hover:text-blue-600">
+                    Terms & Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="#" className="text-blue-500 hover:text-blue-600">
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={!agreeTerms}
+              className="w-full bg-blue-900 text-white py-3 rounded-full font-semibold hover:bg-blue-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              Create Account
+            </button>
+          </div>
+
+          <p className="text-center mt-6 text-gray-700">
+            Already have an account?{" "}
+            <button
+              onClick={handleSignIn}
+              className="text-blue-500 hover:text-blue-600 font-medium"
+            >
+              Sign In
+            </button>
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
