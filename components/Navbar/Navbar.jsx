@@ -76,7 +76,8 @@ export default function Navbar({ token }) {
       default: 0,
     };
 
-    let highestRole = userData.role.roleName.toLowerCase().trim();
+    // let highestRole = userData.role.roleName.toLowerCase().trim();
+    let highestRole = userData.role.toLowerCase().trim();
     if (rolePriority[highestRole] === undefined) {
       highestRole = "default";
     }
