@@ -1,6 +1,8 @@
 "use client";
 
 import { User, Mail, Briefcase, MapPin, Phone, Flag } from "lucide-react";
+import { editProfile } from '@/libs/fetch';
+
 
 export default function ProfilePage({
   isEditing,
@@ -13,8 +15,15 @@ export default function ProfilePage({
   };
 
   const handleSave = () => {
+    console.log("profile", profile)
+    editData(profile)
     setIsEditing(false);
   };
+
+  const editData = async (data) => {
+    const res = await editProfile(data);
+    console.log(res)
+  }
 
   return (
     <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8">
@@ -52,7 +61,7 @@ export default function ProfilePage({
           </div>
           <div className="text-center">
             <h3 className="font-bold text-lg md:text-xl text-gray-900 break-words max-w-[200px]">
-              {profile.name} {profile.lastName}
+              {profile.firstName} {profile.lastName}
             </h3>
             <span className="inline-block mt-2 px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full uppercase tracking-wide">
               {profile.role || "User"}
@@ -65,7 +74,7 @@ export default function ProfilePage({
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <InputField
                 label="First Name"
-                value={profile.name}
+                value={profile.firstName}
                 onChange={(v) => handleChange("name", v)}
                 isEditing={isEditing}
                 icon={<User size={18} />}
@@ -98,7 +107,7 @@ export default function ProfilePage({
 
             <InputField
               label="Job"
-              value={profile.jobTitle}
+              value={profile.job.jobNameTh}
               onChange={(v) => handleChange("jobTitle", v)}
               isEditing={isEditing}
               icon={<Briefcase size={18} />}
@@ -106,14 +115,14 @@ export default function ProfilePage({
 
             <InputField
               label="Country"
-              value={profile.country}
+              value={profile.country.countryNameTh}
               onChange={(v) => handleChange("country", v)}
               isEditing={isEditing}
               icon={<Flag size={18} />}
             />
             <InputField
               label="City / Province"
-              value={profile.city}
+              value={profile.city.cityNameTh}
               onChange={(v) => handleChange("city", v)}
               isEditing={isEditing}
               icon={<MapPin size={18} />}

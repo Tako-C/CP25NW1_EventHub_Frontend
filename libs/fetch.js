@@ -3,15 +3,15 @@ const url = process.env.NEXT_PUBLIC_API_URL;
 function getCookie(name) {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+  if (parts.length === 2) return parts.pop().split(";").shift();
 }
 
 const getData = async (path) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
   });
@@ -26,7 +26,7 @@ const getData = async (path) => {
 };
 
 const getDataNoToken = async (path) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
   const res = await fetch(`${url}/${path}`);
 
   if (!res.ok) {
@@ -41,9 +41,9 @@ const getDataNoToken = async (path) => {
 const getImage = async (path) => {
   // const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       // Authorization: `Bearer ${token}`,
     },
   });
@@ -60,11 +60,11 @@ const getImage = async (path) => {
 };
 
 const getQrImage = async (path) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
   });
@@ -82,11 +82,11 @@ const getQrImage = async (path) => {
 };
 
 const regisEvents = async (path) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
   });
@@ -102,9 +102,9 @@ const regisEvents = async (path) => {
 
 const loginPassWord = async (email, password) => {
   const res = await fetch(`${url}/auth/login`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       email: email,
@@ -117,9 +117,9 @@ const loginPassWord = async (email, password) => {
 
 const registerRequest = async (fname, lname, email, password) => {
   const res = await fetch(`${url}/auth/register/otp/request`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       firstName: fname,
@@ -134,9 +134,9 @@ const registerRequest = async (fname, lname, email, password) => {
 
 const registerOTP = async (email, otp, password) => {
   const res = await fetch(`${url}/auth/register/otp/verify`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       email: email,
@@ -150,9 +150,9 @@ const registerOTP = async (email, otp, password) => {
 
 const loginOTPRequest = async (email) => {
   const res = await fetch(`${url}/auth/login/otp/request`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       email: email,
@@ -164,9 +164,9 @@ const loginOTPRequest = async (email) => {
 
 const loginOTPVerify = async (email, otp) => {
   const res = await fetch(`${url}/auth/login/otp/verify`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       email: email,
@@ -178,11 +178,11 @@ const loginOTPVerify = async (email, otp) => {
 };
 
 const qrCodefetch = async (qrcode) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
   const res = await fetch(`${url}/qr/check-in`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
@@ -200,11 +200,11 @@ const qrCodefetch = async (qrcode) => {
 };
 
 const getListUser = async (path, email, eventId) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
@@ -223,11 +223,11 @@ const getListUser = async (path, email, eventId) => {
 };
 
 const getListUserByEvent = async (path, userId, eventId) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
@@ -246,11 +246,11 @@ const getListUserByEvent = async (path, userId, eventId) => {
 };
 
 const userCheckIn = async (path, eventId, userId) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
   const res = await fetch(`${url}/${path}`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
@@ -269,11 +269,11 @@ const userCheckIn = async (path, eventId, userId) => {
 };
 
 const getUserInfo = async (qrContent) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
   const res = await fetch(`${url}/qr/user-info`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
@@ -292,9 +292,9 @@ const getUserInfo = async (qrContent) => {
 
 const regisRequestEmail = async (email, firstName, lastName, id) => {
   const res = await fetch(`${url}/events/${id}/register/otp/request`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       email: email,
@@ -308,13 +308,37 @@ const regisRequestEmail = async (email, firstName, lastName, id) => {
 
 const regisVerifyEmail = async (email, otp, id) => {
   const res = await fetch(`${url}/events/${id}/register/otp/verify`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       email: email,
-      otp: otp
+      otp: otp,
+    }),
+  });
+
+  return res.json();
+};
+
+const editProfile = async (data) => {
+  const token = getCookie("token");
+  const res = await fetch(`${url}/users/me/profile`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      firstName: data?.firstName,
+      lastName: data?.lastName,
+      email: data?.email,
+      address: data?.address,
+      phone: data?.phone,
+      job: data?.job,
+      country: data?.country,
+      city: data?.city,
+      postCode: data?.postCode,
     }),
   });
 
@@ -338,5 +362,6 @@ export {
   getQrImage,
   getUserInfo,
   regisRequestEmail,
-  regisVerifyEmail
+  regisVerifyEmail,
+  editProfile,
 };
