@@ -29,7 +29,7 @@ export default function ProfilePage({
         </div>
         {!isEditing && (
           <button
-            disabled
+            // disabled
             onClick={() => setIsEditing(true)}
             className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm md:text-base"
           >
