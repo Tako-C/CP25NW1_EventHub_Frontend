@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { ShieldX, ArrowLeft, Home } from "lucide-react";
 
 export default function Error403() {
@@ -21,24 +20,20 @@ export default function Error403() {
             </div>
           </div>
 
-          {/* Error Code */}
           <h1 className="text-7xl md:text-9xl font-bold text-gray-900 mb-4">
             403
           </h1>
 
-          {/* Title */}
           <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-4">
             ไม่มีสิทธิ์เข้าถึง
           </h2>
 
-          {/* Description */}
           <p className="text-gray-600 text-base md:text-lg mb-8 px-4">
             ขออภัย คุณไม่ได้รับอนุญาตให้เข้าถึงหน้านี้
             <br className="hidden sm:block" />
             กรุณาตรวจสอบสิทธิ์การเข้าถึงของคุณ
           </p>
 
-          {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
             <button
               onClick={() => (window.location.href = "/home")}

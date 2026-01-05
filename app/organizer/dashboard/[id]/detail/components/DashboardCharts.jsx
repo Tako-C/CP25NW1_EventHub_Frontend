@@ -30,7 +30,6 @@ export const AgeBarChart = () => {
     data: [
       { age: '0-5y', value: 12 },
       { age: '5-10y', value: 16 },
-      // ... ข้อมูลอื่นๆ
       { age: '35+y', value: 9 }
     ],
     xField: 'age',

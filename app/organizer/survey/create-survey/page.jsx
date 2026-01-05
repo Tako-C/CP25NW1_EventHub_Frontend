@@ -91,7 +91,6 @@ export default function CreateFeedbackForm() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
-        {/* Create Feedback Form Section */}
         <div className="mb-8">
           <div className="flex items-center mb-6">
             <h1 className="text-3xl font-semibold text-gray-800">Create Feedback Form</h1>
@@ -100,7 +99,6 @@ export default function CreateFeedbackForm() {
 
           <div className="bg-white rounded-lg shadow p-8">
             <div className="grid grid-cols-2 gap-8">
-              {/* Left Column */}
               <div className="space-y-6">
                 <div>
                   <label className="block text-gray-700 font-medium mb-2">
@@ -156,7 +154,6 @@ export default function CreateFeedbackForm() {
                 </div>
               </div>
 
-              {/* Right Column */}
               <div className="space-y-6">
                 <div className="flex gap-4">
                   <div className="flex-1">
@@ -224,7 +221,6 @@ export default function CreateFeedbackForm() {
           </div>
         </div>
 
-        {/* Create Question Section */}
         <div className="mb-8">
           <div className="flex items-center mb-6">
             <h2 className="text-3xl font-semibold text-gray-800">Create Question</h2>
@@ -300,7 +296,6 @@ export default function CreateFeedbackForm() {
               </div>
             ))}
 
-            {/* Add Question Button */}
             <div className="bg-white rounded-lg shadow p-6 flex justify-center">
               <button
                 onClick={addQuestion}
@@ -312,7 +307,6 @@ export default function CreateFeedbackForm() {
           </div>
         </div>
 
-        {/* Bottom Actions */}
         <div className="text-center">
           <p className="text-red-500 mb-4">Are you sure you want to create the feedback?</p>
           <div className="flex justify-center gap-4">

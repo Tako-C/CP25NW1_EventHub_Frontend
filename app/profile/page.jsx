@@ -39,19 +39,6 @@ export default function Page() {
     if (res?.statusCode === 200) {
       const userData = res.data;
       console.log(userData);
-      // setProfile({
-      //   name: userData?.firstName || '',
-      //   lastName: userData?.lastName || '',
-      //   email: userData?.email || '',
-      //   phone: userData?.phone || '',
-      //   role: userData?.role?.roleName || 'User',
-      //   jobTitle: userData?.job?.jobName || '',
-      //   country: userData?.country?.countryName || '',
-      //   city: userData?.city?.cityName || '',
-      //   postCode: userData?.postCode || '',
-      //   companyName: '',
-      //   address: '',
-      // });
       setProfile({
         id: userData?.id || "",
         firstName: userData?.firstName || "",

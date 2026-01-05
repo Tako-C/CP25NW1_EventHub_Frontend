@@ -303,7 +303,6 @@ export default function ExpoRegisterForm() {
                 />
               </div>
 
-              {/* ส่วนที่ 1: Source */}
               <div className="bg-white rounded-3xl shadow-lg p-6 md:p-8">
                 <label className="block text-gray-900 font-medium mb-4">
                   How did you hear about the show? (คุณรู้จักงานนี้ได้อย่างไร)
@@ -328,7 +327,6 @@ export default function ExpoRegisterForm() {
                 </div>
               </div>
 
-              {/* ส่วนที่ 2: Product Expect */}
               <div className="bg-white rounded-3xl shadow-lg p-6 md:p-8">
                 <label className="block text-gray-900 font-medium mb-4 leading-relaxed">
                   What do you expect from this event? – Select all that applies{" "}

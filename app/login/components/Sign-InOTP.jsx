@@ -92,7 +92,6 @@ export default function SignInPageOTP({
         });
       }
     } catch (error) {
-      // console.error("Error during login:", error);
       setNotification({
         isVisible: true,
         isError: true,

@@ -28,10 +28,6 @@ export default function SignInPage({
   };
 
   const handleSubmit = async () => {
-    // if (!email.includes("@") || !email.endsWith(".com")) {
-    //   alert("Please enter a valid email address with '@' and '.com'");
-    //   return;
-    // }
     if (!validateForm()) {
       return;
     }
@@ -39,7 +35,6 @@ export default function SignInPage({
     console.log(res);
     if (res.statusCode === 200) {
       Cookie.set("token", res?.data.token);
-      // router.push("/home");
       window.location.href = "/home";
     } else if (res.statusCode === 401) {
       setNotification({

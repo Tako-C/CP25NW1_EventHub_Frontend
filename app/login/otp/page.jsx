@@ -32,7 +32,6 @@ export default function Page() {
   };
 
   useEffect(() => {
-    // const stored = sessionStorage.getItem("signinData");
     const data = Cookies.get("signinData");
     if (data) {
       const email = JSON?.parse(Cookies.get("signinData"));
@@ -150,7 +149,6 @@ export default function Page() {
         const res = await loginOTPVerify(data, otpCode);
         console.log("res", res);
         if (res.statusCode === 200) {
-          // router.push('/home')
           Cookies.set("token", res?.data.token);
           Cookies.remove("signinData");
           window.location.href = "/home";
