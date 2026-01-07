@@ -4,7 +4,7 @@ import Cookie from "js-cookie";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { loginPassWord } from "@/libs/fetch";
+import { authLoginPassword } from "@/libs/fetch";
 import Notification from "@/components/Notification/Notification";
 
 export default function SignInPage({
@@ -31,7 +31,7 @@ export default function SignInPage({
     if (!validateForm()) {
       return;
     }
-    const res = await loginPassWord(email, password);
+    const res = await authLoginPassword(email, password);
     console.log(res);
     if (res.statusCode === 200) {
       Cookie.set("token", res?.data.token);

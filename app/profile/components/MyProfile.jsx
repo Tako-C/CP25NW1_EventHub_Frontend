@@ -1,7 +1,7 @@
 "use client";
 
 import { User, Mail, Briefcase, MapPin, Phone, Flag } from "lucide-react";
-import { editProfile } from '@/libs/fetch';
+import { postUpdateProfile } from '@/libs/fetch';
 
 
 export default function ProfilePage({
@@ -21,7 +21,7 @@ export default function ProfilePage({
   };
 
   const editData = async (data) => {
-    const res = await editProfile(data);
+    const res = await postUpdateProfile(data);
     console.log(res)
   }
 

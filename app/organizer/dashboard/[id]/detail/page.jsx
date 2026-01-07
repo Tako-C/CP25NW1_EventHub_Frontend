@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Input, Table } from 'antd';
 import { SearchOutlined, UserOutlined, MailOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import { getData, getListUserByEvent } from '@/libs/fetch';
+import { getData, getListUser } from '@/libs/fetch';
 import { useParams } from 'next/navigation';
 import { FormatDate } from '@/utils/format';
 
@@ -63,7 +63,7 @@ export default function ExhibitionDashboard() {
   const fetchData = async () => {
     try {
       const res = await getData('users/me/profile');
-      const resListUser = await getListUserByEvent(
+      const resListUser = await getListUser(
         'list/check-in',
         id,
         res?.data?.id

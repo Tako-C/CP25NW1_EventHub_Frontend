@@ -2,9 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
-  loginOTPVerify,
-  loginOTPRequest,
-  regisVerifyEmail,
+  authLoginOTPVerify,
+  authLoginOTPRequest,
+  verifyEmailOTP,
 } from "@/libs/fetch";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
@@ -108,7 +108,7 @@ export default function Page() {
     const newEnd = Date.now() + 60 * 1000;
     localStorage.setItem(`otp_end_time_${data}`, newEnd);
 
-    const res = await loginOTPRequest(data);
+    const res = await authLoginOTPRequest(data);
 
     setTimeout(() => setLoading(false), 500);
   };
@@ -139,14 +139,14 @@ export default function Page() {
     console.log(otpCode);
     if (otpCode.length === 6) {
       if (eventId) {
-        const res = await regisVerifyEmail(data, otpCode, eventId);
+        const res = await verifyEmailOTP(data, otpCode, eventId);
         console.log(res)
         if (res.statusCode === 200) {
           Cookies.set("token", res?.data.token);
           window.location.href = `/profile?tab=events`;
         }
       } else {
-        const res = await loginOTPVerify(data, otpCode);
+        const res = await authLoginOTPVerify(data, otpCode);
         console.log("res", res);
         if (res.statusCode === 200) {
           Cookies.set("token", res?.data.token);

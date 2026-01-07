@@ -12,7 +12,7 @@ import {
   Calendar,
   CheckCircle,
 } from "lucide-react";
-import { qrCodefetch, getUserInfo, getImage } from "@/libs/fetch";
+import { postQRCheckIn, postQRUserInfo, getImage } from "@/libs/fetch";
 import Notification from "@/components/Notification/Notification"; 
 
 export default function QRScannerCheckin() {
@@ -40,7 +40,7 @@ export default function QRScannerCheckin() {
     setIsScanning(false);
 
     try {
-      const res = await getUserInfo(qrContent);
+      const res = await postQRUserInfo(qrContent);
 
       if (res?.statusCode === 200 && res.data) {
         const user = res.data.userProfile || {};
@@ -83,7 +83,7 @@ export default function QRScannerCheckin() {
     setIsProcessing(true);
 
     try {
-      const res = await qrCodefetch(confirmData.qrContent);
+      const res = await postQRCheckIn(confirmData.qrContent);
 
       if (res?.statusCode === 200 || res?.message === "Check-in successful") {
         setNotificationState({

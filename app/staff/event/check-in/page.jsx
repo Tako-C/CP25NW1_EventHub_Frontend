@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Search, RotateCcw, Loader2, Calendar } from "lucide-react";
-import { getListUser, getData, userCheckIn } from "@/libs/fetch";
+import { getListUser, getData, postUserCheckIn } from "@/libs/fetch";
 import { useSearchParams } from "next/navigation";
 import Notification from "@/components/Notification/Notification";
 
@@ -45,7 +45,7 @@ export default function CheckInStaff() {
 
     setIsUpdating(true);
     try {
-      const result = await userCheckIn(
+      const result = await postUserCheckIn(
         "manual/check-in",
         selectedEventId,
         userId

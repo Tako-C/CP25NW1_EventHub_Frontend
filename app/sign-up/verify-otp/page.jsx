@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { registerOTP, loginPassWord, registerRequest } from "@/libs/fetch";
+import { authRegisterVerify, authLoginPassword, authRegisterRequest } from "@/libs/fetch";
 import { useRouter } from "next/navigation";
 import Cookie from "js-cookie";
 
@@ -61,7 +61,7 @@ export default function Page() {
     const newEnd = Date.now() + 60 * 1000;
     localStorage.setItem(`otp_end_time_${data.email}`, newEnd);
 
-    const res = await registerRequest(
+    const res = await authRegisterRequest(
       data?.firstName,
       data?.lastName,
       data?.email,
@@ -97,9 +97,9 @@ export default function Page() {
 
     if (otpCode.length === 6) {
       try {
-        const res = await registerOTP(data?.email, otpCode, data?.password);
+        const res = await authRegisterVerify(data?.email, otpCode, data?.password);
         if (res.statusCode === 200) {
-          const resLogin = await loginPassWord(data?.email, data?.password);
+          const resLogin = await authLoginPassword(data?.email, data?.password);
           if (resLogin?.statusCode === 200 || resLogin?.data?.token) {
             Cookie.set("token", resLogin?.data.token);
             Cookie.remove("signupData");

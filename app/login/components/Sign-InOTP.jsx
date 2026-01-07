@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { loginOTPRequest } from "@/libs/fetch";
+import { authLoginOTPRequest } from "@/libs/fetch";
 import Cookies from "js-cookie";
 import Notification from "@/components/Notification/Notification";
 
@@ -67,7 +67,7 @@ export default function SignInPageOTP({
         return;
       }
 
-      const res = await loginOTPRequest(email);
+      const res = await authLoginOTPRequest(email);
 
       if (res.statusCode === 200) {
         const newEndTime = Date.now() + OTP_COOLDOWN_SEC * 1000;

@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { Calendar, Info } from "lucide-react";
 import {
   getData,
-  regisEvents,
+  postEventRegister,
   getDataNoToken,
-  regisRequestEmail,
+  requestEmailOTP,
 } from "@/libs/fetch";
 import { useParams, useRouter } from "next/navigation";
 import SuccessPage from "@/components/Notification/Success_Regis_Page";
@@ -131,7 +131,7 @@ export default function ExpoRegisterForm() {
         email: formData.email,
         eventId: id,
       };
-      const res = await regisRequestEmail(
+      const res = await requestEmailOTP(
         signupData?.email,
         signupData?.firstName,
         signupData?.lastName,
@@ -161,7 +161,7 @@ export default function ExpoRegisterForm() {
     }
     if (token) {
       console.log("Form submitted:", formData);
-      const res = await regisEvents(`events/${id}/register`);
+      const res = await postEventRegister(`events/${id}/register`);
       console.log(res);
       if (res.statusCode === 200) {
         setIsSuccess(true);

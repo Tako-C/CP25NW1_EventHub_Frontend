@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { registerRequest } from "@/libs/fetch";
+import { getData , authRegisterRequest } from "@/libs/fetch";
 import Cookies from "js-cookie";
-import { getData } from "@/libs/fetch";
 import { Eye, EyeOff } from "lucide-react";
 import Notification from "@/components/Notification/Notification";
 
@@ -133,7 +132,7 @@ export default function Page() {
       localStorage.setItem(key, endTime);
       setCooldown(60);
 
-      const res = await registerRequest(
+      const res = await authRegisterRequest(
         formData?.firstName,
         formData?.lastName,
         formData?.email,

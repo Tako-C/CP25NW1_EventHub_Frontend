@@ -38,9 +38,9 @@ const apiFetch = async (endpoint, options = {}, isBlob = false) => {
   return data;
 };
 
-export const fetchData = (path) => apiFetch(path, { method: "GET" });
+export const getData = (path) => apiFetch(path, { method: "GET" });
 
-export const fetchDataNoToken = (path) =>
+export const getDataNoToken = (path) =>
   fetch(`${url}/${path}`).then((res) => res.json());
 
 export const authLoginPassword = (email, password) =>
@@ -75,13 +75,13 @@ export const authLoginOTPVerify = (email, otp) =>
 
 export const postEventRegister = (path) => apiFetch(path, { method: "POST" });
 
-export const requestEventOTP = (id, payload) =>
+export const requestEmailOTP = (id, payload) =>
   apiFetch(`events/${id}/register/otp/request`, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 
-export const verifyEventOTP = (id, email, otp) =>
+export const verifyEmailOTP = (id, email, otp) =>
   apiFetch(`events/${id}/register/otp/verify`, {
     method: "POST",
     body: JSON.stringify({ email, otp }),
@@ -111,10 +111,10 @@ export const postUserCheckIn = (path, eventId, userId) =>
     body: JSON.stringify({ eventId, userId }),
   });
 
-export const fetchUserList = (path, payload) =>
+export const getListUser = (path, payload) =>
   apiFetch(path, {
     method: "POST",
     body: JSON.stringify(payload),
   });
 
-export const fetchImageBlob = (path) => apiFetch(path, { method: "GET" }, true);
+export const getImage = (path) => apiFetch(path, { method: "GET" }, true);
