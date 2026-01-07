@@ -314,11 +314,141 @@ const regisVerifyEmail = async (email, otp, id) => {
     },
     body: JSON.stringify({
       email: email,
-      otp: otp
+      otp: otp,
     }),
   });
 
   return res.json();
+};
+
+const createEvent = async (formData) => {
+  const token = getCookie('token');
+  const res = await fetch(`${url}/events`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    const errorMessage =
+      data.message || `Failed to create event (Status: ${res.status})`;
+    throw new Error(errorMessage);
+  }
+
+  return data;
+};
+
+const getEventTypes = async () => {
+  const res = await fetch(`${url}/events/types`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch event types');
+  }
+
+  return await res.json();
+};
+
+const getEventById = async (id) => {
+  const token = getCookie('token');
+  const res = await fetch(`${url}/events/${id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to fetch event');
+  }
+
+  return await res.json();
+};
+
+const updateEvent = async (id, formData) => {
+  const token = getCookie('token');
+  const res = await fetch(`${url}/events/${id}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to update event');
+  }
+
+  return await res.json();
+};
+
+const deleteEvent = async (id) => {
+  const token = getCookie('token');
+  const res = await fetch(`${url}/events/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to delete event');
+  }
+
+  // เช็ค status 204 (No Content) หรือ return json ตามที่ backend ส่งมา
+  if (res.status === 204) return true;
+  return await res.json().catch(() => ({}));
+};
+
+const deleteEventImage = async (eventId, category, index = null) => {
+  const token = getCookie('token');
+
+  // สร้าง URL query string
+  let path = `${url}/events/${eventId}/images?category=${category}`;
+  if (index !== null) {
+    path += `&index=${index}`;
+  }
+
+  const res = await fetch(path, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to delete image');
+  }
+
+  return true;
+};
+
+const getUpdateImage = async (path) => {
+  // const token = getCookie("token");
+  const res = await fetch(`${url}/${path}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    return error;
+  }
 };
 
 export {
@@ -338,5 +468,12 @@ export {
   getQrImage,
   getUserInfo,
   regisRequestEmail,
-  regisVerifyEmail
+  regisVerifyEmail,
+  createEvent,
+  getEventTypes,
+  getEventById,
+  updateEvent,
+  deleteEvent,
+  deleteEventImage,
+  getUpdateImage,
 };

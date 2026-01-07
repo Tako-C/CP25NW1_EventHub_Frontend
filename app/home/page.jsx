@@ -1,6 +1,6 @@
-"use client";
-import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+'use client';
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,13 +8,16 @@ import {
   MapPin,
   Pause,
   Play,
-} from "lucide-react";
+} from 'lucide-react';
+import Cookies from 'js-cookie'; // เพิ่ม
+import { jwtDecode } from 'jwt-decode'; // เพิ่ม
 
-import { FormatDate } from "@/utils/format";
-import { getDataNoToken } from "@/libs/fetch";
-import EventCard from "@/components/Card/EventCard";
-import { EventCardImage } from "@/utils/getImage";
-import "./animations.css";
+import { FormatDate } from '@/utils/format';
+import { getDataNoToken } from '@/libs/fetch';
+import EventCard from '@/components/Card/EventCard';
+import { EventCardImage } from '@/utils/getImage';
+import OrganizerEvents from './components/OrganizerEvents';
+import './animations.css';
 
 const mockFeedbackData = [];
 
@@ -23,7 +26,12 @@ export default function Page() {
   const [eventData, setEventData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  // --- เพิ่ม State สำหรับ Organizer ---
+  const [userRole, setUserRole] = useState('GUEST');
+  const [userId, setUserId] = useState(null); // เก็บ ID ของคน Login
+  // ---------------------------------
+
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [feedbackData, setFeedbackData] = useState([]);
 
   const [isAutoPlay, setIsAutoPlay] = useState(true);
@@ -31,8 +39,31 @@ export default function Page() {
 
   const router = useRouter();
 
+  // === Scroll to Hash on Load ===
+  useEffect(() => {
+    const handleScrollToHash = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    };
+
+    handleScrollToHash();
+    const timer1 = setTimeout(handleScrollToHash, 500);
+    const timer2 = setTimeout(handleScrollToHash, 1500);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, []);
+
   useEffect(() => {
     fetchData();
+    checkUserToken();
   }, []);
 
   useEffect(() => {
@@ -45,15 +76,35 @@ export default function Page() {
     return () => clearInterval(interval);
   }, [isAutoPlay, isHovered, eventData.length]);
 
+  const checkUserToken = () => {
+    const token = Cookies.get('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const rawRole =
+          decoded.role || decoded.auth || decoded.authorities || 'guest';
+        const role = String(rawRole).toUpperCase();
+        const id = decoded.id || decoded.userId || decoded.sub;
+
+        setUserRole(role);
+        setUserId(id);
+
+        // console.log('Decoded Token:', { rawRole, role, id });
+      } catch (error) {
+        console.error('Token decode error', error);
+      }
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await getDataNoToken("events");
+      const res = await getDataNoToken('events');
       const fetchedEvents = res.data || [];
       setEventData(fetchedEvents);
       setFeedbackData(mockFeedbackData);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('Error fetching data:', error);
       setEventData([]);
       setFeedbackData([]);
     } finally {
@@ -66,16 +117,33 @@ export default function Page() {
       .map((event) => event.eventTypeId?.eventTypeName)
       .filter((type) => type);
 
-    return ["All", ...new Set(types)];
+    return ['All', ...new Set(types)];
   }, [eventData]);
 
   const filteredEvents = useMemo(() => {
-    if (selectedCategory === "All") return eventData;
+    if (selectedCategory === 'All') return eventData;
 
     return eventData.filter(
       (event) => event.eventTypeId?.eventTypeName === selectedCategory
     );
   }, [selectedCategory, eventData]);
+
+  // --- Organizer's Events (Filtered by userId) ---
+  const myOrganizedEvents = useMemo(() => {
+    if (!userId || !eventData.length) return [];
+
+    const myEvents = eventData.filter((event) => {
+      if (typeof event.createdBy !== 'object') {
+        return event.createdBy == userId;
+      }
+      return event.createdBy?.id == userId;
+    });
+
+    console.log(
+      `📋 Found ${myEvents.length} events for Organizer ID ${userId}`
+    );
+    return myEvents;
+  }, [userId, eventData]);
 
   const nextEvent = () => {
     if (eventData.length === 0) return;
@@ -113,8 +181,8 @@ export default function Page() {
                   key={index}
                   className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
                     index === currentEventIndex
-                      ? "opacity-100 z-0"
-                      : "opacity-0 -z-10"
+                      ? 'opacity-100 z-0'
+                      : 'opacity-0 -z-10'
                   }`}
                 >
                   <EventCardImage
@@ -140,14 +208,14 @@ export default function Page() {
                 </div>
 
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 animate-slide-up leading-tight drop-shadow-lg">
-                  {currentEvent?.eventName || "Event Title"}
+                  {currentEvent?.eventName || 'Event Title'}
                 </h1>
 
                 <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 mb-8 text-white/90 animate-slide-up animation-delay-200">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-emerald-400" />
                     <span className="text-base md:text-lg">
-                      {currentEvent?.location || "Location"}
+                      {currentEvent?.location || 'Location'}
                     </span>
                   </div>
                   <div className="hidden md:block w-1 h-1 bg-white/40 rounded-full" />
@@ -158,7 +226,7 @@ export default function Page() {
                         ? `${FormatDate(currentEvent.startDate)} - ${FormatDate(
                             currentEvent.endDate
                           )}`
-                        : "Date Unavailable"}
+                        : 'Date Unavailable'}
                     </span>
                   </div>
                 </div>
@@ -204,8 +272,8 @@ export default function Page() {
                       <div
                         className={`h-2 rounded-full transition-all duration-300 ${
                           index === currentEventIndex
-                            ? "w-8 bg-emerald-400"
-                            : "w-2 bg-white/40 group-hover:bg-white/60"
+                            ? 'w-8 bg-emerald-400'
+                            : 'w-2 bg-white/40 group-hover:bg-white/60'
                         }`}
                       />
                     </button>
@@ -229,7 +297,7 @@ export default function Page() {
                 <span className="text-white font-medium">
                   {eventData.length > 0
                     ? `${currentEventIndex + 1} / ${eventData.length}`
-                    : "0 / 0"}
+                    : '0 / 0'}
                 </span>
               </div>
             </div>
@@ -261,8 +329,8 @@ export default function Page() {
               onClick={() => setSelectedCategory(category)}
               className={`px-4 md:px-6 py-2 rounded-full transition text-sm md:text-base ${
                 selectedCategory === category
-                  ? "bg-blue-900 text-white"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                  ? 'bg-blue-900 text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
               }`}
             >
               {category}
@@ -284,6 +352,19 @@ export default function Page() {
           )}
         </div>
       </section>
+
+      {/* ----------------------------------------------------------------------- */}
+      {/* --- Organizer Section --- */}
+      {/* ----------------------------------------------------------------------- */}
+
+      {userId && (userRole === 'ORGANIZER' || userRole === 'ADMIN') && (
+        <section
+          id="organizer-section"
+          className="bg-gray-50 border-t border-gray-200"
+        >
+          <OrganizerEvents events={myOrganizedEvents} />
+        </section>
+      )}
 
       {/* <style jsx>{`
         @keyframes fade-in {
