@@ -1,28 +1,32 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { registerOTP, loginPassWord, registerRequest } from "@/libs/fetch";
-import { useRouter } from "next/navigation";
-import Cookie from "js-cookie";
+import { useState, useRef, useEffect } from 'react';
+import {
+  authRegisterVerify,
+  authLoginPassword,
+  authRegisterRequest,
+} from '@/libs/fetch';
+import { useRouter } from 'next/navigation';
+import Cookie from 'js-cookie';
 
 export default function Page() {
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef([]);
   const [data, setData] = useState(null);
   const router = useRouter();
   const [cooldown, setCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isDisabled, setIsDisabled] = useState(true);
-  const [errors, setErrors] = useState("");
+  const [errors, setErrors] = useState('');
 
   useEffect(() => {
-    const raw = Cookie.get("signupData");
+    const raw = Cookie.get('signupData');
     if (raw) {
       try {
         const stored = JSON.parse(raw);
         setData(stored);
       } catch (err) {
-        console.error("Invalid signupData cookie", err);
+        console.error('Invalid signupData cookie', err);
       }
     }
   }, []);
@@ -61,7 +65,7 @@ export default function Page() {
     const newEnd = Date.now() + 60 * 1000;
     localStorage.setItem(`otp_end_time_${data.email}`, newEnd);
 
-    const res = await registerRequest(
+    const res = await authRegisterRequest(
       data?.firstName,
       data?.lastName,
       data?.email,
@@ -78,39 +82,43 @@ export default function Page() {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    setIsDisabled(newOtp.join("").length !== 6);
-    setErrors("");
+    setIsDisabled(newOtp.join('').length !== 6);
+    setErrors('');
 
-    if (value !== "" && index < 5) {
+    if (value !== '' && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleContinue = async () => {
-    const otpCode = otp.join("");
+    const otpCode = otp.join('');
 
     if (otpCode.length === 6) {
       try {
-        const res = await registerOTP(data?.email, otpCode, data?.password);
+        const res = await authRegisterVerify(
+          data?.email,
+          otpCode,
+          data?.password
+        );
         if (res.statusCode === 200) {
-          const resLogin = await loginPassWord(data?.email, data?.password);
+          const resLogin = await authLoginPassword(data?.email, data?.password);
           if (resLogin?.statusCode === 200 || resLogin?.data?.token) {
-            Cookie.set("token", resLogin?.data.token);
-            Cookie.remove("signupData");
-            window.location.href = "/home";
+            Cookie.set('token', resLogin?.data.token);
+            Cookie.remove('signupData');
+            window.location.href = '/home';
           }
         } else {
-          setErrors("รหัส OTP ไม่ถูกต้อง");
+          setErrors('รหัส OTP ไม่ถูกต้อง');
         }
       } catch (error) {
-        console.error("Error confirming OTP:", error);
-        setErrors("เกิดข้อผิดพลาด กรุณาลองใหม่");
+        console.error('Error confirming OTP:', error);
+        setErrors('เกิดข้อผิดพลาด กรุณาลองใหม่');
       }
     }
   };
@@ -151,7 +159,7 @@ export default function Page() {
               disabled={cooldown > 0 || loading}
               className="text-sm text-gray-600 underline hover:text-purple-600 disabled:text-gray-400"
             >
-              {cooldown > 0 ? `รอ ${cooldown} วินาที` : "Resend code"}
+              {cooldown > 0 ? `รอ ${cooldown} วินาที` : 'Resend code'}
             </button>
           </div>
 
@@ -160,8 +168,8 @@ export default function Page() {
             disabled={isDisabled}
             className={`w-full py-3 rounded-lg font-medium transition-colors ${
               isDisabled
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-blue-900 text-white hover:bg-blue-800"
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-blue-900 text-white hover:bg-blue-800'
             }`}
           >
             Continue

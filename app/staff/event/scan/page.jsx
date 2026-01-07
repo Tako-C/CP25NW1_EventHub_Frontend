@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Scanner } from "@yudiel/react-qr-scanner";
+import { useState } from 'react';
+import { Scanner } from '@yudiel/react-qr-scanner';
 import {
   X,
   ScanLine,
@@ -11,9 +11,9 @@ import {
   AlertCircle,
   Calendar,
   CheckCircle,
-} from "lucide-react";
-import { qrCodefetch, getUserInfo, getImage } from "@/libs/fetch";
-import Notification from "@/components/Notification/Notification"; 
+} from 'lucide-react';
+import { postQRCheckIn, postQRUserInfo, getImage } from '@/libs/fetch';
+import Notification from '@/components/Notification/Notification';
 
 export default function QRScannerCheckin() {
   const [isScanning, setIsScanning] = useState(true);
@@ -21,7 +21,7 @@ export default function QRScannerCheckin() {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationState, setNotificationState] = useState({
     error: false,
-    message: "",
+    message: '',
   });
   const [error, setError] = useState(false);
   const [confirmData, setConfirmData] = useState(null);
@@ -40,7 +40,7 @@ export default function QRScannerCheckin() {
     setIsScanning(false);
 
     try {
-      const res = await getUserInfo(qrContent);
+      const res = await postQRUserInfo(qrContent);
 
       if (res?.statusCode === 200 && res.data) {
         const user = res.data.userProfile || {};
@@ -51,7 +51,7 @@ export default function QRScannerCheckin() {
           lastName: user.lastName,
           email: user.email,
           imgPath: user.imgPath,
-          eventName: event.eventName || "Unknown Event",
+          eventName: event.eventName || 'Unknown Event',
         });
 
         if (user.imgPath) {
@@ -60,17 +60,17 @@ export default function QRScannerCheckin() {
           fetchUserImage(null);
         }
       } else {
-        throw new Error(res?.message || "User not found");
+        throw new Error(res?.message || 'User not found');
       }
     } catch (error) {
-      console.error("Scan Error:", error);
+      console.error('Scan Error:', error);
       showError(error.message);
     }
   };
 
   const fetchUserImage = async (path) => {
     try {
-      const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+      const cleanPath = path.startsWith('/') ? path.substring(1) : path;
       const imgUrl = await getImage(`upload/users/${cleanPath}`);
       setUserImage(imgUrl);
     } catch (err) {
@@ -83,9 +83,9 @@ export default function QRScannerCheckin() {
     setIsProcessing(true);
 
     try {
-      const res = await qrCodefetch(confirmData.qrContent);
+      const res = await postQRCheckIn(confirmData.qrContent);
 
-      if (res?.statusCode === 200 || res?.message === "Check-in successful") {
+      if (res?.statusCode === 200 || res?.message === 'Check-in successful') {
         setNotificationState({
           error: false,
           message: `Checked-in: ${confirmData.firstName}`,
@@ -93,7 +93,7 @@ export default function QRScannerCheckin() {
         setShowNotification(true);
         setConfirmData(null);
       } else {
-        throw new Error(res?.message || "Check-in failed");
+        throw new Error(res?.message || 'Check-in failed');
       }
     } catch (error) {
       showError(error.message);
@@ -178,7 +178,7 @@ export default function QRScannerCheckin() {
                   disabled={isProcessing}
                   className="py-3 rounded-xl font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 disabled:bg-purple-300"
                 >
-                  {isProcessing ? "Processing..." : "Confirm"}
+                  {isProcessing ? 'Processing...' : 'Confirm'}
                 </button>
               </div>
             </div>
@@ -206,8 +206,8 @@ export default function QRScannerCheckin() {
                 allowMultiple={true}
                 components={{ audio: false, finder: true }}
                 styles={{
-                  container: { width: "100%", height: "100%" },
-                  video: { width: "100%", height: "100%", objectFit: "cover" },
+                  container: { width: '100%', height: '100%' },
+                  video: { width: '100%', height: '100%', objectFit: 'cover' },
                 }}
               />
             </div>
@@ -216,8 +216,8 @@ export default function QRScannerCheckin() {
               <div
                 className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 ${
                   error
-                    ? "bg-red-500/20 text-red-400"
-                    : "bg-green-500/20 text-green-400"
+                    ? 'bg-red-500/20 text-red-400'
+                    : 'bg-green-500/20 text-green-400'
                 }`}
               >
                 <ScanLine size={28} />

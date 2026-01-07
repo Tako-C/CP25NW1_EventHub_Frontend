@@ -352,59 +352,6 @@ export default function Page() {
           )}
         </div>
       </section>
-
-      {/* ----------------------------------------------------------------------- */}
-      {/* --- Organizer Section --- */}
-      {/* ----------------------------------------------------------------------- */}
-
-      {userId && (userRole === 'ORGANIZER' || userRole === 'ADMIN') && (
-        <section
-          id="organizer-section"
-          className="bg-gray-50 border-t border-gray-200"
-        >
-          <OrganizerEvents events={myOrganizedEvents} />
-        </section>
-      )}
-
-      {/* <style jsx>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes slide-up {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.6s ease-out;
-        }
-        .animate-slide-up {
-          animation: slide-up 0.8s ease-out forwards;
-        }
-        .animation-delay-200 {
-          animation-delay: 0.2s;
-          opacity: 0;
-        }
-        .animation-delay-300 {
-          animation-delay: 0.3s;
-          opacity: 0;
-        }
-        .delay-1000 {
-          animation-delay: 1s;
-        }
-      `}</style> */}
     </div>
   );
 }

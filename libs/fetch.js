@@ -1,479 +1,120 @@
 const url = process.env.NEXT_PUBLIC_API_URL;
 
-function getCookie(name) {
+const getCookie = (name) => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop().split(';').shift();
-}
+};
 
-const getData = async (path) => {
+const apiFetch = async (endpoint, options = {}, isBlob = false) => {
   const token = getCookie('token');
-  const res = await fetch(`${url}/${path}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+    ...(token && { Authorization: `Bearer ${token}` }),
+    ...options.headers,
+  };
+
+  const response = await fetch(`${url}/${endpoint}`, {
+    ...options,
+    headers: defaultHeaders,
   });
 
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
+  if (isBlob && response.ok) {
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
   }
 
-  const data = await res.json();
-  return data;
-};
+  const data = await response.json();
 
-const getDataNoToken = async (path) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/${path}`);
-
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
-  }
-
-  const data = await res.json();
-  return data;
-};
-
-const getImage = async (path) => {
-  // const token = getCookie("token");
-  const res = await fetch(`${url}/${path}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      // Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
-  }
-
-  const imageBlob = await res.blob();
-  const imageUrl = URL.createObjectURL(imageBlob);
-
-  // window.open(imageUrl, '_blank');
-  return imageUrl;
-};
-
-const getQrImage = async (path) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/${path}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
-  }
-
-  const imageBlob = await res.blob();
-  const imageUrl = URL.createObjectURL(imageBlob);
-
-  // window.open(imageUrl, '_blank');
-  return imageUrl;
-};
-
-const regisEvents = async (path) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
-  }
-
-  const data = await res.json();
-  return data;
-};
-
-const loginPassWord = async (email, password) => {
-  const res = await fetch(`${url}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: email,
-      password: password,
-    }),
-  });
-
-  return res.json();
-};
-
-const registerRequest = async (fname, lname, email, password) => {
-  const res = await fetch(`${url}/auth/register/otp/request`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      firstName: fname,
-      lastName: lname,
-      email: email,
-      password: password,
-    }),
-  });
-
-  return res.json();
-};
-
-const registerOTP = async (email, otp, password) => {
-  const res = await fetch(`${url}/auth/register/otp/verify`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: email,
-      otp: otp,
-      password: password,
-    }),
-  });
-
-  return res.json();
-};
-
-const loginOTPRequest = async (email) => {
-  const res = await fetch(`${url}/auth/login/otp/request`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: email,
-    }),
-  });
-
-  return res.json();
-};
-
-const loginOTPVerify = async (email, otp) => {
-  const res = await fetch(`${url}/auth/login/otp/verify`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: email,
-      otp: otp,
-    }),
-  });
-
-  return res.json();
-};
-
-const qrCodefetch = async (qrcode) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/qr/check-in`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      qrContent: qrcode,
-    }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    const errorMessage = data.message || `HTTP Error: ${res.status}`;
-    throw new Error(errorMessage);
+  if (!response.ok) {
+    const errorMessage = data.message || `Error: ${response.status}`;
+    const error = new Error(errorMessage);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
 
   return data;
 };
 
-const getListUser = async (path, email, eventId) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/${path}`, {
+export const getData = (path) => apiFetch(path, { method: 'GET' });
+
+export const getDataNoToken = (path) =>
+  fetch(`${url}/${path}`).then((res) => res.json());
+
+export const authLoginPassword = (email, password) =>
+  apiFetch('auth/login', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      email: email,
-      eventId: eventId,
-    }),
+    body: JSON.stringify({ email, password }),
   });
 
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
-  }
-
-  const data = await res.json();
-  return data;
-};
-
-const getListUserByEvent = async (path, userId, eventId) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/${path}`, {
+export const authRegisterRequest = (firstName, lastName, email, password) =>
+  apiFetch('auth/register/otp/request', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      eventId: eventId,
-      userId: userId,
-    }),
+    body: JSON.stringify({ firstName, lastName, email, password }),
   });
 
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
-  }
-
-  const data = await res.json();
-  return data;
-};
-
-const userCheckIn = async (path, eventId, userId) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/${path}`, {
+export const authRegisterVerify = (email, otp, password) =>
+  apiFetch('auth/register/otp/verify', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      eventId: eventId,
-      userId: userId,
-    }),
+    body: JSON.stringify({ email, otp, password }),
   });
 
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
-  }
-
-  const data = await res.json();
-  return data;
-};
-
-const getUserInfo = async (qrContent) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/qr/user-info`, {
+export const authLoginOTPRequest = (email) =>
+  apiFetch('auth/login/otp/request', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      qrContent: qrContent,
-    }),
+    body: JSON.stringify({ email }),
   });
 
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
-  }
-
-  const data = await res.json();
-  return data;
-};
-
-const regisRequestEmail = async (email, firstName, lastName, id) => {
-  const res = await fetch(`${url}/events/${id}/register/otp/request`, {
+export const authLoginOTPVerify = (email, otp) =>
+  apiFetch('auth/login/otp/verify', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: email,
-      firstName: firstName,
-      lastName: lastName,
-    }),
+    body: JSON.stringify({ email, otp }),
   });
 
-  return res.json();
-};
+export const postEventRegister = (path) => apiFetch(path, { method: 'POST' });
 
-const regisVerifyEmail = async (email, otp, id) => {
-  const res = await fetch(`${url}/events/${id}/register/otp/verify`, {
+export const requestEmailOTP = (id, payload) =>
+  apiFetch(`events/${id}/register/otp/request`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email: email,
-      otp: otp,
-    }),
+    body: JSON.stringify(payload),
   });
 
-  return res.json();
-};
-
-const createEvent = async (formData) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/events`, {
+export const verifyEmailOTP = (id, email, otp) =>
+  apiFetch(`events/${id}/register/otp/verify`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
+    body: JSON.stringify({ email, otp }),
   });
 
-  const data = await res.json();
-
-  if (!res.ok) {
-    const errorMessage =
-      data.message || `Failed to create event (Status: ${res.status})`;
-    throw new Error(errorMessage);
-  }
-
-  return data;
-};
-
-const getEventTypes = async () => {
-  const res = await fetch(`${url}/events/types`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+export const postQRCheckIn = (qrContent) =>
+  apiFetch('qr/check-in', {
+    method: 'POST',
+    body: JSON.stringify({ qrContent }),
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch event types');
-  }
-
-  return await res.json();
-};
-
-const getEventById = async (id) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/events/${id}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
+export const postQRUserInfo = (qrContent) =>
+  apiFetch('qr/user-info', {
+    method: 'POST',
+    body: JSON.stringify({ qrContent }),
   });
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to fetch event');
-  }
-
-  return await res.json();
-};
-
-const updateEvent = async (id, formData) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/events/${id}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
+export const postUpdateProfile = (data) =>
+  apiFetch('users/me/profile', {
+    method: 'POST',
+    body: JSON.stringify(data),
   });
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to update event');
-  }
-
-  return await res.json();
-};
-
-const deleteEvent = async (id) => {
-  const token = getCookie('token');
-  const res = await fetch(`${url}/events/${id}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+export const postUserCheckIn = (path, eventId, userId) =>
+  apiFetch(path, {
+    method: 'POST',
+    body: JSON.stringify({ eventId, userId }),
   });
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to delete event');
-  }
-
-  // เช็ค status 204 (No Content) หรือ return json ตามที่ backend ส่งมา
-  if (res.status === 204) return true;
-  return await res.json().catch(() => ({}));
-};
-
-const deleteEventImage = async (eventId, category, index = null) => {
-  const token = getCookie('token');
-
-  // สร้าง URL query string
-  let path = `${url}/events/${eventId}/images?category=${category}`;
-  if (index !== null) {
-    path += `&index=${index}`;
-  }
-
-  const res = await fetch(path, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+export const getListUser = (path, payload) =>
+  apiFetch(path, {
+    method: 'POST',
+    body: JSON.stringify(payload),
   });
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || 'Failed to delete image');
-  }
-
-  return true;
-};
-
-const getUpdateImage = async (path) => {
-  // const token = getCookie("token");
-  const res = await fetch(`${url}/${path}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!res.ok) {
-    const error = await res.json();
-    return error;
-  }
-};
-
-export {
-  getData,
-  loginPassWord,
-  registerRequest,
-  registerOTP,
-  loginOTPRequest,
-  loginOTPVerify,
-  regisEvents,
-  getImage,
-  getDataNoToken,
-  qrCodefetch,
-  getListUser,
-  userCheckIn,
-  getListUserByEvent,
-  getQrImage,
-  getUserInfo,
-  regisRequestEmail,
-  regisVerifyEmail,
-  createEvent,
-  getEventTypes,
-  getEventById,
-  updateEvent,
-  deleteEvent,
-  deleteEventImage,
-  getUpdateImage,
-};
+export const getImage = (path) => apiFetch(path, { method: 'GET' }, true);

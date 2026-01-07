@@ -1,26 +1,26 @@
-"use client";
+'use client';
 
-import Cookie from "js-cookie";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { loginPassWord } from "@/libs/fetch";
-import Notification from "@/components/Notification/Notification";
+import Cookie from 'js-cookie';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { authLoginPassword } from '@/libs/fetch';
+import Notification from '@/components/Notification/Notification';
 
 export default function SignInPage({
   isOpen,
   setIsSignInOpen,
   setIsSignInOTPOpen,
 }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
   const [errors, setErrors] = useState({});
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
-    message: "",
+    message: '',
   });
 
   const closeNotification = () => {
@@ -28,19 +28,14 @@ export default function SignInPage({
   };
 
   const handleSubmit = async () => {
-    // if (!email.includes("@") || !email.endsWith(".com")) {
-    //   alert("Please enter a valid email address with '@' and '.com'");
-    //   return;
-    // }
     if (!validateForm()) {
       return;
     }
-    const res = await loginPassWord(email, password);
+    const res = await authLoginPassword(email, password);
     console.log(res);
     if (res.statusCode === 200) {
-      Cookie.set("token", res?.data.token);
-      // router.push("/home");
-      window.location.href = "/home";
+      Cookie.set('token', res?.data.token);
+      window.location.href = '/home';
     } else if (res.statusCode === 401) {
       setNotification({
         isVisible: true,
@@ -51,34 +46,34 @@ export default function SignInPage({
       setNotification({
         isVisible: true,
         isError: true,
-        message: "เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้ง",
+        message: 'เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้ง',
       });
     }
   };
 
   const validateField = (field, value) => {
     switch (field) {
-      case "email":
-        if (!value.trim()) return "* กรุณากรอกอีเมล";
-        if (!value.includes("@") || !value.endsWith(".com"))
-          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
-        return "";
-      case "password":
-        if (!value.trim()) return "* กรุณากรอกรหัสผ่าน";
-        if (value.length < 8) return "* รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
-        return "";
+      case 'email':
+        if (!value.trim()) return '* กรุณากรอกอีเมล';
+        if (!value.includes('@') || !value.endsWith('.com'))
+          return '* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)';
+        return '';
+      case 'password':
+        if (!value.trim()) return '* กรุณากรอกรหัสผ่าน';
+        if (value.length < 8) return '* รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร';
+        return '';
       default:
-        return "";
+        return '';
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    const emailErr = validateField("email", email);
+    const emailErr = validateField('email', email);
     if (emailErr) {
       newErrors.email = emailErr;
     }
-    const passwordErr = validateField("password", password);
+    const passwordErr = validateField('password', password);
     if (passwordErr) {
       newErrors.password = passwordErr;
     }
@@ -92,7 +87,7 @@ export default function SignInPage({
     setIsSignInOTPOpen(true);
   };
   const handleSignUp = () => {
-    router.push("/sign-up");
+    router.push('/sign-up');
   };
   if (!isOpen) return null;
   return (
@@ -190,7 +185,7 @@ export default function SignInPage({
           </div>
 
           <p className="text-center mt-6 text-gray-700">
-            Don't have account?{" "}
+            Don't have account?{' '}
             <button
               onClick={handleSignUp}
               className="text-blue-500 hover:text-blue-600 font-medium"

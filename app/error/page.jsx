@@ -1,7 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { ShieldX, ArrowLeft, Home } from "lucide-react";
+import { ShieldX, ArrowLeft, Home } from 'lucide-react';
 
 export default function Error403() {
   return (
@@ -21,34 +20,29 @@ export default function Error403() {
             </div>
           </div>
 
-          {/* Error Code */}
           <h1 className="text-7xl md:text-9xl font-bold text-gray-900 mb-4">
             403
           </h1>
 
-          {/* Title */}
           <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-4">
             ไม่มีสิทธิ์เข้าถึง
           </h2>
 
-          {/* Description */}
           <p className="text-gray-600 text-base md:text-lg mb-8 px-4">
             ขออภัย คุณไม่ได้รับอนุญาตให้เข้าถึงหน้านี้
             <br className="hidden sm:block" />
             กรุณาตรวจสอบสิทธิ์การเข้าถึงของคุณ
           </p>
 
-          {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
             <button
-              onClick={() => (window.location.href = "/home")}
+              onClick={() => (window.location.href = '/home')}
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
             >
               <Home className="w-5 h-5" />
               <span>กลับหน้าหลัก</span>
             </button>
           </div>
-
         </div>
       </div>
     </div>

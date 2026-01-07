@@ -1,47 +1,47 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Calendar, Info } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Calendar, Info } from 'lucide-react';
 import {
   getData,
-  regisEvents,
+  postEventRegister,
   getDataNoToken,
-  regisRequestEmail,
-} from "@/libs/fetch";
-import { useParams, useRouter } from "next/navigation";
-import SuccessPage from "@/components/Notification/Success_Regis_Page";
-import { FormatDate } from "@/utils/format";
-import Cookies from "js-cookie";
-import Notification from "@/components/Notification/Notification";
+  requestEmailOTP,
+} from '@/libs/fetch';
+import { useParams, useRouter } from 'next/navigation';
+import SuccessPage from '@/components/Notification/Success_Regis_Page';
+import { FormatDate } from '@/utils/format';
+import Cookie from 'js-cookie';
+import Notification from '@/components/Notification/Notification';
 
 const MOCK_OPTIONS = {
   sources: [
-    "Facebook / Instagram",
-    "Email Newsletter (จดหมายข่าวทางอีเมล)",
-    "Friend or Colleague (เพื่อนหรือเพื่อนร่วมงานแนะนำ)",
-    "Search Engine / Google (ค้นหาผ่าน Google)",
-    "Online Advertisement (โฆษณาออนไลน์)",
-    "Other (อื่นๆ)",
+    'Facebook / Instagram',
+    'Email Newsletter (จดหมายข่าวทางอีเมล)',
+    'Friend or Colleague (เพื่อนหรือเพื่อนร่วมงานแนะนำ)',
+    'Search Engine / Google (ค้นหาผ่าน Google)',
+    'Online Advertisement (โฆษณาออนไลน์)',
+    'Other (อื่นๆ)',
   ],
   expectations: [
-    "Collect information on innovative products, technologies, and solutions for placing orders (รวบรวมข้อมูลสินค้า เทคโนโลยี และบริการโซลูชั่นใหม่เพื่อสั่งซื้อ)",
-    "Explore product/Technology offerings and trends in the market (สำรวจสินค้า เทคโนโลยีและแนวโน้มในตลาด)",
-    "Extend my network (ขยายเครือข่ายทางธุรกิจ)",
-    "Evaluate the show for future participation (ศึกษาข้อมูลเพื่อร่วมออกบูธในงานครั้งต่อไป)",
-    "Meet existing suppliers (พบปะเยี่ยมตัวแทนที่ติดต่อกันอยู่แล้ว)",
-    "Establish new contacts /Seek representative (หาตัวแทน คู่ค้าพันธมิตรรายใหม่)",
-    "Other, please specify (อื่น ๆ - โปรดระบุ)",
+    'Collect information on innovative products, technologies, and solutions for placing orders (รวบรวมข้อมูลสินค้า เทคโนโลยี และบริการโซลูชั่นใหม่เพื่อสั่งซื้อ)',
+    'Explore product/Technology offerings and trends in the market (สำรวจสินค้า เทคโนโลยีและแนวโน้มในตลาด)',
+    'Extend my network (ขยายเครือข่ายทางธุรกิจ)',
+    'Evaluate the show for future participation (ศึกษาข้อมูลเพื่อร่วมออกบูธในงานครั้งต่อไป)',
+    'Meet existing suppliers (พบปะเยี่ยมตัวแทนที่ติดต่อกันอยู่แล้ว)',
+    'Establish new contacts /Seek representative (หาตัวแทน คู่ค้าพันธมิตรรายใหม่)',
+    'Other, please specify (อื่น ๆ - โปรดระบุ)',
   ],
 };
 
 export default function ExpoRegisterForm() {
-  const token = Cookies.get("token");
+  const token = Cookie.get('token');
   const router = useRouter();
   const { id } = useParams();
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
+    firstName: '',
+    lastName: '',
+    email: '',
     expectations: [],
     source: [],
     agreeTerms: false,
@@ -51,7 +51,7 @@ export default function ExpoRegisterForm() {
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
-    message: "",
+    message: '',
   });
 
   const closeNotification = () => {
@@ -111,7 +111,7 @@ export default function ExpoRegisterForm() {
       setNotification({
         isVisible: true,
         isError: true,
-        message: "Please fill in all required fields",
+        message: 'Please fill in all required fields',
       });
       return;
     }
@@ -119,7 +119,7 @@ export default function ExpoRegisterForm() {
       setNotification({
         isVisible: true,
         isError: true,
-        message: "Please agree to the terms",
+        message: 'Please agree to the terms',
       });
       return;
     }
@@ -131,7 +131,7 @@ export default function ExpoRegisterForm() {
         email: formData.email,
         eventId: id,
       };
-      const res = await regisRequestEmail(
+      const res = await requestEmailOTP(
         signupData?.email,
         signupData?.firstName,
         signupData?.lastName,
@@ -140,17 +140,17 @@ export default function ExpoRegisterForm() {
       console.log(res);
       if (
         res?.statusCode === 200 &&
-        res?.message === "Registration OTP has been sent to your email."
+        res?.message === 'Registration OTP has been sent to your email.'
       ) {
-        Cookies.set("signupDataFromRegis", JSON.stringify(signupData));
-        router.push("/login/otp");
+        Cookie.set('signupDataFromRegis', JSON.stringify(signupData));
+        router.push('/login/otp');
       }
       if (
         res?.statusCode === 200 &&
-        res?.message === "Login OTP has been sent to your email."
+        res?.message === 'Login OTP has been sent to your email.'
       ) {
-        Cookies.set("signinDataFromRegis", JSON.stringify(signupData));
-        router.push("/login/otp");
+        Cookie.set('signinDataFromRegis', JSON.stringify(signupData));
+        router.push('/login/otp');
       } else {
         setNotification({
           isVisible: true,
@@ -160,8 +160,8 @@ export default function ExpoRegisterForm() {
       }
     }
     if (token) {
-      console.log("Form submitted:", formData);
-      const res = await regisEvents(`events/${id}/register`);
+      console.log('Form submitted:', formData);
+      const res = await postEventRegister(`events/${id}/register`);
       console.log(res);
       if (res.statusCode === 200) {
         setIsSuccess(true);
@@ -204,7 +204,7 @@ export default function ExpoRegisterForm() {
                     Register for
                   </h1>
                   <h2 className="text-xl md:text-3xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent mt-2 text-center break-words max-w-full">
-                    {eventDetail?.eventName || "-"}
+                    {eventDetail?.eventName || '-'}
                   </h2>
                 </div>
 
@@ -303,7 +303,6 @@ export default function ExpoRegisterForm() {
                 />
               </div>
 
-              {/* ส่วนที่ 1: Source */}
               <div className="bg-white rounded-3xl shadow-lg p-6 md:p-8">
                 <label className="block text-gray-900 font-medium mb-4">
                   How did you hear about the show? (คุณรู้จักงานนี้ได้อย่างไร)
@@ -317,7 +316,7 @@ export default function ExpoRegisterForm() {
                       <input
                         type="checkbox"
                         checked={formData.source.includes(option)}
-                        onChange={() => handleCheckboxChange("source", option)}
+                        onChange={() => handleCheckboxChange('source', option)}
                         className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600 flex-shrink-0"
                       />
                       <span className="ml-3 text-gray-700 group-hover:text-gray-900">
@@ -328,10 +327,9 @@ export default function ExpoRegisterForm() {
                 </div>
               </div>
 
-              {/* ส่วนที่ 2: Product Expect */}
               <div className="bg-white rounded-3xl shadow-lg p-6 md:p-8">
                 <label className="block text-gray-900 font-medium mb-4 leading-relaxed">
-                  What do you expect from this event? – Select all that applies{" "}
+                  What do you expect from this event? – Select all that applies{' '}
                   <br className="hidden md:block" /> (คุณคาดหวังอะไรจากงานนี้ -
                   เลือกได้หลายตัว)
                 </label>
@@ -345,7 +343,7 @@ export default function ExpoRegisterForm() {
                         type="checkbox"
                         checked={formData.expectations.includes(option)}
                         onChange={() =>
-                          handleCheckboxChange("expectations", option)
+                          handleCheckboxChange('expectations', option)
                         }
                         className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600 flex-shrink-0"
                       />
@@ -370,7 +368,7 @@ export default function ExpoRegisterForm() {
                   className="w-5 h-5 border-2 border-gray-400 rounded cursor-pointer accent-purple-600 mt-1 flex-shrink-0"
                 />
                 <label className="ml-3 text-sm md:text-base text-gray-700">
-                  By checking this box, I hereby agree that my{" "}
+                  By checking this box, I hereby agree that my{' '}
                   <span className="underline">information</span> will be shared
                   to our website.
                 </label>

@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { loginOTPRequest } from "@/libs/fetch";
-import Cookies from "js-cookie";
-import Notification from "@/components/Notification/Notification";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { authLoginOTPRequest } from '@/libs/fetch';
+import Cookie from 'js-cookie';
+import Notification from '@/components/Notification/Notification';
 
 export default function SignInPageOTP({
   isOpen,
   setIsSignInOpen,
   setIsSignInOTPOpen,
 }) {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const router = useRouter();
   const [cooldown, setCooldown] = useState(0);
   const [errors, setErrors] = useState({});
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
-    message: "",
+    message: '',
   });
 
   const closeNotification = () => {
@@ -63,20 +63,20 @@ export default function SignInPageOTP({
       if (savedEndTime && savedEndTime > now) {
         const remaining = Math.floor((savedEndTime - now) / 1000);
         setCooldown(remaining);
-        router.push("/login/otp");
+        router.push('/login/otp');
         return;
       }
 
-      const res = await loginOTPRequest(email);
+      const res = await authLoginOTPRequest(email);
 
       if (res.statusCode === 200) {
         const newEndTime = Date.now() + OTP_COOLDOWN_SEC * 1000;
         localStorage.setItem(STORAGE_KEY, newEndTime);
 
         setCooldown(OTP_COOLDOWN_SEC);
-        Cookies.set("signinData", JSON.stringify(email));
+        Cookie.set('signinData', JSON.stringify(email));
 
-        router.push("/login/otp");
+        router.push('/login/otp');
       } else if (res.statusCode === 500) {
         setNotification({
           isVisible: true,
@@ -92,17 +92,16 @@ export default function SignInPageOTP({
         });
       }
     } catch (error) {
-      // console.error("Error during login:", error);
       setNotification({
         isVisible: true,
         isError: true,
-        message: error,
+        message: error.message,
       });
 
       localStorage.removeItem(STORAGE_KEY);
       setCooldown(0);
 
-      window.alert("An unexpected error occurred. Please try again.");
+      // window.alert("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -111,25 +110,25 @@ export default function SignInPageOTP({
     setIsSignInOpen(true);
   };
   const handleSignUp = () => {
-    router.push("/sign-up");
+    router.push('/sign-up');
   };
   if (!isOpen) return null;
 
   const validateField = (field, value) => {
     switch (field) {
-      case "email":
-        if (!value.trim()) return "* กรุณากรอกอีเมล";
-        if (!value.includes("@") || !value.endsWith(".com"))
-          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
-        return "";
+      case 'email':
+        if (!value.trim()) return '* กรุณากรอกอีเมล';
+        if (!value.includes('@') || !value.endsWith('.com'))
+          return '* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)';
+        return '';
       default:
-        return "";
+        return '';
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    const err = validateField("email", email);
+    const err = validateField('email', email);
     if (err) {
       newErrors.email = err;
     }
@@ -197,7 +196,7 @@ export default function SignInPageOTP({
           </div>
 
           <p className="text-center mt-6 text-gray-700">
-            Don't have account?{" "}
+            Don't have account?{' '}
             <button
               onClick={handleSignUp}
               className="text-blue-500 hover:text-blue-600 font-medium"

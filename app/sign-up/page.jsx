@@ -1,21 +1,20 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { registerRequest } from "@/libs/fetch";
-import Cookies from "js-cookie";
-import { getData } from "@/libs/fetch";
-import { Eye, EyeOff } from "lucide-react";
-import Notification from "@/components/Notification/Notification";
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { getData, authRegisterRequest } from '@/libs/fetch';
+import Cookie from 'js-cookie';
+import { Eye, EyeOff } from 'lucide-react';
+import Notification from '@/components/Notification/Notification';
 
 export default function Page() {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
   const router = useRouter();
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -27,7 +26,7 @@ export default function Page() {
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
-    message: "",
+    message: '',
   });
 
   const closeNotification = () => {
@@ -62,23 +61,23 @@ export default function Page() {
 
   const validateField = (field, value) => {
     switch (field) {
-      case "firstName":
-        return value.trim() ? "" : "* กรุณากรอกชื่อจริง";
-      case "lastName":
-        return value.trim() ? "" : "* กรุณากรอกนามสกุล";
-      case "email":
-        if (!value.trim()) return "* กรุณากรอกอีเมล";
-        if (!value.includes("@") || !value.endsWith(".com"))
-          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
-        return "";
-      case "password":
-        return value.trim() ? "" : "* กรุณากรอกรหัสผ่าน";
-      case "confirmPassword":
-        if (!value.trim()) return "* กรุณายืนยันรหัสผ่าน";
-        if (value !== formData.password) return "* รหัสผ่านไม่ตรงกัน";
-        return "";
+      case 'firstName':
+        return value.trim() ? '' : '* กรุณากรอกชื่อจริง';
+      case 'lastName':
+        return value.trim() ? '' : '* กรุณากรอกนามสกุล';
+      case 'email':
+        if (!value.trim()) return '* กรุณากรอกอีเมล';
+        if (!value.includes('@') || !value.endsWith('.com'))
+          return '* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)';
+        return '';
+      case 'password':
+        return value.trim() ? '' : '* กรุณากรอกรหัสผ่าน';
+      case 'confirmPassword':
+        if (!value.trim()) return '* กรุณายืนยันรหัสผ่าน';
+        if (value !== formData.password) return '* รหัสผ่านไม่ตรงกัน';
+        return '';
       default:
-        return "";
+        return '';
     }
   };
 
@@ -103,7 +102,7 @@ export default function Page() {
 
     if (!validateForm() || !agreeTerms) {
       if (!agreeTerms) {
-        console.log("Please agree to the Terms & Conditions.");
+        console.log('Please agree to the Terms & Conditions.');
       }
       return;
     }
@@ -113,9 +112,9 @@ export default function Page() {
     try {
       setLoading(true);
 
-      Cookies.set("signupData", JSON.stringify(formData), {
+      Cookie.set('signupData', JSON.stringify(formData), {
         secure: true,
-        sameSite: "strict",
+        sameSite: 'strict',
       });
 
       const savedEnd = localStorage.getItem(key);
@@ -125,7 +124,7 @@ export default function Page() {
 
       if (remaining > 0) {
         setCooldown(remaining);
-        router.push("/sign-up/verify-otp");
+        router.push('/sign-up/verify-otp');
         return;
       }
 
@@ -133,7 +132,7 @@ export default function Page() {
       localStorage.setItem(key, endTime);
       setCooldown(60);
 
-      const res = await registerRequest(
+      const res = await authRegisterRequest(
         formData?.firstName,
         formData?.lastName,
         formData?.email,
@@ -141,7 +140,7 @@ export default function Page() {
       );
 
       if (res.statusCode === 200) {
-        router.push("/sign-up/verify-otp");
+        router.push('/sign-up/verify-otp');
       } else if (res.statusCode === 400) {
         localStorage.removeItem(key);
         setCooldown(0);
@@ -160,20 +159,20 @@ export default function Page() {
         });
       }
     } catch (error) {
-      console.error("Error during registration:", error);
+      console.error('Error during registration:', error);
       localStorage.removeItem(key);
       setCooldown(0);
       setNotification({
         isVisible: true,
         isError: true,
-        message: "An unexpected error occurred. Please try again.",
+        message: 'An unexpected error occurred. Please try again.',
       });
     } finally {
       setLoading(false);
     }
   };
   const handleSignIn = () => {
-    router.push("/login");
+    router.push('/login');
   };
 
   return (
@@ -203,9 +202,9 @@ export default function Page() {
                 type="text"
                 placeholder="Enter your first name"
                 value={formData.firstName}
-                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
                 className={`w-full px-4 py-3 border ${
-                  errors.firstName ? "border-red-500" : "border-gray-300"
+                  errors.firstName ? 'border-red-500' : 'border-gray-300'
                 } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
               />
               {errors.firstName && (
@@ -225,9 +224,9 @@ export default function Page() {
                 type="text"
                 placeholder="Enter your last name"
                 value={formData.lastName}
-                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
                 className={`w-full px-4 py-3 border ${
-                  errors.lastName ? "border-red-500" : "border-gray-300"
+                  errors.lastName ? 'border-red-500' : 'border-gray-300'
                 } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
               />
               {errors.lastName && (
@@ -247,9 +246,9 @@ export default function Page() {
                 type="email"
                 placeholder="Enter your email"
                 value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
+                onChange={(e) => handleInputChange('email', e.target.value)}
                 className={`w-full px-4 py-3 border ${
-                  errors.email ? "border-red-500" : "border-gray-300"
+                  errors.email ? 'border-red-500' : 'border-gray-300'
                 } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
               />
               {errors.email && (
@@ -267,21 +266,21 @@ export default function Page() {
               <div className="relative">
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Create a password"
                   value={formData.password}
                   onChange={(e) =>
-                    handleInputChange("password", e.target.value)
+                    handleInputChange('password', e.target.value)
                   }
                   className={`w-full px-4 py-3 border ${
-                    errors.password ? "border-red-500" : "border-gray-300"
+                    errors.password ? 'border-red-500' : 'border-gray-300'
                   } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -302,16 +301,16 @@ export default function Page() {
               <div className="relative">
                 <input
                   id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={(e) =>
-                    handleInputChange("confirmPassword", e.target.value)
+                    handleInputChange('confirmPassword', e.target.value)
                   }
                   className={`w-full px-4 py-3 border ${
                     errors.confirmPassword
-                      ? "border-red-500"
-                      : "border-gray-300"
+                      ? 'border-red-500'
+                      : 'border-gray-300'
                   } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
                 />
                 <button
@@ -319,7 +318,7 @@ export default function Page() {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
                   aria-label={
-                    showConfirmPassword ? "Hide password" : "Show password"
+                    showConfirmPassword ? 'Hide password' : 'Show password'
                   }
                 >
                   {showConfirmPassword ? (
@@ -346,11 +345,11 @@ export default function Page() {
                   className="w-4 h-4 mt-1 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                 />
                 <span className="text-sm text-gray-600">
-                  I agree to the{" "}
+                  I agree to the{' '}
                   <Link href="#" className="text-blue-500 hover:text-blue-600">
                     Terms & Conditions
-                  </Link>{" "}
-                  and{" "}
+                  </Link>{' '}
+                  and{' '}
                   <Link href="#" className="text-blue-500 hover:text-blue-600">
                     Privacy Policy
                   </Link>
@@ -368,7 +367,7 @@ export default function Page() {
           </div>
 
           <p className="text-center mt-6 text-gray-700">
-            Already have an account?{" "}
+            Already have an account?{' '}
             <button
               onClick={handleSignIn}
               className="text-blue-500 hover:text-blue-600 font-medium"
