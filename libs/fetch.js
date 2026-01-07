@@ -9,8 +9,10 @@ const getCookie = (name) => {
 const apiFetch = async (endpoint, options = {}, isBlob = false) => {
   const token = getCookie('token');
 
+  const isFormData = options.body instanceof FormData;
+
   const defaultHeaders = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
@@ -23,6 +25,10 @@ const apiFetch = async (endpoint, options = {}, isBlob = false) => {
   if (isBlob && response.ok) {
     const blob = await response.blob();
     return URL.createObjectURL(blob);
+  }
+
+  if (response.status === 204) {
+    return true;
   }
 
   const data = await response.json();
@@ -116,5 +122,36 @@ export const getListUser = (path, payload) =>
     method: 'POST',
     body: JSON.stringify(payload),
   });
+
+export const createEvent = (formData) =>
+  apiFetch('events', {
+    method: 'POST',
+    body: formData,
+  });
+
+export const getEventTypes = () => apiFetch('events/types', { method: 'GET' });
+
+export const getEventById = (id) => apiFetch(`events/${id}`, { method: 'GET' });
+
+export const updateEvent = (id, formData) =>
+  apiFetch(`events/${id}`, {
+    method: 'PUT',
+    body: formData,
+  });
+
+export const deleteEvent = (id) =>
+  apiFetch(`events/${id}`, { method: 'DELETE' });
+
+export const deleteEventImage = (id, category, index = null) => {
+  let endpoint = `events/${id}/images?category=${category}`;
+  if (index !== null) {
+    endpoint += `&index=${index}`;
+  }
+  return apiFetch(endpoint, {
+    method: 'DELETE',
+  });
+};
+
+export const getUpdateImage = (path) => apiFetch(path, { method: 'GET' }, true);
 
 export const getImage = (path) => apiFetch(path, { method: 'GET' }, true);

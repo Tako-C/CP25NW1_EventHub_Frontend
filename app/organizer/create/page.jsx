@@ -102,6 +102,10 @@ export default function CreateEventPage() {
         : '';
       formData.append('startDate', startDateStr);
       formData.append('endDate', endDateStr);
+      formData.append('contactEmail', values.contactEmail || '');
+      formData.append('contactPhone', values.contactPhone || '');
+      formData.append('contactLine', values.contactLine || '');
+      formData.append('contactFacebook', values.contactFacebook || '');
 
       // จัดการ Files (Single File)
       if (values.eventCard?.[0]?.originFileObj) {

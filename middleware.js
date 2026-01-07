@@ -76,7 +76,7 @@ export async function middleware(req) {
       console.warn('Middleware Fetch API failed status:', res.status);
     }
   } catch (fetchError) {
-    console.warn('Middleware Fetch Exception (Skipped):', fetchError);
+    // console.warn('Middleware Fetch Exception (Skipped):', fetchError);
   }
 
   // -----------------------------------------------------------

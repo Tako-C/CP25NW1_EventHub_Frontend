@@ -89,7 +89,7 @@ export default function EditEventPage() {
             loadAndFormatImage(slides[1], 'slide2'),
             loadAndFormatImage(slides[2], 'slide3'),
           ]);
-
+        console.log(event);
         setInitialData({
           ...event,
           // Text Data
@@ -101,6 +101,10 @@ export default function EditEventPage() {
             event.eventType,
           startDate: event.startDate ? dayjs(event.startDate) : null,
           endDate: event.endDate ? dayjs(event.endDate) : null,
+          contactEmail: event.contactEmail || event.email || '',
+          contactPhone: event.contactPhone || event.phone || '',
+          contactLine: event.contactLine || event.lineId || '',
+          contactFacebook: event.contactFacebook || event.facebook || '',
 
           // Image Data
           eventCard: fileCard,
@@ -134,6 +138,10 @@ export default function EditEventPage() {
       formData.append('eventDesc', values.eventDescription);
       formData.append('eventTypeId', values.eventType);
       formData.append('location', values.location);
+      formData.append('contactEmail', values.contactEmail || '');
+      formData.append('contactPhone', values.contactPhone || '');
+      formData.append('contactLine', values.contactLine || '');
+      formData.append('contactFacebook', values.contactFacebook || '');
       const creatorId = initialData.createdBy?.id || initialData.createdBy;
       if (creatorId) {
         formData.append('createdBy', creatorId);

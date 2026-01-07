@@ -352,6 +352,19 @@ export default function Page() {
           )}
         </div>
       </section>
+
+      {/* ----------------------------------------------------------------------- */}
+      {/* --- Organizer Section --- */}
+      {/* ----------------------------------------------------------------------- */}
+
+      {userId && (userRole === 'ORGANIZER' || userRole === 'ADMIN') && (
+        <section
+          id="organizer-section"
+          className="bg-gray-50 border-t border-gray-200"
+        >
+          <OrganizerEvents events={myOrganizedEvents} />
+        </section>
+      )}
     </div>
   );
 }
