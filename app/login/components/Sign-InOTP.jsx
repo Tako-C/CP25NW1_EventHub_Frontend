@@ -95,13 +95,13 @@ export default function SignInPageOTP({
       setNotification({
         isVisible: true,
         isError: true,
-        message: error,
+        message: error.message,
       });
 
       localStorage.removeItem(STORAGE_KEY);
       setCooldown(0);
 
-      window.alert("An unexpected error occurred. Please try again.");
+      // window.alert("An unexpected error occurred. Please try again.");
     }
   };
 
