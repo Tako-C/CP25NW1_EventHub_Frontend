@@ -16,7 +16,7 @@ import {
   LayoutDashboard,
   Shield,
 } from "lucide-react";
-import Cookies from "js-cookie";
+import Cookie from "js-cookie";
 import { getData } from "@/libs/fetch";
 
 export default function Navbar({ token }) {
@@ -162,7 +162,7 @@ export default function Navbar({ token }) {
   };
 
   const handleSignOut = () => {
-    Cookies.remove("token");
+    Cookie.remove("token");
     setIsProfileOpen(false);
     window.location.href = "/login";
   };

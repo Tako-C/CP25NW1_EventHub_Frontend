@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 export async function middleware(req) {
-  const token = req.cookies.get("token")?.value;
+  const token = req.cookie.get("token")?.value;
   const url = req.nextUrl.clone();
   
   // 1. เก็บ Path ปัจจุบันไว้เช็ค

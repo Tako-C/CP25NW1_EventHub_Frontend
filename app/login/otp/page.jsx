@@ -7,7 +7,7 @@ import {
   verifyEmailOTP,
 } from "@/libs/fetch";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import Cookie from "js-cookie";
 import Notification from "@/components/Notification/Notification";
 
 export default function Page() {
@@ -32,17 +32,17 @@ export default function Page() {
   };
 
   useEffect(() => {
-    const data = Cookies.get("signinData");
+    const data = Cookie.get("signinData");
     if (data) {
-      const email = JSON?.parse(Cookies.get("signinData"));
+      const email = JSON?.parse(Cookie.get("signinData"));
       console.log(email);
       if (email) setData(email);
     }
   }, []);
 
   useEffect(() => {
-    const raw_up = Cookies.get("signupDataFromRegis");
-    const raw_in = Cookies.get("signinDataFromRegis");
+    const raw_up = Cookie.get("signupDataFromRegis");
+    const raw_in = Cookie.get("signinDataFromRegis");
     if (raw_in) {
       const data = JSON.parse(raw_in);
       console.log(data);
@@ -55,7 +55,7 @@ export default function Page() {
       setData(data?.email);
       setEventId(data?.eventId);
       setCooldown(60);
-      Cookies.remove("signinDataFromRegis");
+      Cookie.remove("signinDataFromRegis");
     }
     if (raw_up) {
       const data = JSON.parse(raw_up);
@@ -69,7 +69,7 @@ export default function Page() {
       setData(data?.email);
       setEventId(data?.eventId);
       setCooldown(60);
-      Cookies.remove("signupDataFromRegis");
+      Cookie.remove("signupDataFromRegis");
     }
   }, []);
 
@@ -142,15 +142,15 @@ export default function Page() {
         const res = await verifyEmailOTP(data, otpCode, eventId);
         console.log(res)
         if (res.statusCode === 200) {
-          Cookies.set("token", res?.data.token);
+          Cookie.set("token", res?.data.token);
           window.location.href = `/profile?tab=events`;
         }
       } else {
         const res = await authLoginOTPVerify(data, otpCode);
         console.log("res", res);
         if (res.statusCode === 200) {
-          Cookies.set("token", res?.data.token);
-          Cookies.remove("signinData");
+          Cookie.set("token", res?.data.token);
+          Cookie.remove("signinData");
           window.location.href = "/home";
         } else {
           setErrors("ใส่ OTP ให้ถูกต้อง");

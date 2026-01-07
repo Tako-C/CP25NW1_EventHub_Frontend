@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authLoginOTPRequest } from "@/libs/fetch";
-import Cookies from "js-cookie";
+import Cookie from "js-cookie";
 import Notification from "@/components/Notification/Notification";
 
 export default function SignInPageOTP({
@@ -74,7 +74,7 @@ export default function SignInPageOTP({
         localStorage.setItem(STORAGE_KEY, newEndTime);
 
         setCooldown(OTP_COOLDOWN_SEC);
-        Cookies.set("signinData", JSON.stringify(email));
+        Cookie.set("signinData", JSON.stringify(email));
 
         router.push("/login/otp");
       } else if (res.statusCode === 500) {

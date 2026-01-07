@@ -11,7 +11,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import SuccessPage from "@/components/Notification/Success_Regis_Page";
 import { FormatDate } from "@/utils/format";
-import Cookies from "js-cookie";
+import Cookie from "js-cookie";
 import Notification from "@/components/Notification/Notification";
 
 const MOCK_OPTIONS = {
@@ -35,7 +35,7 @@ const MOCK_OPTIONS = {
 };
 
 export default function ExpoRegisterForm() {
-  const token = Cookies.get("token");
+  const token = Cookie.get("token");
   const router = useRouter();
   const { id } = useParams();
   const [formData, setFormData] = useState({
@@ -142,14 +142,14 @@ export default function ExpoRegisterForm() {
         res?.statusCode === 200 &&
         res?.message === "Registration OTP has been sent to your email."
       ) {
-        Cookies.set("signupDataFromRegis", JSON.stringify(signupData));
+        Cookie.set("signupDataFromRegis", JSON.stringify(signupData));
         router.push("/login/otp");
       }
       if (
         res?.statusCode === 200 &&
         res?.message === "Login OTP has been sent to your email."
       ) {
-        Cookies.set("signinDataFromRegis", JSON.stringify(signupData));
+        Cookie.set("signinDataFromRegis", JSON.stringify(signupData));
         router.push("/login/otp");
       } else {
         setNotification({

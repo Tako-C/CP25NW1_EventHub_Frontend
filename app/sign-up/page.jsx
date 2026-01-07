@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getData , authRegisterRequest } from "@/libs/fetch";
-import Cookies from "js-cookie";
+import Cookie from "js-cookie";
 import { Eye, EyeOff } from "lucide-react";
 import Notification from "@/components/Notification/Notification";
 
@@ -112,7 +112,7 @@ export default function Page() {
     try {
       setLoading(true);
 
-      Cookies.set("signupData", JSON.stringify(formData), {
+      Cookie.set("signupData", JSON.stringify(formData), {
         secure: true,
         sameSite: "strict",
       });
