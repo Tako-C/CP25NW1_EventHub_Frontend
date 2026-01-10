@@ -4,13 +4,15 @@ services:
       context: .
       args:
         # NEXT_PUBLIC_API_URL: http://cp25nw1.sit.kmutt.ac.th:8080
-        NEXT_PUBLIC_API_URL: https://cp25nw1.sit.kmutt.ac.th/api
+        # NEXT_PUBLIC_API_URL: https://cp25nw1.sit.kmutt.ac.th/api
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     container_name: eventhub_frontend
     ports:
       - "3000:3000"
     environment:
       # - NEXT_PUBLIC_API_URL=http://cp25nw1.sit.kmutt.ac.th:8080
-      - NEXT_PUBLIC_API_URL=https://cp25nw1.sit.kmutt.ac.th/api
+      # - NEXT_PUBLIC_API_URL=https://cp25nw1.sit.kmutt.ac.th/api
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     networks:
       - eventhub-net
 
