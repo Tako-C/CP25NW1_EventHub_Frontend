@@ -101,12 +101,14 @@ export default function ProfilePage({
                 onChange={(v) => handleChange("firstName", v)}
                 isEditing={isEditing}
                 icon={<User size={18} />}
+                maxLength={20}
               />
               <InputField
                 label="Last Name"
                 value={updateProfile.lastName}
                 onChange={(v) => handleChange("lastName", v)}
                 isEditing={isEditing}
+                maxLength={20}
               />
             </div>
 
@@ -126,6 +128,7 @@ export default function ProfilePage({
               isEditing={isEditing}
               type="tel"
               icon={<Phone size={18} />}
+              maxLength={10}
             />
 
             <InputField
@@ -174,6 +177,7 @@ export default function ProfilePage({
               value={updateProfile.postCode}
               onChange={(v) => handleChange("postCode", v)}
               isEditing={isEditing}
+              maxLength={5}
             />
           </div>
 

@@ -203,6 +203,7 @@ export default function Page() {
                 placeholder="Enter your first name"
                 value={formData.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
+                maxLength={20}
                 className={`w-full px-4 py-3 border ${
                   errors.firstName ? 'border-red-500' : 'border-gray-300'
                 } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
@@ -225,6 +226,7 @@ export default function Page() {
                 placeholder="Enter your last name"
                 value={formData.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
+                maxLength={20}
                 className={`w-full px-4 py-3 border ${
                   errors.lastName ? 'border-red-500' : 'border-gray-300'
                 } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
@@ -247,6 +249,7 @@ export default function Page() {
                 placeholder="Enter your email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
+                maxLength={50}
                 className={`w-full px-4 py-3 border ${
                   errors.email ? 'border-red-500' : 'border-gray-300'
                 } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
@@ -272,6 +275,7 @@ export default function Page() {
                   onChange={(e) =>
                     handleInputChange('password', e.target.value)
                   }
+                  maxLength={20}
                   className={`w-full px-4 py-3 border ${
                     errors.password ? 'border-red-500' : 'border-gray-300'
                   } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
@@ -307,6 +311,7 @@ export default function Page() {
                   onChange={(e) =>
                     handleInputChange('confirmPassword', e.target.value)
                   }
+                  maxLength={20}
                   className={`w-full px-4 py-3 border ${
                     errors.confirmPassword
                       ? 'border-red-500'
