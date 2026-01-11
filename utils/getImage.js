@@ -175,7 +175,7 @@ export function QrCodeImage({ qrCodeUrl, isEnded, status }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const isCheckedIn = status === 'check_in';
+  const isCheckedIn = status === 'CHECK_IN';
 
   useEffect(() => {
     if (qrCodeUrl) {

@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Search, RotateCcw, Loader2, Calendar } from 'lucide-react';
-import { getListUser, getData, postUserCheckIn } from '@/libs/fetch';
-import { useSearchParams } from 'next/navigation';
-import Notification from '@/components/Notification/Notification';
+import { useState, useEffect } from "react";
+import { Search, RotateCcw, Loader2, Calendar } from "lucide-react";
+import { getListUser, getData, postUserCheckIn } from "@/libs/fetch";
+import { useSearchParams } from "next/navigation";
+import Notification from "@/components/Notification/Notification";
 
 export default function CheckInStaff() {
-  const [searchEmail, setSearchEmail] = useState('');
+  const [searchEmail, setSearchEmail] = useState("");
   const [visitors, setVisitors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
   const [events, setEvents] = useState([]);
-  const [selectedEventId, setSelectedEventId] = useState('');
-  const [userId, setUserId] = useState('');
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [userId, setUserId] = useState("");
   const [errors, setErrors] = useState({});
 
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
-    message: '',
+    message: "",
   });
 
   const closeNotification = () => {
@@ -29,16 +29,16 @@ export default function CheckInStaff() {
   };
 
   const searchParams = useSearchParams();
-  const paramEventId = searchParams.get('eventId');
+  const paramEventId = searchParams.get("eventId");
 
   const handleCheckIn = async (visitorData) => {
-    if (visitorData.status === 'check_in') return;
+    if (visitorData.status === "check_in") return;
 
     if (!selectedEventId) {
       setNotification({
         isVisible: true,
         isError: true,
-        message: 'กรุณาเลือก Event ก่อนทำการ Check-in',
+        message: "กรุณาเลือก Event ก่อนทำการ Check-in",
       });
       return;
     }
@@ -46,7 +46,7 @@ export default function CheckInStaff() {
     setIsUpdating(true);
     try {
       const result = await postUserCheckIn(
-        'manual/check-in',
+        "manual/check-in",
         selectedEventId,
         userId
       );
@@ -55,7 +55,7 @@ export default function CheckInStaff() {
         setVisitors((prevVisitors) =>
           prevVisitors.map((v) => {
             if (v.email === visitorData.email) {
-              return { ...v, status: 'check_in' };
+              return { ...v, status: "check_in" };
             }
             return v;
           })
@@ -68,11 +68,11 @@ export default function CheckInStaff() {
         });
       }
     } catch (error) {
-      console.error('Check-in failed:', error);
+      console.error("Check-in failed:", error);
       setNotification({
         isVisible: true,
         isError: true,
-        message: 'เกิดข้อผิดพลาดในการ Check-in',
+        message: "เกิดข้อผิดพลาดในการ Check-in",
       });
     } finally {
       setIsUpdating(false);
@@ -88,7 +88,7 @@ export default function CheckInStaff() {
       setNotification({
         isVisible: true,
         isError: true,
-        message: 'กรุณาเลือก Event ที่ต้องการค้นหา',
+        message: "กรุณาเลือก Event ที่ต้องการค้นหา",
       });
       return;
     }
@@ -98,11 +98,10 @@ export default function CheckInStaff() {
     setVisitors([]);
 
     try {
-      const result = await getListUser(
-        'manual/search',
-        searchEmail,
-        selectedEventId
-      );
+      const result = await getListUser("manual/search", {
+        email: searchEmail,
+        eventId: selectedEventId,
+      });
 
       console.log(result);
       if (result?.userId) {
@@ -120,7 +119,7 @@ export default function CheckInStaff() {
         });
       }
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error("Error fetching user:", error);
       setVisitors([]);
     } finally {
       setIsLoading(false);
@@ -129,19 +128,19 @@ export default function CheckInStaff() {
 
   const validateField = (field, value) => {
     switch (field) {
-      case 'email':
-        if (!value.trim()) return '* กรุณากรอกอีเมล';
-        if (!value.includes('@') || !value.endsWith('.com'))
-          return '* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)';
-        return '';
+      case "email":
+        if (!value.trim()) return "* กรุณากรอกอีเมล";
+        if (!value.includes("@") || !value.endsWith(".com"))
+          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
+        return "";
       default:
-        return '';
+        return "";
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    const emailErr = validateField('email', searchEmail);
+    const emailErr = validateField("email", searchEmail);
     if (emailErr) {
       newErrors.email = emailErr;
     }
@@ -152,26 +151,26 @@ export default function CheckInStaff() {
   };
 
   const handleReset = () => {
-    setSearchEmail('');
+    setSearchEmail("");
     setVisitors([]);
     setHasSearched(false);
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
 
   const fetchData = async () => {
     try {
-      const res = await getData('users/me/registered-events');
-      console.log('Events loaded:', res?.data);
+      const res = await getData("users/me/registered-events");
+      console.log("Events loaded:", res?.data);
       if (res?.data && Array.isArray(res.data)) {
         setEvents(res.data);
       }
     } catch (error) {
-      console.error('Failed to fetch events', error);
+      console.error("Failed to fetch events", error);
     }
   };
 
@@ -219,11 +218,11 @@ export default function CheckInStaff() {
           </h3>
 
           <p className="text-center text-gray-600 mb-6 md:mb-8 text-sm md:text-base">
-            Event :{' '}
+            Event :{" "}
             <span className="font-medium text-purple-600 block md:inline mt-1 md:mt-0">
               {selectedEventObj
                 ? selectedEventObj.eventName
-                : 'Please select an event'}
+                : "Please select an event"}
             </span>
           </p>
 
@@ -242,7 +241,7 @@ export default function CheckInStaff() {
               {events.map((event) => (
                 <option key={event.eventId} value={event.eventId}>
                   {event.eventName} (
-                  {new Date(event.startDate).toLocaleDateString('th-TH')})
+                  {new Date(event.startDate).toLocaleDateString("th-TH")})
                 </option>
               ))}
             </select>
@@ -275,7 +274,7 @@ export default function CheckInStaff() {
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    'Search'
+                    "Search"
                   )}
                 </button>
                 <button
@@ -307,7 +306,7 @@ export default function CheckInStaff() {
               <>
                 {visitors.length > 0 ? (
                   visitors.map((visitor, index) => {
-                    const isCheckedIn = visitor.status === 'check_in';
+                    const isCheckedIn = visitor.status === "CHECK_IN";
                     return (
                       <div
                         key={index}
@@ -344,7 +343,7 @@ export default function CheckInStaff() {
                                 Phone :
                               </span>
                               <span className="text-gray-900">
-                                {visitor.phone || '-'}
+                                {visitor.phone || "-"}
                               </span>
                             </div>
                           </div>
@@ -356,7 +355,7 @@ export default function CheckInStaff() {
                                 disabled={isUpdating}
                                 className="w-full md:w-auto bg-green-400 hover:bg-green-500 disabled:bg-green-200 text-white font-medium px-8 py-3 rounded-md transition-colors"
                               >
-                                {isUpdating ? 'Saving...' : 'Check-in'}
+                                {isUpdating ? "Saving..." : "Check-in"}
                               </button>
                             ) : (
                               <div className="text-center w-full md:w-auto">
@@ -379,8 +378,8 @@ export default function CheckInStaff() {
                 ) : (
                   <div className="text-center text-gray-500 py-8">
                     {hasSearched
-                      ? 'ไม่พบข้อมูลผู้เข้าร่วมงาน (User Not Found)'
-                      : 'กรุณากรอกข้อมูลเพื่อค้นหา'}
+                      ? "ไม่พบข้อมูลผู้เข้าร่วมงาน (User Not Found)"
+                      : "กรุณากรอกข้อมูลเพื่อค้นหา"}
                   </div>
                 )}
               </>
