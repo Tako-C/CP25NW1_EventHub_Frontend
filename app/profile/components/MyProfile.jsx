@@ -1,6 +1,6 @@
 "use client";
 
-import { User, Mail, Briefcase, MapPin, Phone, Flag } from "lucide-react";
+import { User, Mail, Briefcase, MapPin, Phone, Flag, ChevronDown } from "lucide-react";
 import { postUpdateProfile, getData } from "@/libs/fetch";
 import { useState, useEffect } from "react";
 
@@ -11,15 +11,37 @@ export default function ProfilePage({
   setProfile,
 }) {
   const [updateProfile, setUpdateProfile] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [cities, setCities] = useState([]);
+
+  const fetchData = async () => {
+    try {
+      const resJob = await getData(`users/jobs`);
+      const resCountry = await getData(`users/countrys`);
+
+      setJobs(resJob?.data || []);
+      setCountries(resCountry?.data || []);
+
+      // ดึงเมืองเริ่มต้น (เช่น จากประเทศที่ user มีอยู่ หรือประเทศแรกใน list)
+      const countryId = updateProfile?.country?.id || resCountry?.data?.[0]?.id;
+      if (countryId) {
+        const resCity = await getData(`users/country/${countryId}/citys`);
+        setCities(resCity?.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   useEffect(() => {
     console.log(profile);
     setUpdateProfile(profile);
   }, [profile]);
-
-  // const handleChange = (field, value) => {
-  //   setUpdateProfile((prev) => ({ ...prev, [field]: value }));
-  // };
 
   const handleChange = (field, value, subField = null) => {
     setUpdateProfile((prev) => {
@@ -40,12 +62,27 @@ export default function ProfilePage({
     console.log("profile", updateProfile);
     editData(updateProfile);
     setIsEditing(false);
-    // window.location.reload();
+    window.location.reload();
   };
 
   const editData = async (data) => {
     const res = await postUpdateProfile(data);
     console.log(res);
+  };
+
+  const handleCountryChange = async (countryId) => {
+    const selectedCountry = countries.find((c) => c.id == countryId);
+    handleChange("country", selectedCountry);
+
+    const resCity = await getData(`users/country/${countryId}/citys`);
+    setCities(resCity?.data || []);
+
+    handleChange("city", null);
+  };
+
+  const handleCancel = () => {
+    setUpdateProfile(profile); 
+    setIsEditing(false);
   };
 
   return (
@@ -111,7 +148,6 @@ export default function ProfilePage({
                 maxLength={20}
               />
             </div>
-
             <InputField
               label="Email Address"
               value={updateProfile.email}
@@ -131,25 +167,33 @@ export default function ProfilePage({
               maxLength={10}
             />
 
-            <InputField
+            <SelectField
               label="Job"
-              value={updateProfile?.job?.jobNameTh}
-              onChange={(v) => handleChange("job", v, "jobNameTh")}
+              value={updateProfile?.job?.id}
+              options={jobs}
+              onChange={(id) => {
+                const selected = jobs.find((j) => j.id == id);
+                handleChange("job", selected);
+              }}
               isEditing={isEditing}
               icon={<Briefcase size={18} />}
             />
-
-            <InputField
+            <SelectField
               label="Country"
-              value={updateProfile?.country?.countryNameTh}
-              onChange={(v) => handleChange("country", v, "countryNameTh")}
+              value={updateProfile?.country?.id}
+              options={countries}
+              onChange={handleCountryChange}
               isEditing={isEditing}
               icon={<Flag size={18} />}
             />
-            <InputField
+            <SelectField
               label="City / Province"
-              value={updateProfile?.city?.cityNameTh}
-              onChange={(v) => handleChange("city", v, "cityNameTh")}
+              value={updateProfile?.city?.id}
+              options={cities}
+              onChange={(id) => {
+                const selected = cities.find((c) => c.id == id);
+                handleChange("city", selected);
+              }}
               isEditing={isEditing}
               icon={<MapPin size={18} />}
             />
@@ -171,7 +215,6 @@ export default function ProfilePage({
                 </div>
               )}
             </div>
-
             <InputField
               label="Post Code"
               value={updateProfile.postCode}
@@ -184,8 +227,10 @@ export default function ProfilePage({
           {isEditing && (
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
               <button
-                onClick={() => setIsEditing(false)}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-full font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                onClick={() => {
+                  handleCancel();
+                }}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors text-sm font-medium"
               >
                 Cancel
               </button>
@@ -249,6 +294,82 @@ function InputField({
               </div>
             )}
             <span className="truncate w-full block">{value || "-"}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SelectField({
+  label,
+  value,
+  options,
+  onChange,
+  isEditing,
+  icon,
+  placeholder = "Select option",
+}) {
+  const getDisplayName = (val) => {
+    if (!val) return "-";
+    if (typeof val === "object") {
+      return val.jobNameTh || val.countryNameTh || val.cityNameTh || "-";
+    }
+
+    const found = options.find(
+      (opt) => opt.id === val || opt.id === Number(val)
+    );
+    if (found) {
+      return found.jobNameTh || found.countryNameTh || found.cityNameTh;
+    }
+    return val; 
+  };
+
+  return (
+    <div className="flex flex-col">
+      <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
+        {label}
+      </label>
+      <div className="relative">
+        {isEditing ? (
+          <div className="relative">
+            {icon && (
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+                {icon}
+              </div>
+            )}
+            <select
+              value={typeof value === "object" ? value.id : value || ""}
+              onChange={(e) => onChange(e.target.value)}
+              className={`w-full ${
+                icon ? "pl-10" : "pl-4"
+              } pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base appearance-none`}
+            >
+              <option value="">{placeholder}</option>
+              {options.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.jobNameTh || opt.countryNameTh || opt.cityNameTh}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+              <ChevronDown size={18} />
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`w-full ${
+              icon ? "pl-10" : "pl-4"
+            } pr-4 py-2.5 bg-white border-b border-gray-200 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px]`}
+          >
+            {icon && (
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400">
+                {icon}
+              </div>
+            )}
+            <span className="truncate w-full block">
+              {getDisplayName(value)}
+            </span>
           </div>
         )}
       </div>
