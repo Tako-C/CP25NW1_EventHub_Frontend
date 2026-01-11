@@ -29,6 +29,7 @@ import {
 import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 import { getEventTypes } from '@/libs/fetch';
+import EventPreview from './EventPreview';
 
 // --- Custom Input Field ---
 function CustomInputField({
@@ -95,6 +96,8 @@ export default function EventForm({
   const [form] = Form.useForm();
   const startDate = Form.useWatch('startDate', form);
 
+  const formValues = Form.useWatch([], form);
+
   const disabledDate = (current) => {
     return current && current < dayjs().startOf('day');
   };
@@ -107,6 +110,17 @@ export default function EventForm({
       return current && current < dayjs(startDate).startOf('day');
     }
     return false;
+  };
+
+  const uploadProps = {
+    beforeUpload: (file) => {
+      // return false เพื่อระงับการ auto upload
+      return false;
+    },
+    listType: 'picture-card',
+    maxCount: 1,
+    showUploadList: { showPreviewIcon: false }, // ปรับตามต้องการ
+    accept: 'image/*',
   };
 
   const [eventTypes, setEventTypes] = useState([]);
@@ -535,6 +549,8 @@ export default function EventForm({
                 </Form.Item>
               </div>
             </section>
+
+            {formValues && <EventPreview formValues={formValues} />}
 
             {/* Actions */}
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-8 pt-6 border-t border-gray-100">

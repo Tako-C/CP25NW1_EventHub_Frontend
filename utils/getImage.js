@@ -308,12 +308,56 @@ export function EventCardImage({ imageCard, eventName }) {
 
   useEffect(() => {
     if (imageCard) {
+      let imgSource = imageCard;
+      if (Array.isArray(imageCard)) {
+        imgSource = imageCard.length > 0 ? imageCard[0] : null;
+      }
+
+      // ถ้าไม่มีข้อมูล หรือไม่ใช่ String ให้จบการทำงาน
+      if (!imgSource || typeof imgSource !== 'string') {
+        setImage(null);
+        setIsLoading(false);
+        return;
+      }
+
+      // string เช็คว่าเป็น URL หรือ Blob หรือไม่ (Previwer)
+      if (imgSource.startsWith('blob:') || imgSource.startsWith('http')) {
+        setImage(imgSource);
+        setIsLoading(false);
+        return;
+      }
       const fetchImage = async () => {
         try {
-          const path = imageCard.startsWith('/')
-            ? imageCard.substring(1)
-            : imageCard;
-          const res = await getImage(`upload/events/${path}`);
+          let targetPath = imageCard;
+
+          // 1. ถ้ามาเป็น Array ให้เอาตัวแรก (index 0)
+          if (Array.isArray(targetPath)) {
+            targetPath = targetPath.length > 0 ? targetPath[0] : null;
+          }
+          // 2. ถ้าเป็น String ที่มี comma คั่น ให้ split แล้วเอาตัวแรก
+          else if (typeof targetPath === 'string' && targetPath.includes(',')) {
+            targetPath = targetPath.split(',')[0].trim();
+          }
+
+          // ถ้าไม่มีรูปเลยให้จบการทำงาน
+          if (!targetPath) {
+            setImage(null);
+            return;
+          }
+
+          const cleanPath = targetPath.startsWith('/')
+            ? targetPath.substring(1)
+            : targetPath;
+
+          let finalPath;
+          if (cleanPath.startsWith('upload/events/')) {
+            finalPath = cleanPath;
+          } else {
+            finalPath = `upload/events/${cleanPath}`;
+          }
+
+          // 4. เรียก API
+          const res = await getImage(finalPath);
           setImage(res);
         } catch (error) {
           console.error('Error fetching event card image:', error);

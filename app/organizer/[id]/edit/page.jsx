@@ -46,72 +46,95 @@ export default function EditEventPage() {
     const fetchEventData = async () => {
       if (!id) return;
       try {
-        const data = await getEventById(id);
-        const event = data.data || data;
+        const response = await getEventById(id);
+        const eventData = response.data || response;
 
-        const loadAndFormatImage = async (path, uid) => {
-          if (!path) return [];
+        const loadAndFormatImage = async (imgFilename, uidSuffix) => {
+          if (!imgFilename) return [];
 
           try {
-            const result = await getUpdateImage(path);
+            let fetchPath = imgFilename;
+            if (
+              !fetchPath.startsWith('upload/events') &&
+              !fetchPath.includes('/')
+            ) {
+              fetchPath = `upload/events/${fetchPath}`;
+            }
 
-            if (typeof result !== 'string') {
+            // ลบ / ตัวแรกออก ถ้ามี
+            if (fetchPath.startsWith('/')) {
+              fetchPath = fetchPath.substring(1);
+            }
+
+            // ดึง Blob URL
+            const blobUrl = await getUpdateImage(fetchPath);
+
+            if (!blobUrl || typeof blobUrl !== 'string') {
               return [];
             }
 
             return [
               {
-                uid: `-existing-${uid}`,
-                name: 'image.jpg',
+                uid: `-existing-${uidSuffix}`, // สำคัญ: ใช้ prefix นี้เพื่อเช็คตอนลบ
+                name: imgFilename,
                 status: 'done',
-                url: result,
+                url: blobUrl,
+                thumbUrl: blobUrl,
               },
             ];
           } catch (err) {
+            console.error(`Failed to load image: ${imgFilename}`, err);
             return [];
           }
         };
 
-        const imgSource = event.images || event;
-        const pathCard = imgSource.imgCard || event.eventCard;
-        const pathDetail = imgSource.imgDetail || event.eventDetail;
-        const pathMap = imgSource.imgMap || event.eventMap;
+        const imagesObj = eventData.images || {};
+        const pathCard = imagesObj.imgCard; // "1_card.jpg"
+        const pathDetail = imagesObj.imgDetail; // "1_detail.jpg"
+        // เช็คเผื่อว่ามี imgMap ในอนาคต (ใน JSON ตัวอย่างไม่มี)
+        const pathMap = imagesObj.imgMap || eventData.imgMap;
+        const slidesArray = imagesObj.imgSlideShow || []; // ["1_slideshow.jpg"]
 
-        // Slideshow Array
-        const slides = imgSource.imgSlideShow || event.eventSlideshow || [];
+        // Parallel Fetching: ดึงทุกรูปพร้อมกัน
         const [fileCard, fileDetail, fileMap, slide1, slide2, slide3] =
           await Promise.all([
             loadAndFormatImage(pathCard, 'card'),
             loadAndFormatImage(pathDetail, 'detail'),
             loadAndFormatImage(pathMap, 'map'),
-            // Slideshow Slots
-            loadAndFormatImage(slides[0], 'slide1'),
-            loadAndFormatImage(slides[1], 'slide2'),
-            loadAndFormatImage(slides[2], 'slide3'),
+            // Slideshow: ดึงตาม Index
+            loadAndFormatImage(slidesArray[0], 'slide1'),
+            loadAndFormatImage(slidesArray[1], 'slide2'),
+            loadAndFormatImage(slidesArray[2], 'slide3'),
           ]);
-        console.log(event);
-        setInitialData({
-          ...event,
-          // Text Data
-          eventDescription: event.eventDesc || event.eventDescription,
-          eventType:
-            event.eventTypeId?.id ||
-            event.eventTypeId ||
-            event.eventType?.id ||
-            event.eventType,
-          startDate: event.startDate ? dayjs(event.startDate) : null,
-          endDate: event.endDate ? dayjs(event.endDate) : null,
-          contactEmail: event.contactEmail || event.email || '',
-          contactPhone: event.contactPhone || event.phone || '',
-          contactLine: event.contactLine || event.lineId || '',
-          contactFacebook: event.contactFacebook || event.facebook || '',
 
-          // Image Data
+        setInitialData({
+          ...eventData, // ระวังการ spread ข้อมูลที่ไม่ได้ใช้
+
+          // --- Text Data Mapping ---
+          eventName: eventData.eventName,
+          hostOrganization: eventData.hostOrganisation, // Map Organisation -> Organization
+          location: eventData.location,
+          eventDescription: eventData.eventDesc, // Map eventDesc -> eventDescription
+
+          // Event Type (เข้าถึง nested object)
+          eventType: eventData.eventTypeId?.id,
+
+          // Date
+          startDate: eventData.startDate ? dayjs(eventData.startDate) : null,
+          endDate: eventData.endDate ? dayjs(eventData.endDate) : null,
+
+          // Contacts
+          contactEmail: eventData.contactEmail || '',
+          contactPhone: eventData.contactPhone || '',
+          contactLine: eventData.contactLine || '',
+          contactFacebook: eventData.contactFacebook || '',
+
+          // --- Image Data (FileList) ---
           eventCard: fileCard,
           eventDetail: fileDetail,
           eventMap: fileMap,
 
-          // Slideshow Slots
+          // --- Slideshow Slots ---
           slideshowSlot1: slide1,
           slideshowSlot2: slide2,
           slideshowSlot3: slide3,
@@ -137,6 +160,7 @@ export default function EditEventPage() {
       formData.append('eventName', values.eventName);
       formData.append('eventDesc', values.eventDescription);
       formData.append('eventTypeId', values.eventType);
+      formData.append('hostOrganisation', values.hostOrganization || '');
       formData.append('location', values.location);
       formData.append('contactEmail', values.contactEmail || '');
       formData.append('contactPhone', values.contactPhone || '');
@@ -240,13 +264,13 @@ export default function EditEventPage() {
       else if (fieldName === 'eventDetail') category = 'detail';
       else if (fieldName === 'eventMap') category = 'map';
       else if (fieldName === 'slideshowSlot1') {
-        category = 'Slideshow';
+        category = 'slideshow';
         index = 1;
       } else if (fieldName === 'slideshowSlot2') {
-        category = 'Slideshow';
+        category = 'slideshow';
         index = 2;
       } else if (fieldName === 'slideshowSlot3') {
-        category = 'Slideshow';
+        category = 'slideshow';
         index = 3;
       }
 

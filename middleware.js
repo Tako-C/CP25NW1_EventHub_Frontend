@@ -39,7 +39,7 @@ export async function middleware(req) {
   // --- ด่านที่ 1: ดึง Role จาก Event ผ่าน API ---
   try {
     const res = await fetch(
-      'https://cp25nw1.sit.kmutt.ac.th/api/users/me/registered-events',
+      'http://eventhub_backend:8080/users/me/registered-events',
       {
         headers: {
           Authorization: `Bearer ${token}`,
