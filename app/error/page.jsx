@@ -1,8 +1,10 @@
-'use client';
+"use client";
 
-import { ShieldX, ArrowLeft, Home } from 'lucide-react';
+import { ShieldX, ArrowLeft, Home } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Error403() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
@@ -36,7 +38,13 @@ export default function Error403() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4">
             <button
-              onClick={() => (window.location.href = '/home')}
+              onClick={() => {
+                // (window.location.href = '/home')
+                router.push("/home");
+                setTimeout(() => {
+                  window.location.reload();
+                }, 100);
+              }}
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
             >
               <Home className="w-5 h-5" />

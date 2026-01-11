@@ -164,7 +164,9 @@ export default function Navbar({ token }) {
   const handleSignOut = () => {
     Cookie.remove('token');
     setIsProfileOpen(false);
-    window.location.href = '/login';
+    // window.location.href = '/login';
+    router.push('/login');
+    setUser(null);
   };
 
   const handleNavigation = (path) => {

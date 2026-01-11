@@ -1,30 +1,30 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 import {
   authLoginOTPVerify,
   authLoginOTPRequest,
   verifyEmailOTP,
-} from '@/libs/fetch';
-import { useRouter } from 'next/navigation';
-import Cookie from 'js-cookie';
-import Notification from '@/components/Notification/Notification';
+} from "@/libs/fetch";
+import { useRouter } from "next/navigation";
+import Cookie from "js-cookie";
+import Notification from "@/components/Notification/Notification";
 
 export default function Page() {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputRefs = useRef([]);
   const [data, setData] = useState(null);
   const router = useRouter();
   const [cooldown, setCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isDisabled, setIsDisabled] = useState(true);
-  const [errors, setErrors] = useState('');
+  const [errors, setErrors] = useState("");
   const [eventId, setEventId] = useState();
 
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
-    message: '',
+    message: "",
   });
 
   const closeNotification = () => {
@@ -32,17 +32,17 @@ export default function Page() {
   };
 
   useEffect(() => {
-    const data = Cookie.get('signinData');
+    const data = Cookie.get("signinData");
     if (data) {
-      const email = JSON?.parse(Cookie.get('signinData'));
+      const email = JSON?.parse(Cookie.get("signinData"));
       console.log(email);
       if (email) setData(email);
     }
   }, []);
 
   useEffect(() => {
-    const raw_up = Cookie.get('signupDataFromRegis');
-    const raw_in = Cookie.get('signinDataFromRegis');
+    const raw_up = Cookie.get("signupDataFromRegis");
+    const raw_in = Cookie.get("signinDataFromRegis");
     if (raw_in) {
       const data = JSON.parse(raw_in);
       console.log(data);
@@ -50,12 +50,12 @@ export default function Page() {
         isVisible: true,
         isError: true,
         message:
-          'You Have an account, Please Sign in by Enter OTP before registration event',
+          "You Have an account, Please Sign in by Enter OTP before registration event",
       });
       setData(data?.email);
       setEventId(data?.eventId);
       setCooldown(60);
-      Cookie.remove('signinDataFromRegis');
+      Cookie.remove("signinDataFromRegis");
     }
     if (raw_up) {
       const data = JSON.parse(raw_up);
@@ -64,12 +64,12 @@ export default function Page() {
         isVisible: true,
         isError: true,
         message:
-          'You Have no an account, Please Sign in by Enter OTP before registration event',
+          "You Have no an account, Please Sign in by Enter OTP before registration event",
       });
       setData(data?.email);
       setEventId(data?.eventId);
       setCooldown(60);
-      Cookie.remove('signupDataFromRegis');
+      Cookie.remove("signupDataFromRegis");
     }
   }, []);
 
@@ -120,40 +120,48 @@ export default function Page() {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    setIsDisabled(newOtp.join('').length !== 6);
-    setErrors('');
+    setIsDisabled(newOtp.join("").length !== 6);
+    setErrors("");
 
-    if (value !== '' && index < 5) {
+    if (value !== "" && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
   const handleContinue = async () => {
-    const otpCode = otp.join('');
+    const otpCode = otp.join("");
     console.log(otpCode);
     if (otpCode.length === 6) {
       if (eventId) {
         const res = await verifyEmailOTP(data, otpCode, eventId);
         console.log(res);
         if (res.statusCode === 200) {
-          Cookie.set('token', res?.data.token);
-          window.location.href = `/profile?tab=events`;
+          Cookie.set("token", res?.data.token);
+          // window.location.href = `/profile?tab=events`;
+          router.push("/profile?tab=events");
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         }
       } else {
         const res = await authLoginOTPVerify(data, otpCode);
-        console.log('res', res);
+        console.log("res", res);
         if (res.statusCode === 200) {
-          Cookie.set('token', res?.data.token);
-          Cookie.remove('signinData');
-          window.location.href = '/home';
+          Cookie.set("token", res?.data.token);
+          Cookie.remove("signinData");
+          // window.location.href = '/home';
+          router.push("/home");
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         } else {
-          setErrors('ใส่ OTP ให้ถูกต้อง');
+          setErrors("ใส่ OTP ให้ถูกต้อง");
         }
       }
     }
@@ -204,7 +212,7 @@ export default function Page() {
                 disabled={cooldown > 0 || loading}
                 className="text-sm text-gray-600 underline hover:text-purple-600 disabled:text-gray-400"
               >
-                {cooldown > 0 ? `รอ ${cooldown} วินาที` : 'Resend code'}
+                {cooldown > 0 ? `รอ ${cooldown} วินาที` : "Resend code"}
               </button>
             </div>
 
@@ -213,8 +221,8 @@ export default function Page() {
               disabled={isDisabled}
               className={`w-full py-3 rounded-lg font-medium transition-colors ${
                 isDisabled
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-900 text-white hover:bg-blue-800'
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-900 text-white hover:bg-blue-800"
               }`}
             >
               Continue
