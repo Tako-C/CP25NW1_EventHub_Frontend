@@ -51,59 +51,44 @@ export default function SignInPageOTP({
     return () => clearInterval(timer);
   }, [cooldown, email]);
 
-  const handleSubmit = async (e) => {
-    if (!validateForm()) return;
+const handleSubmit = async (e) => {
+  if (!validateForm()) return;
 
-    const OTP_COOLDOWN_SEC = 60;
-    const STORAGE_KEY = `otp_end_time_${email}`;
-    const now = Date.now();
+  const OTP_COOLDOWN_SEC = 60;
+  const STORAGE_KEY = `otp_end_time_${email}`;
+  const now = Date.now();
 
-    try {
-      const savedEndTime = localStorage.getItem(STORAGE_KEY);
-      if (savedEndTime && savedEndTime > now) {
-        const remaining = Math.floor((savedEndTime - now) / 1000);
-        setCooldown(remaining);
-        router.push('/login/otp');
-        return;
-      }
-
-      const res = await authLoginOTPRequest(email);
-
-      if (res.statusCode === 200) {
-        const newEndTime = Date.now() + OTP_COOLDOWN_SEC * 1000;
-        localStorage.setItem(STORAGE_KEY, newEndTime);
-
-        setCooldown(OTP_COOLDOWN_SEC);
-        Cookie.set('signinData', JSON.stringify(email));
-
-        router.push('/login/otp');
-      } else if (res.statusCode === 500) {
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: res?.message,
-        });
-      } else {
-        // throw new Error(`Unexpected status code: ${res.statusCode}`);
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: res?.message,
-        });
-      }
-    } catch (error) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: error.message,
-      });
-
-      localStorage.removeItem(STORAGE_KEY);
-      setCooldown(0);
-
-      // window.alert("An unexpected error occurred. Please try again.");
+  try {
+    const savedEndTime = localStorage.getItem(STORAGE_KEY);
+    if (savedEndTime && savedEndTime > now) {
+      const remaining = Math.floor((savedEndTime - now) / 1000);
+      setCooldown(remaining);
+      router.push('/login/otp');
+      return;
     }
-  };
+
+    const res = await authLoginOTPRequest(email);
+
+    if (res.statusCode === 200) {
+      const newEndTime = Date.now() + OTP_COOLDOWN_SEC * 1000;
+      localStorage.setItem(STORAGE_KEY, newEndTime);
+      setCooldown(OTP_COOLDOWN_SEC);
+      Cookie.set('signinData', JSON.stringify(email));
+      router.push('/login/otp');
+    }
+  } catch (error) {
+    console.error("OTP Request Error:", error);
+
+    setNotification({
+      isVisible: true,
+      isError: true,
+      message: error.data?.message || error.message || "เกิดข้อผิดพลาดในการขอ OTP",
+    });
+
+    localStorage.removeItem(STORAGE_KEY);
+    setCooldown(0);
+  }
+};
 
   const handleSignIn = () => {
     setIsSignInOTPOpen(false);

@@ -27,34 +27,38 @@ export default function SignInPage({
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
+const handleSubmit = async () => {
+  if (!validateForm()) {
+    return;
+  }
+
+  try {
     const res = await authLoginPassword(email, password);
-    console.log(res);
+
     if (res.statusCode === 200) {
       Cookie.set("token", res?.data.token);
-      // window.location.href = '/home';
       router.push("/home");
       setTimeout(() => {
         window.location.reload();
       }, 100);
-    } else if (res.statusCode === 401) {
+    }
+  } catch (error) {
+
+    if (error.status === 401) {
       setNotification({
         isVisible: true,
         isError: true,
-        message: res?.message,
+        message: error.data?.message || "Email หรือ Password ไม่ถูกต้อง",
       });
     } else {
       setNotification({
         isVisible: true,
         isError: true,
-        message: "เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่อีกครั้ง",
+        message: "เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่",
       });
     }
-  };
-
+  }
+};
   const validateField = (field, value) => {
     switch (field) {
       case "email":
