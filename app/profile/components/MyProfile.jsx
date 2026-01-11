@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
-import { User, Mail, Briefcase, MapPin, Phone, Flag } from 'lucide-react';
-import { postUpdateProfile } from '@/libs/fetch';
+import { User, Mail, Briefcase, MapPin, Phone, Flag } from "lucide-react";
+import { postUpdateProfile } from "@/libs/fetch";
+import { useState, useEffect } from "react";
 
 export default function ProfilePage({
   isEditing,
@@ -9,14 +10,37 @@ export default function ProfilePage({
   profile,
   setProfile,
 }) {
-  const handleChange = (field, value) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
+  const [updateProfile, setUpdateProfile] = useState([]);
+
+  useEffect(() => {
+    console.log(profile);
+    setUpdateProfile(profile);
+  }, [profile]);
+
+  // const handleChange = (field, value) => {
+  //   setUpdateProfile((prev) => ({ ...prev, [field]: value }));
+  // };
+
+  const handleChange = (field, value, subField = null) => {
+    setUpdateProfile((prev) => {
+      if (subField) {
+        return {
+          ...prev,
+          [field]: {
+            ...prev[field],
+            [subField]: value,
+          },
+        };
+      }
+      return { ...prev, [field]: value };
+    });
   };
 
   const handleSave = () => {
-    console.log('profile', profile);
-    editData(profile);
+    console.log("profile", updateProfile);
+    editData(updateProfile);
     setIsEditing(false);
+    // window.location.reload();
   };
 
   const editData = async (data) => {
@@ -63,7 +87,7 @@ export default function ProfilePage({
               {profile.firstName} {profile.lastName}
             </h3>
             <span className="inline-block mt-2 px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full uppercase tracking-wide">
-              {profile.role || 'User'}
+              {profile.role || "User"}
             </span>
           </div>
         </div>
@@ -73,23 +97,23 @@ export default function ProfilePage({
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <InputField
                 label="First Name"
-                value={profile.firstName}
-                onChange={(v) => handleChange('name', v)}
+                value={updateProfile.firstName}
+                onChange={(v) => handleChange("firstName", v)}
                 isEditing={isEditing}
                 icon={<User size={18} />}
               />
               <InputField
                 label="Last Name"
-                value={profile.lastName}
-                onChange={(v) => handleChange('lastName', v)}
+                value={updateProfile.lastName}
+                onChange={(v) => handleChange("lastName", v)}
                 isEditing={isEditing}
               />
             </div>
 
             <InputField
               label="Email Address"
-              value={profile.email}
-              onChange={(v) => handleChange('email', v)}
+              value={updateProfile.email}
+              onChange={(v) => handleChange("email", v)}
               isEditing={isEditing}
               type="email"
               icon={<Mail size={18} />}
@@ -97,8 +121,8 @@ export default function ProfilePage({
             />
             <InputField
               label="Phone Number"
-              value={profile.phone}
-              onChange={(v) => handleChange('phone', v)}
+              value={updateProfile.phone}
+              onChange={(v) => handleChange("phone", v)}
               isEditing={isEditing}
               type="tel"
               icon={<Phone size={18} />}
@@ -106,23 +130,23 @@ export default function ProfilePage({
 
             <InputField
               label="Job"
-              value={profile.job.jobNameTh}
-              onChange={(v) => handleChange('jobTitle', v)}
+              value={updateProfile?.job?.jobNameTh}
+              onChange={(v) => handleChange("job", v, "jobNameTh")}
               isEditing={isEditing}
               icon={<Briefcase size={18} />}
             />
 
             <InputField
               label="Country"
-              value={profile.country.countryNameTh}
-              onChange={(v) => handleChange('country', v)}
+              value={updateProfile?.country?.countryNameTh}
+              onChange={(v) => handleChange("country", v, "countryNameTh")}
               isEditing={isEditing}
               icon={<Flag size={18} />}
             />
             <InputField
               label="City / Province"
-              value={profile.city.cityNameTh}
-              onChange={(v) => handleChange('city', v)}
+              value={updateProfile?.city?.cityNameTh}
+              onChange={(v) => handleChange("city", v, "cityNameTh")}
               isEditing={isEditing}
               icon={<MapPin size={18} />}
             />
@@ -133,22 +157,22 @@ export default function ProfilePage({
               </label>
               {isEditing ? (
                 <textarea
-                  value={profile.address}
-                  onChange={(e) => handleChange('address', e.target.value)}
+                  value={updateProfile.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
                   rows="3"
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base"
                 />
               ) : (
                 <div className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-700 min-h-[50px] flex items-center border border-transparent text-sm md:text-base break-words">
-                  {profile.address || '-'}
+                  {updateProfile.address || "-"}
                 </div>
               )}
             </div>
 
             <InputField
               label="Post Code"
-              value={profile.postCode}
-              onChange={(v) => handleChange('postCode', v)}
+              value={updateProfile.postCode}
+              onChange={(v) => handleChange("postCode", v)}
               isEditing={isEditing}
             />
           </div>
@@ -180,7 +204,7 @@ function InputField({
   value,
   onChange,
   isEditing,
-  type = 'text',
+  type = "text",
   icon,
   disabled = false,
 }) {
@@ -203,16 +227,16 @@ function InputField({
               onChange={(e) => onChange(e.target.value)}
               disabled={disabled}
               className={`w-full ${
-                icon ? 'pl-10' : 'pl-4'
+                icon ? "pl-10" : "pl-4"
               } pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base ${
-                disabled ? 'opacity-60 cursor-not-allowed' : ''
+                disabled ? "opacity-60 cursor-not-allowed" : ""
               }`}
             />
           </div>
         ) : (
           <div
             className={`w-full ${
-              icon ? 'pl-10' : 'pl-4'
+              icon ? "pl-10" : "pl-4"
             } pr-4 py-2.5 bg-white border-b border-gray-200 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px]`}
           >
             {icon && (
@@ -220,7 +244,7 @@ function InputField({
                 {icon}
               </div>
             )}
-            <span className="truncate w-full block">{value || '-'}</span>
+            <span className="truncate w-full block">{value || "-"}</span>
           </div>
         )}
       </div>
