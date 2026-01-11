@@ -1,7 +1,7 @@
 "use client";
 
 import { User, Mail, Briefcase, MapPin, Phone, Flag } from "lucide-react";
-import { postUpdateProfile } from "@/libs/fetch";
+import { postUpdateProfile, getData } from "@/libs/fetch";
 import { useState, useEffect } from "react";
 
 export default function ProfilePage({

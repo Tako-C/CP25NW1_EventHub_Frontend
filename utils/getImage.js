@@ -1,5 +1,5 @@
 import { QrCode, X, Download, CheckCircle, ScanLine } from 'lucide-react';
-import { getImage, getQrImage } from '@/libs/fetch';
+import { getImage } from '@/libs/fetch';
 import { useState, useEffect } from 'react';
 
 function QrCodeModal({ isOpen, onClose, image, qrCodeUrl, isEnded }) {
@@ -181,7 +181,7 @@ export function QrCodeImage({ qrCodeUrl, isEnded, status }) {
     if (qrCodeUrl) {
       const fetchImage = async () => {
         try {
-          const res = await getQrImage(
+          const res = await getImage(
             qrCodeUrl.startsWith('/') ? qrCodeUrl.substring(1) : qrCodeUrl
           );
           setImage(res);
