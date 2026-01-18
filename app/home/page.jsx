@@ -16,7 +16,7 @@ import { FormatDate } from '@/utils/format';
 import { getDataNoToken } from '@/libs/fetch';
 import EventCard from '@/components/Card/EventCard';
 import { EventCardImage } from '@/utils/getImage';
-import OrganizerEvents from './components/OrganizerEvents';
+import OrganizerEvents from '../organizer/event/components/OrganizerEvents';
 import './animations.css';
 
 const mockFeedbackData = [];
@@ -357,14 +357,14 @@ export default function Page() {
       {/* --- Organizer Section --- */}
       {/* ----------------------------------------------------------------------- */}
 
-      {userId && (userRole === 'ORGANIZER' || userRole === 'ADMIN') && (
+      {/* {userId && (userRole === 'ORGANIZER' || userRole === 'ADMIN') && (
         <section
           id="organizer-section"
           className="bg-gray-50 border-t border-gray-200"
         >
           <OrganizerEvents events={myOrganizedEvents} />
         </section>
-      )}
+      )} */}
     </div>
   );
 }

@@ -214,7 +214,7 @@ export default function Navbar({ token }) {
       case 'organizer':
         return [
           { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
+          { label: 'Events', path: '/organizer', hasDropdown: true  },
           { label: 'Check-in', path: '/staff', hasDropdown: true },
           { label: 'Dashboard', path: '/organizer/dashboard' },
         ];
@@ -252,9 +252,9 @@ export default function Navbar({ token }) {
   ];
 
   const organizerOptions = [
-    { label: 'Dashboard', path: '/organizer/dashboard' },
+    // { label: 'Dashboard', path: '/organizer/dashboard' },
     // { label: 'My Events', path: '/organizer/create' },
-    // { label: 'My Feedback', path: '/organizer/events' },
+    { label: 'My Events', path: '/organizer/event' },
   ];
 
   return (
@@ -262,11 +262,11 @@ export default function Navbar({ token }) {
       <nav className="fixed top-0 left-0 w-full bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b shadow-md z-50">
         <div
           className="flex items-center gap-2 cursor-pointer z-50"
-          onClick={() => handleNavigation('/login')}
+          onClick={() => handleNavigation('/home')}
         >
           <div
             className="flex items-center gap-4 cursor-pointer z-50 group"
-            onClick={() => handleNavigation('/login')}
+            onClick={() => handleNavigation('/home')}
           >
             <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 tracking-tight">
               EXPO HUB
@@ -326,7 +326,7 @@ export default function Navbar({ token }) {
             }
 
             // 2. dropdown organizer
-            if (item.label === 'Organizer' && item.hasDropdown) {
+            if (item.label === 'Events' && item.hasDropdown) {
               return (
                 <div
                   key={item.label}
@@ -473,7 +473,7 @@ export default function Navbar({ token }) {
               const subItems =
                 item.label === 'Check-in'
                   ? staffOptions
-                  : item.label === 'Organizer'
+                  : item.label === 'Events'
                   ? organizerOptions
                   : [];
 

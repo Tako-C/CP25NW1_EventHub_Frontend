@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Typography } from 'antd';
 import { useRouter } from 'next/navigation';
-import EventForm from '../components/EventForm';
+import EventForm from '../../components/EventForm';
 import dayjs from 'dayjs';
 import { createEvent } from '@/libs/fetch';
 import Notification from '@/components/Notification/Notification';

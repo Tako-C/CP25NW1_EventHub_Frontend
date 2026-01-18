@@ -21,7 +21,7 @@ export default function OrganizerEvents({ events = [] }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* --- Card 1: Create New Event (ปุ่มบวก) --- */}
         <div
-          onClick={() => router.push('/organizer/create')}
+          onClick={() => router.push('/organizer/event/create')}
           className="group relative flex flex-col items-center justify-center h-full min-h-[300px] bg-white border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-all duration-300"
         >
           <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -36,7 +36,7 @@ export default function OrganizerEvents({ events = [] }) {
         {events.map((event, index) => (
           <div
             key={index}
-            onClick={() => router.push(`/organizer/${event.id}/edit`)} // ลิงก์ไปหน้า Edit
+            onClick={() => router.push(`/organizer/event/${event.id}/edit`)} // ลิงก์ไปหน้า Edit
             className="group relative bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden flex flex-col h-full min-h-[300px]"
           >
             {/* Image Section */}
