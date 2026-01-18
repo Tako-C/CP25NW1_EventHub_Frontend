@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
   User,
@@ -15,15 +15,15 @@ import {
   ScanLine,
   LayoutDashboard,
   Shield,
-} from 'lucide-react';
-import Cookie from 'js-cookie';
-import { getData } from '@/libs/fetch';
+} from "lucide-react";
+import Cookie from "js-cookie";
+import { getData } from "@/libs/fetch";
 
 export default function Navbar({ token }) {
   const iconMap = {
     Home: <HomeIcon size={18} />,
     Events: <Calendar size={18} />,
-    'Check-in': <ScanLine size={18} />,
+    "Check-in": <ScanLine size={18} />,
     Admin: <Shield size={18} />,
     Organizer: <Briefcase size={18} />,
     Staff: <Users size={18} />,
@@ -41,7 +41,7 @@ export default function Navbar({ token }) {
 
   const [user, setUser] = useState();
   const [data, setData] = useState();
-  const [activeRole, setActiveRole] = useState('default');
+  const [activeRole, setActiveRole] = useState("default");
 
   const profileDropdownRef = useRef(null);
   const staffDropdownRef = useRef(null);
@@ -64,7 +64,7 @@ export default function Navbar({ token }) {
 
   const calculateActiveRole = (userData, eventData) => {
     if (!userData) {
-      return 'default';
+      return "default";
     }
 
     const rolePriority = {
@@ -79,7 +79,7 @@ export default function Navbar({ token }) {
     // let highestRole = userData.role.roleName.toLowerCase().trim();
     let highestRole = userData.role.toLowerCase().trim();
     if (rolePriority[highestRole] === undefined) {
-      highestRole = 'default';
+      highestRole = "default";
     }
 
     if (eventData && Array.isArray(eventData)) {
@@ -104,47 +104,78 @@ export default function Navbar({ token }) {
     return highestRole;
   };
 
-  const fetchData = async () => {
-    if (token) {
-      const resUser = await getData('users/me/profile');
-      const resEventRegis = await getData('users/me/registered-events');
+  // const fetchData = async () => {
+  //   if (token) {
+  //     const resUser = await getData('users/me/profile');
+  //     const resEventRegis = await getData('users/me/registered-events');
 
-      setUser(resUser?.data);
-      let mergeData = { user: resUser?.data, event: resEventRegis?.data };
-      // console.log(mergeData);
-      setData(mergeData);
-    }
-  };
+  //     setUser(resUser?.data);
+  //     let mergeData = { user: resUser?.data, event: resEventRegis?.data };
+  //     // console.log(mergeData);
+  //     setData(mergeData);
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   fetchData();
+
+  //   function handleClickOutside(event) {
+  //     if (
+  //       profileDropdownRef.current &&
+  //       !profileDropdownRef.current.contains(event.target)
+  //     ) {
+  //       setIsProfileOpen(false);
+  //     }
+  //     if (
+  //       staffDropdownRef.current &&
+  //       !staffDropdownRef.current.contains(event.target)
+  //     ) {
+  //       setIsStaffOpen(false);
+  //     }
+  //     if (
+  //       organizerDropdownRef.current &&
+  //       !organizerDropdownRef.current.contains(event.target)
+  //     ) {
+  //       setIsOrganizerOpen(false);
+  //     }
+  //   }
+
+  //   document.addEventListener('mousedown', handleClickOutside);
+  //   return () => {
+  //     document.removeEventListener('mousedown', handleClickOutside);
+  //   };
+  // }, []);
 
   useEffect(() => {
-    fetchData();
+    const fetchUser = async () => {
+      const tokenFromCookie = Cookie.get("token");
 
-    function handleClickOutside(event) {
-      if (
-        profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target)
-      ) {
-        setIsProfileOpen(false);
+      if (tokenFromCookie) {
+        try {
+          const res = await getData("users/me/profile");
+          if (res?.data) {
+            setUser(res.data);
+            const resEventRegis = await getData("users/me/registered-events");
+            setData({ user: res.data, event: resEventRegis?.data });
+          }
+        } catch (err) {
+          console.error("Fetch user error:", err);
+          setUser(null);
+        }
       }
-      if (
-        staffDropdownRef.current &&
-        !staffDropdownRef.current.contains(event.target)
-      ) {
-        setIsStaffOpen(false);
-      }
-      if (
-        organizerDropdownRef.current &&
-        !organizerDropdownRef.current.contains(event.target)
-      ) {
-        setIsOrganizerOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+
+    fetchUser();
+
+    // ดักฟัง Event จากหน้า Login
+    const handleLoginSuccess = () => {
+      fetchUser(); // รันใหม่ทันทีเมื่อมีการ Login
+    };
+
+    window.addEventListener("user-logged-in", handleLoginSuccess);
+    return () =>
+      window.removeEventListener("user-logged-in", handleLoginSuccess);
+  }, []); // ใช้ [] เพื่อให้สมัคร Event แค่ครั้งเดียว
 
   useEffect(() => {
     if (user && data) {
@@ -152,20 +183,19 @@ export default function Navbar({ token }) {
       setActiveRole(calculatedRole);
       // console.log("Calculated Active Role:", calculatedRole);
     } else {
-      setActiveRole('default');
+      setActiveRole("default");
     }
   }, [user, data]);
 
   const handleProfileClick = () => {
     setIsProfileOpen(false);
-    handleNavigation('/profile');
+    handleNavigation("/profile");
   };
 
   const handleSignOut = () => {
-    Cookie.remove('token');
+    Cookie.remove("token");
+    router.push("/login");
     setIsProfileOpen(false);
-    // window.location.href = '/login';
-    router.push('/login');
     setUser(null);
   };
 
@@ -175,19 +205,19 @@ export default function Navbar({ token }) {
     setIsOrganizerOpen(false);
     setMobileActiveDropdown(null);
 
-    if (path.startsWith('#')) {
-      if (pathName !== '/' && pathName !== '/home') {
+    if (path.startsWith("#")) {
+      if (pathName !== "/" && pathName !== "/home") {
         router.push(`/home`);
         setTimeout(() => {
           const element = document.querySelector(path);
           if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
           }
         }, 100);
       } else {
         const element = document.querySelector(path);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }
     } else {
@@ -197,37 +227,37 @@ export default function Navbar({ token }) {
   };
 
   const getMenuItems = () => {
-    if (activeRole === 'default') {
+    if (activeRole === "default") {
       return [
-        { label: 'Home', path: '#home' },
-        { label: 'Events', path: '#events' },
+        { label: "Home", path: "#home" },
+        { label: "Events", path: "#events" },
       ];
     }
 
     switch (activeRole) {
-      case 'admin':
+      case "admin":
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
-          { label: 'Admin', path: '/admin' },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "#events" },
+          { label: "Admin", path: "/admin" },
         ];
-      case 'organizer':
+      case "organizer":
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '/organizer', hasDropdown: true  },
-          { label: 'Check-in', path: '/staff', hasDropdown: true },
-          { label: 'Dashboard', path: '/organizer/dashboard' },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "/organizer", hasDropdown: true },
+          { label: "Check-in", path: "/staff", hasDropdown: true },
+          { label: "Dashboard", path: "/organizer/dashboard" },
         ];
-      case 'staff':
+      case "staff":
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
-          { label: 'Check-in', path: '/staff', hasDropdown: true },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "#events" },
+          { label: "Check-in", path: "/staff", hasDropdown: true },
         ];
-      case 'user':
+      case "user":
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "#events" },
           // { label: "Reward", path: "/reward" },
         ];
       // case "visitor":
@@ -238,8 +268,8 @@ export default function Navbar({ token }) {
       //   ];
       default:
         return [
-          { label: 'Home', path: '#home' },
-          { label: 'Events', path: '#events' },
+          { label: "Home", path: "#home" },
+          { label: "Events", path: "#events" },
         ];
     }
   };
@@ -247,14 +277,14 @@ export default function Navbar({ token }) {
   const menuItems = getMenuItems();
 
   const staffOptions = [
-    { label: 'Scan QR', path: '/staff/event/scan' },
-    { label: 'Manual Check-in', path: '/staff/event/check-in' },
+    { label: "Scan QR", path: "/staff/event/scan" },
+    { label: "Manual Check-in", path: "/staff/event/check-in" },
   ];
 
   const organizerOptions = [
     // { label: 'Dashboard', path: '/organizer/dashboard' },
     // { label: 'My Events', path: '/organizer/create' },
-    { label: 'My Events', path: '/organizer/event' },
+    { label: "My Events", path: "/organizer/event" },
   ];
 
   return (
@@ -262,11 +292,11 @@ export default function Navbar({ token }) {
       <nav className="fixed top-0 left-0 w-full bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b shadow-md z-50">
         <div
           className="flex items-center gap-2 cursor-pointer z-50"
-          onClick={() => handleNavigation('/home')}
+          onClick={() => handleNavigation("/home")}
         >
           <div
             className="flex items-center gap-4 cursor-pointer z-50 group"
-            onClick={() => handleNavigation('/home')}
+            onClick={() => handleNavigation("/home")}
           >
             <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 tracking-tight">
               EXPO HUB
@@ -290,7 +320,7 @@ export default function Navbar({ token }) {
         <div className="hidden lg:flex items-center gap-6">
           {menuItems.map((item) => {
             // 1. dropdown staff
-            if (item.label === 'Check-in' && item.hasDropdown) {
+            if (item.label === "Check-in" && item.hasDropdown) {
               return (
                 <div
                   key={item.label}
@@ -326,7 +356,7 @@ export default function Navbar({ token }) {
             }
 
             // 2. dropdown organizer
-            if (item.label === 'Events' && item.hasDropdown) {
+            if (item.label === "Events" && item.hasDropdown) {
               return (
                 <div
                   key={item.label}
@@ -378,7 +408,7 @@ export default function Navbar({ token }) {
 
           {!user ? (
             <button
-              onClick={() => handleNavigation('/login')}
+              onClick={() => handleNavigation("/login")}
               className="text-gray-700 hover:text-purple-600 transition whitespace-nowrap"
             >
               Join | Log in
@@ -455,7 +485,7 @@ export default function Navbar({ token }) {
 
       <div
         className={`lg:hidden fixed top-0 right-0 h-full w-64 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-          isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex flex-col p-6 pt-20 gap-4">
@@ -471,9 +501,9 @@ export default function Navbar({ token }) {
             if (item.hasDropdown) {
               const isExpanded = mobileActiveDropdown === item.label;
               const subItems =
-                item.label === 'Check-in'
+                item.label === "Check-in"
                   ? staffOptions
-                  : item.label === 'Events'
+                  : item.label === "Events"
                   ? organizerOptions
                   : [];
 
@@ -489,7 +519,7 @@ export default function Navbar({ token }) {
                     <ChevronDown
                       size={16}
                       className={`transform transition-transform duration-200 ${
-                        isExpanded ? 'rotate-180' : ''
+                        isExpanded ? "rotate-180" : ""
                       }`}
                     />
                   </button>
@@ -525,14 +555,14 @@ export default function Navbar({ token }) {
           <div className="mt-4 pt-4 border-t border-gray-200">
             {!user ? (
               <button
-                onClick={() => handleNavigation('/login')}
+                onClick={() => handleNavigation("/login")}
                 className="w-full text-center bg-purple-600 text-white py-2 px-4 rounded-full hover:bg-purple-700 transition"
               >
                 Join | Log in
               </button>
             ) : (
               <button
-                onClick={() => handleNavigation('/profile')}
+                onClick={() => handleNavigation("/profile")}
                 className="w-full flex items-center gap-3 text-gray-700 hover:text-purple-600 py-2 px-4 hover:bg-purple-50 rounded-lg transition"
               >
                 <span className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">

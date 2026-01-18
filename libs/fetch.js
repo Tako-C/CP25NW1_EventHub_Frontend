@@ -34,7 +34,7 @@ const apiFetch = async (endpoint, options = {}, isBlob = false) => {
   const data = await response.json();
 
   if (!response.ok) {
-    const errorMessage = data.message || `Error: ${response.status}`;
+    const errorMessage = data.message || `${response.status}`;
     const error = new Error(errorMessage);
     error.status = response.status;
     error.data = data;

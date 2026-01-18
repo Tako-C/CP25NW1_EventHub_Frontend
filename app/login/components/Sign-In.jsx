@@ -27,38 +27,43 @@ export default function SignInPage({
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
 
-const handleSubmit = async () => {
-  if (!validateForm()) {
-    return;
-  }
-
-  try {
-    const res = await authLoginPassword(email, password);
-
-    if (res.statusCode === 200) {
-      Cookie.set("token", res?.data.token);
-      router.push("/home");
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
     }
-  } catch (error) {
 
-    if (error.status === 401) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: error.data?.message || "Email หรือ Password ไม่ถูกต้อง",
-      });
-    } else {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: "เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่",
-      });
+    try {
+      const res = await authLoginPassword(email, password);
+
+      // if (res.statusCode === 200) {
+      //   Cookie.set("token", res?.data.token);
+      //   router.push("/home");
+      //   setTimeout(() => {
+      //     window.location.reload();
+      //   }, 100);
+      // }
+
+      if (res.statusCode === 200) {
+        Cookie.set("token", res?.data.token, { path: "/" });
+        window.dispatchEvent(new Event("user-logged-in"));
+        router.push("/home");
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: error.data?.message || "Email หรือ Password ไม่ถูกต้อง",
+        });
+      } else {
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: "เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่",
+        });
+      }
     }
-  }
-};
+  };
   const validateField = (field, value) => {
     switch (field) {
       case "email":
