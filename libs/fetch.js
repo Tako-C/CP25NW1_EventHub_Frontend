@@ -155,3 +155,15 @@ export const deleteEventImage = (id, category, index = null) => {
 export const getUpdateImage = (path) => apiFetch(path, { method: 'GET' }, true);
 
 export const getImage = (path) => apiFetch(path, { method: 'GET' }, true);
+
+export const createSurvey = (events, id, question) =>
+  apiFetch(`events/${id}/surveys`, {
+    method: 'POST',
+    body: {
+      "name": events,
+      "description": events,
+      "points": events,
+      "type": events,
+      "questions": question,
+    },
+  });

@@ -1,105 +1,212 @@
-"use client"
+"use client";
 
-import { useState } from 'react';
-import { X, Plus } from 'lucide-react';
+import { useState, useEffect, useMemo } from "react";
+import {
+  ClipboardList,
+  Calendar,
+  MapPin,
+  FileText,
+  ChevronRight,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
+import { getDataNoToken } from "@/libs/fetch";
+import Cookies from "js-cookie"; 
+import { jwtDecode } from "jwt-decode"; 
+import { FormatDate } from "@/utils/format"; 
+import { EventCardImage } from "@/utils/getImage"; 
+import { useRouter } from "next/navigation";
 
-export default function Page() {
-  const [feedbacks, setFeedbacks] = useState([
-    { id: 1, title: 'Feedback Event 1', description: 'Feedback Event Des...', enabled: false },
-    { id: 2, title: 'Feedback Event 2', description: 'Feedback Event Des...', enabled: false }
-  ]);
-
-  const addFeedback = () => {
-    const newId = feedbacks.length > 0 ? Math.max(...feedbacks.map(f => f.id)) + 1 : 1;
-    setFeedbacks([...feedbacks, {
-      id: newId,
-      title: `Feedback Event ${newId}`,
-      description: 'Feedback Event Des...',
-      enabled: false
-    }]);
-  };
-
-  const removeFeedback = (id) => {
-    setFeedbacks(feedbacks.filter(f => f.id !== id));
-  };
-
-  const toggleFeedback = (id) => {
-    setFeedbacks(feedbacks.map(f => 
-      f.id === id ? { ...f, enabled: !f.enabled } : f
-    ));
-  };
-
+function SurveyEventCard({ event, onClick }) {
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-center mb-8">
-          <h1 className="text-2xl font-semibold text-gray-800">My Feedback</h1>
-        </div>
+    <div
+      onClick={onClick}
+      className="group bg-white rounded-3xl shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden flex flex-col"
+    >
+      <div className="relative h-64 overflow-hidden">
+        <EventCardImage
+          imageCard={event?.images?.imgCard}
+          eventName={event.eventName}
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {feedbacks.map(feedback => (
-            <div key={feedback.id} className="bg-white rounded-2xl shadow-lg p-6 relative">
-              <button
-                onClick={() => removeFeedback(feedback.id)}
-                className="absolute -top-3 -right-3 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors shadow-md"
-              >
-                <X size={16} />
-              </button>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
 
-              <div className="flex flex-col items-center">
-                <div className="relative mb-4">
-                  <div className="w-20 h-20 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg viewBox="0 0 64 64" className="w-16 h-16">
-                      <path d="M10 20 L35 20 L35 35 L20 35 L10 45 Z" fill="#3B82F6" />
-                      <rect x="12" y="24" width="18" height="2" fill="white" />
-                      <rect x="12" y="28" width="18" height="2" fill="white" />
-                      <rect x="12" y="32" width="12" height="2" fill="white" />
-                    </svg>
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-green-400 rounded-lg flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" className="w-8 h-8 fill-white">
-                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
-                  </div>
-                </div>
-
-                <h3 className="text-gray-800 font-medium mb-1">{feedback.title}</h3>
-                <p className="text-gray-500 text-sm mb-4">{feedback.description}</p>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => toggleFeedback(feedback.id)}
-                    className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
-                      feedback.enabled 
-                        ? 'bg-gray-300 text-gray-600 hover:bg-gray-400'
-                        : 'bg-red-400 text-white hover:bg-red-500'
-                    }`}
-                  >
-                    Disable
-                  </button>
-                  <button
-                    onClick={() => toggleFeedback(feedback.id)}
-                    className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
-                      feedback.enabled
-                        ? 'bg-blue-500 text-white hover:bg-blue-600'
-                        : 'bg-blue-400 text-white hover:bg-blue-500'
-                    }`}
-                  >
-                    Enable
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          <button
-            onClick={addFeedback}
-            className="bg-gray-200 rounded-2xl shadow-lg p-6 flex items-center justify-center hover:bg-gray-300 transition-colors min-h-[280px]"
-          >
-            <Plus size={48} className="text-gray-600" />
-          </button>
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <div className="bg-white text-gray-900 px-6 py-3 rounded-full font-semibold text-base flex items-center gap-2 shadow-xl transform scale-95 group-hover:scale-100 transition-transform">
+            <FileText className="w-5 h-5" />
+            View Surveys
+            <ChevronRight className="w-5 h-5" />
+          </div>
         </div>
       </div>
+
+      <div className="p-6 flex flex-col flex-1">
+        <h3 className="text-xl font-bold text-gray-900 mb-4 line-clamp-2 min-h-[3.5rem]">
+          {event.eventName}
+        </h3>
+
+        <div className="space-y-3 mb-4">
+          <div className="flex items-start gap-3 text-gray-600">
+            <span className="text-sm">
+              Date : {event.startDate ? FormatDate(event.startDate) : "TBA"}
+            </span>
+          </div>
+          <div className="flex items-start gap-3 text-gray-600">
+            <span className="text-sm line-clamp-1">
+              Location : {event.location || "Online"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-auto pt-4 border-t border-gray-100">
+          <div className="flex items-center gap-2 flex-1">
+            {event.hasPreSurvey ? (
+              <>
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <span className="text-sm font-medium text-gray-700">Pre-Survey</span>
+              </>
+            ) : (
+              <>
+                <XCircle className="w-5 h-5 text-gray-300 flex-shrink-0" />
+                <span className="text-sm font-medium text-gray-400">Pre-Survey</span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2 flex-1">
+            {event.hasPostSurvey ? (
+              <>
+                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <span className="text-sm font-medium text-gray-700">Post-Survey</span>
+              </>
+            ) : (
+              <>
+                <XCircle className="w-5 h-5 text-gray-300 flex-shrink-0" />
+                <span className="text-sm font-medium text-gray-400">Post-Survey</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Page() {
+  const [eventData, setEventData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [userRole, setUserRole] = useState("GUEST");
+  const [userId, setUserId] = useState(null); 
+  const mockFeedbackData = [];
+  const router = useRouter();
+
+  useEffect(() => {
+    fetchData();
+    checkUserToken();
+    // setTimeout(() => {
+    //   setEventData(mockFeedbackData);
+    //   setLoading(false);
+    // }, 500);
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await getDataNoToken("events");
+      const fetchedEvents = res.data || [];
+      setEventData(fetchedEvents);
+      // setFeedbackData(mockFeedbackData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setEventData([]);
+      // setFeedbackData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkUserToken = () => {
+    const token = Cookies.get("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const rawRole =
+          decoded.role || decoded.auth || decoded.authorities || "guest";
+        const role = String(rawRole).toUpperCase();
+        const id = decoded.id || decoded.userId || decoded.sub;
+
+        setUserRole(role);
+        setUserId(id);
+
+      } catch (error) {
+        console.error("Token decode error", error);
+      }
+    }
+  };
+
+  const myOrganizedEvents = useMemo(() => {
+    if (!userId || !eventData.length) return [];
+
+    const myEvents = eventData.filter((event) => {
+      if (typeof event.createdBy !== "object") {
+        return event.createdBy == userId;
+      }
+      return event.createdBy?.id == userId;
+    });
+
+    console.log(
+      `📋 Found ${myEvents.length} events for Organizer ID ${userId}`,
+    );
+    return myEvents;
+  }, [userId, eventData]);
+
+  const handleEventClick = (eventId) => {
+    router.push(`/organizer/survey/${eventId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <section className="max-w-7xl mx-auto py-12 px-4 md:px-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+            My Surveys
+          </h1>
+        </div>
+
+        {myOrganizedEvents.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-4">
+              <ClipboardList className="w-12 h-12 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              ยังไม่มี Event
+            </h3>
+            <p className="text-gray-600">
+              สร้าง Event แรกของคุณเพื่อเริ่มเก็บข้อมูล Survey
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {myOrganizedEvents.map((event) => (
+              <SurveyEventCard
+                key={event.id}
+                event={event}
+                onClick={() => handleEventClick(event.id)}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
