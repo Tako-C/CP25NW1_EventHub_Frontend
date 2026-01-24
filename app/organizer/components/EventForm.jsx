@@ -602,7 +602,20 @@ function UploadBox({
         <Upload
           listType="picture-card"
           maxCount={1}
-          beforeUpload={() => false}
+          beforeUpload={(file) => {
+            const isLt5M = file.size / 1024 / 1024 < 5;
+            if (!isLt5M) {
+              message.error(`ไฟล์ "${file.name}" ใหญ่เกินไป! กรุณาใช้ไฟล์ขนาดไม่เกิน 5MB`);
+              return Upload.LIST_IGNORE;
+            }
+            const isImage = file.type.startsWith('image/');
+            if (!isImage) {
+              message.error('กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ');
+              return Upload.LIST_IGNORE;
+            }
+
+            return false;
+          }}
           showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
           onRemove={(file) => {
             if (onRemove) return onRemove(file, name);
