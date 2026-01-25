@@ -172,12 +172,12 @@ function SurveyCard({
       </div>
 
       <div className="flex gap-2 pt-3 border-t border-gray-200">
-        <button
+        {/* <button
           onClick={onView}
           className="flex-1 bg-gray-900 text-white px-3 py-2 rounded-xl font-semibold hover:bg-gray-800 transition-all flex items-center justify-center gap-1.5 text-sm"
         >
           <Eye className="w-3.5 h-3.5" /> ผลลัพธ์
-        </button>
+        </button> */}
         <button
           onClick={onEdit}
           className="flex-1 border-2 border-gray-300 text-gray-700 px-3 py-2 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 text-sm"

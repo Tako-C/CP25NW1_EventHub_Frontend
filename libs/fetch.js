@@ -156,14 +156,14 @@ export const getUpdateImage = (path) => apiFetch(path, { method: 'GET' }, true);
 
 export const getImage = (path) => apiFetch(path, { method: 'GET' }, true);
 
-export const createSurvey = (events, id, question) =>
+export const createSurvey = (events, id, questions) =>
   apiFetch(`events/${id}/surveys`, {
     method: 'POST',
-    body: {
-      "name": events,
-      "description": events,
-      "points": events,
-      "type": events,
-      "questions": question,
-    },
+    body: JSON.stringify({
+      name: events.name,
+      description: events.description,
+      points: events.points,
+      type: events.type,
+      questions,
+    }),
   });
