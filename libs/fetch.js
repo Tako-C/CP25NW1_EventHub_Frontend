@@ -167,3 +167,15 @@ export const createSurvey = (events, id, questions) =>
       questions,
     }),
   });
+
+export const authPasswordForgot = (email) =>
+  apiFetch('auth/password/forgot', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+
+export const authPasswordReset = (email, otp, newPassword, confirmPassword) =>
+  apiFetch('auth/password/reset', {
+    method: 'POST',
+    body: JSON.stringify({ email, otp, newPassword, confirmPassword }),
+  });

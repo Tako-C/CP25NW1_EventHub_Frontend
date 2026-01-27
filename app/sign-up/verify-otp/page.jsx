@@ -141,18 +141,23 @@ export default function Page() {
     try {
       const otpCode = otp.join("");
       if (otpCode.length === 6) {
-        const verifyRes = await authRegisterVerify(
+        // 1. ยืนยัน OTP (ถ้า Backend error จะ throw ไป catch เอง)
+        await authRegisterVerify(
           data?.email,
           otpCode,
           data?.password
         );
-        // if (verifyRes?.statusCode !== 200) return;
 
+        // 2. Login เพื่อรับ Token
         const loginRes = await authLoginPassword(data?.email, data?.password);
-        // if (!loginRes?.data?.token) return;
 
-        localStorage.removeItem(`otp_end_time_${data}`);
-        Cookie.set("token", res?.data.token, { path: "/" });
+        // 3. ลบ Cooldown (ต้องใช้ data.email ให้ตรงกับตอน set)
+        localStorage.removeItem(`otp_end_time_${data?.email}`);
+        
+        // 4. บันทึก Token (แก้ไขจาก res เป็น loginRes)
+        Cookie.set("token", loginRes?.data?.token, { path: "/" });
+        
+        // 5. ลบข้อมูลชั่วคราวและ Redirect
         Cookie.remove("signupData");
 
         window.dispatchEvent(new Event("user-logged-in"));

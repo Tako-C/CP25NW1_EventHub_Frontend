@@ -11,6 +11,7 @@ export default function SignInPage({
   isOpen,
   setIsSignInOpen,
   setIsSignInOTPOpen,
+  setIsForgotPasswordOpen,
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -78,6 +79,12 @@ export default function SignInPage({
       default:
         return "";
     }
+  };
+
+  const handleForgotPassword = (e) => {
+    e.preventDefault();
+    setIsSignInOpen(false);
+    setIsForgotPasswordOpen(true);
   };
 
   const validateForm = () => {
@@ -165,12 +172,12 @@ export default function SignInPage({
                 />
                 <span className="text-sm text-gray-600">Remember me</span>
               </label>
-              <Link
-                href="#"
-                className="text-sm text-blue-500 hover:text-blue-600"
+              <button
+                onClick={handleForgotPassword}
+                className="text-sm text-blue-500 hover:text-blue-600 underline bg-transparent border-none cursor-pointer"
               >
                 Forgot Password?
-              </Link>
+              </button>
             </div>
             <button
               onClick={handleSubmit}
