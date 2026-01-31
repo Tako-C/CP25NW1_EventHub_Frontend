@@ -9,7 +9,7 @@ export default function MyEventPage({ events }) {
     <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="mb-6 border-b border-gray-100 pb-4">
         <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
-          My Events
+          Events History
         </h2>
         <p className="text-gray-500 text-sm mt-1">
           Events you have registered for

@@ -101,7 +101,7 @@ export default function Page() {
                 <div className="flex items-center gap-2">
                   <Calendar size={20} className="lg:hidden" />
                   <span className="font-semibold text-sm md:text-lg">
-                    My Events
+                    Events History
                   </span>
                 </div>
                 <ChevronRight size={24} className="hidden lg:block" />
