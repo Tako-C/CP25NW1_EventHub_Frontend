@@ -284,7 +284,7 @@ export default function Navbar({ token }) {
   const organizerOptions = [
     // { label: 'Dashboard', path: '/organizer/dashboard' },
     { label: "Events Manager", path: "/organizer/event" },
-    { label: "My Survey", path: "/organizer/survey" },
+    { label: "Surveys Manager", path: "/organizer/survey" },
   ];
 
   return (
