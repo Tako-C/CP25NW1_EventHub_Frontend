@@ -107,7 +107,7 @@ export default function Page() {
       />
       <section className="max-w-7xl mx-auto py-12 px-4 md:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">
             My Surveys
           </h1>
         </div>
