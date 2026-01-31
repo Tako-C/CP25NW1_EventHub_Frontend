@@ -33,7 +33,6 @@ export default function Page() {
     const res = await getData('users/me/profile');
     if (res?.statusCode === 200) {
       const userData = res.data;
-      console.log(userData);
       setProfile({
         id: userData?.id || '',
         firstName: userData?.firstName || '',

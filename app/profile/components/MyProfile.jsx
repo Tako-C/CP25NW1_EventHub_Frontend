@@ -1,8 +1,15 @@
-"use client";
-
-import { User, Mail, Briefcase, MapPin, Phone, Flag, ChevronDown } from "lucide-react";
+import {
+  User,
+  Mail,
+  Briefcase,
+  MapPin,
+  Phone,
+  Flag,
+  ChevronDown,
+} from "lucide-react";
 import { postUpdateProfile, getData } from "@/libs/fetch";
 import { useState, useEffect } from "react";
+import Notification from "@/components/Notification/Notification";
 
 export default function ProfilePage({
   isEditing,
@@ -15,6 +22,27 @@ export default function ProfilePage({
   const [countries, setCountries] = useState([]);
   const [cities, setCities] = useState([]);
 
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (msg, isError = false) => {
+    setNotification({
+      isVisible: true,
+      isError: isError,
+      message: msg,
+    });
+    setTimeout(() => {
+      setNotification((prev) => ({ ...prev, isVisible: false }));
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
   const fetchData = async () => {
     try {
       const resJob = await getData(`users/jobs`);
@@ -23,7 +51,6 @@ export default function ProfilePage({
       setJobs(resJob?.data || []);
       setCountries(resCountry?.data || []);
 
-      // ดึงเมืองเริ่มต้น (เช่น จากประเทศที่ user มีอยู่ หรือประเทศแรกใน list)
       const countryId = updateProfile?.country?.id || resCountry?.data?.[0]?.id;
       if (countryId) {
         const resCity = await getData(`users/country/${countryId}/citys`);
@@ -39,7 +66,6 @@ export default function ProfilePage({
   }, []);
 
   useEffect(() => {
-    console.log(profile);
     setUpdateProfile(profile);
   }, [profile]);
 
@@ -59,15 +85,20 @@ export default function ProfilePage({
   };
 
   const handleSave = () => {
-    console.log("profile", updateProfile);
     editData(updateProfile);
     setIsEditing(false);
     window.location.reload();
   };
 
   const editData = async (data) => {
-    const res = await postUpdateProfile(data);
-    console.log(res);
+    try {
+      const res = await postUpdateProfile(data);
+      if (res.statusCode === 200 || res.statusCode === 201) {
+        showNotification(`${res?.message}`, false);
+      }
+    } catch (error) {
+      showNotification(`${error}`, true);
+    }
   };
 
   const handleCountryChange = async (countryId) => {
@@ -81,12 +112,18 @@ export default function ProfilePage({
   };
 
   const handleCancel = () => {
-    setUpdateProfile(profile); 
+    setUpdateProfile(profile);
     setIsEditing(false);
   };
 
   return (
     <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8">
+      <Notification
+        isVisible={notification.isVisible}
+        onClose={closeNotification}
+        isError={notification.isError}
+        message={notification.message}
+      />
       <div className="mb-6 md:mb-8 border-b border-gray-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-800">
@@ -317,12 +354,12 @@ function SelectField({
     }
 
     const found = options.find(
-      (opt) => opt.id === val || opt.id === Number(val)
+      (opt) => opt.id === val || opt.id === Number(val),
     );
     if (found) {
       return found.jobNameTh || found.countryNameTh || found.cityNameTh;
     }
-    return val; 
+    return val;
   };
 
   return (

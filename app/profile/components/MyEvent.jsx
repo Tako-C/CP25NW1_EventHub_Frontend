@@ -1,32 +1,66 @@
-import { Calendar, MapPin, MessageSquare, ClipboardCheck, Ticket } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Calendar, MapPin, MessageSquare, ClipboardCheck, Ticket, Filter } from 'lucide-react';
 import { FormatDate } from '@/utils/format';
 import { EventCardImage, QrCodeImage } from '@/utils/getImage';
 import { useRouter } from 'next/navigation';
 
 export default function MyEventPage({ events }) {
   const router = useRouter();
+  const [selectedRole, setSelectedRole] = useState('ALL');
+
+  const availableRoles = useMemo(() => {
+    if (!events || !Array.isArray(events)) return ['ALL'];
+    const roles = events.map(event => event.eventRole?.toUpperCase() || 'VISITOR');
+    return ['ALL', ...new Set(roles)];
+  }, [events]);
+
+  const filteredEvents = useMemo(() => {
+    if (selectedRole === 'ALL') return events;
+    return events.filter(event => 
+      (event.eventRole?.toUpperCase() || 'VISITOR') === selectedRole
+    );
+  }, [events, selectedRole]);
+
   return (
     <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8">
-      <div className="mb-6 border-b border-gray-100 pb-4">
-        <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
-          Events History
-        </h2>
-        <p className="text-gray-500 text-sm mt-1">
-          Events you have registered for
-        </p>
+      <div className="mb-6 border-b border-gray-100 pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
+            Events History
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">
+            Events you have registered for
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+          <Filter size={16} className="text-gray-400" />
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider"></span>
+          <select
+            value={selectedRole}
+            onChange={(e) => setSelectedRole(e.target.value)}
+            className="bg-transparent text-gray-700 text-sm font-bold outline-none cursor-pointer"
+          >
+            {availableRoles.map((role) => (
+              <option key={role} value={role}>
+                {role === 'ALL' ? 'ALL EVENTS' : role}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {events.length === 0 ? (
+      {filteredEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 p-4">
           <Calendar className="w-12 h-12 text-gray-300 mb-2" />
           <p className="text-gray-500 text-lg font-medium">
-            No registered events found.
+            No events found.
           </p>
-          <p className="text-gray-400 text-sm">Join an event to see it here.</p>
+          <p className="text-gray-400 text-sm">Try changing your filter or join an event.</p>
         </div>
       ) : (
         <div className="space-y-4 md:space-y-6">
-          {events.map((event, index) => {
+          {filteredEvents.map((event, index) => {
             const isStaffOrOrganizer = ['STAFF', 'ORGANIZER'].includes(
               event.eventRole?.toUpperCase()
             );
