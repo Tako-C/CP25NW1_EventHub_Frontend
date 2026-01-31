@@ -1,6 +1,6 @@
-'use client';
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+"use client";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,16 +8,16 @@ import {
   MapPin,
   Pause,
   Play,
-} from 'lucide-react';
-import Cookies from 'js-cookie'; // เพิ่ม
-import { jwtDecode } from 'jwt-decode'; // เพิ่ม
+} from "lucide-react";
+import Cookies from "js-cookie"; 
+import { jwtDecode } from "jwt-decode"; 
 
-import { FormatDate } from '@/utils/format';
-import { getDataNoToken } from '@/libs/fetch';
-import EventCard from '@/components/Card/EventCard';
-import { EventCardImage } from '@/utils/getImage';
-import OrganizerEvents from '../organizer/event/components/OrganizerEvents';
-import './animations.css';
+import { FormatDate } from "@/utils/format";
+import { getDataNoToken } from "@/libs/fetch";
+import EventCard from "@/components/Card/EventCard";
+import { EventCardImage } from "@/utils/getImage";
+import OrganizerEvents from "../organizer/event/components/OrganizerEvents";
+import "./animations.css";
 
 const mockFeedbackData = [];
 
@@ -26,12 +26,10 @@ export default function Page() {
   const [eventData, setEventData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // --- เพิ่ม State สำหรับ Organizer ---
-  const [userRole, setUserRole] = useState('GUEST');
-  const [userId, setUserId] = useState(null); // เก็บ ID ของคน Login
-  // ---------------------------------
+  const [userRole, setUserRole] = useState("GUEST");
+  const [userId, setUserId] = useState(null);
 
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [feedbackData, setFeedbackData] = useState([]);
 
   const [isAutoPlay, setIsAutoPlay] = useState(true);
@@ -39,14 +37,13 @@ export default function Page() {
 
   const router = useRouter();
 
-  // === Scroll to Hash on Load ===
   useEffect(() => {
     const handleScrollToHash = () => {
       const hash = window.location.hash;
       if (hash) {
         const element = document.querySelector(hash);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }
     };
@@ -66,32 +63,21 @@ export default function Page() {
     checkUserToken();
   }, []);
 
-  useEffect(() => {
-    if (!isAutoPlay || isHovered || eventData.length === 0) return;
-
-    const interval = setInterval(() => {
-      setCurrentEventIndex((prev) => (prev + 1) % eventData.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isAutoPlay, isHovered, eventData.length]);
-
   const checkUserToken = () => {
-    const token = Cookies.get('token');
+    const token = Cookies.get("token");
     if (token) {
       try {
         const decoded = jwtDecode(token);
         const rawRole =
-          decoded.role || decoded.auth || decoded.authorities || 'guest';
+          decoded.role || decoded.auth || decoded.authorities || "guest";
         const role = String(rawRole).toUpperCase();
         const id = decoded.id || decoded.userId || decoded.sub;
 
         setUserRole(role);
         setUserId(id);
 
-        // console.log('Decoded Token:', { rawRole, role, id });
       } catch (error) {
-        console.error('Token decode error', error);
+        console.error("Token decode error", error);
       }
     }
   };
@@ -99,12 +85,12 @@ export default function Page() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await getDataNoToken('events');
+      const res = await getDataNoToken("events");
       const fetchedEvents = res.data || [];
       setEventData(fetchedEvents);
       setFeedbackData(mockFeedbackData);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
       setEventData([]);
       setFeedbackData([]);
     } finally {
@@ -117,51 +103,56 @@ export default function Page() {
       .map((event) => event.eventTypeId?.eventTypeName)
       .filter((type) => type);
 
-    return ['All', ...new Set(types)];
+    return ["All", ...new Set(types)];
   }, [eventData]);
 
-  const filteredEvents = useMemo(() => {
-    if (selectedCategory === 'All') return eventData;
+  const slideShowEvents = useMemo(() => {
+    return eventData.filter((event) => event.status !== "FINISHED");
+  }, [eventData]);
 
-    return eventData.filter(
-      (event) => event.eventTypeId?.eventTypeName === selectedCategory
-    );
+  const currentEvent = slideShowEvents[currentEventIndex];
+
+  const filteredEvents = useMemo(() => {
+    let list = eventData;
+
+    if (selectedCategory !== "All") {
+      list = list.filter(
+        (event) => event.eventTypeId?.eventTypeName === selectedCategory,
+      );
+    }
+
+    return [...list].sort((a, b) => {
+      if (a.status !== "FINISHED" && b.status === "FINISHED") return -1;
+      if (a.status === "FINISHED" && b.status !== "FINISHED") return 1;
+      return 0;
+    });
   }, [selectedCategory, eventData]);
 
-  // --- Organizer's Events (Filtered by userId) ---
-  const myOrganizedEvents = useMemo(() => {
-    if (!userId || !eventData.length) return [];
+const nextEvent = () => {
+  if (slideShowEvents.length === 0) return;
+  setCurrentEventIndex((prev) => (prev + 1) % slideShowEvents.length);
+};
 
-    const myEvents = eventData.filter((event) => {
-      if (typeof event.createdBy !== 'object') {
-        return event.createdBy == userId;
-      }
-      return event.createdBy?.id == userId;
-    });
-
-    console.log(
-      `📋 Found ${myEvents.length} events for Organizer ID ${userId}`
-    );
-    return myEvents;
-  }, [userId, eventData]);
-
-  const nextEvent = () => {
-    if (eventData.length === 0) return;
-    setCurrentEventIndex((prev) => (prev + 1) % eventData.length);
-  };
-
-  const prevEvent = () => {
-    if (eventData.length === 0) return;
-    setCurrentEventIndex(
-      (prev) => (prev - 1 + eventData.length) % eventData.length
-    );
-  };
+const prevEvent = () => {
+  if (slideShowEvents.length === 0) return;
+  setCurrentEventIndex(
+    (prev) => (prev - 1 + slideShowEvents.length) % slideShowEvents.length,
+  );
+};
 
   const goToSlide = (index) => {
     setCurrentEventIndex(index);
   };
 
-  const currentEvent = eventData[currentEventIndex];
+  useEffect(() => {
+    if (!isAutoPlay || isHovered || slideShowEvents.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentEventIndex((prev) => (prev + 1) % slideShowEvents.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isAutoPlay, isHovered, slideShowEvents.length]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -173,16 +164,16 @@ export default function Page() {
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
             <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-emerald-500"></div>
           </div>
-        ) : (
+        ) : slideShowEvents.length > 0 ? (
           <>
             <div className="absolute inset-0">
-              {eventData.map((event, index) => (
+              {slideShowEvents.map((event, index) => (
                 <div
-                  key={index}
+                  key={event.id || index} 
                   className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
                     index === currentEventIndex
-                      ? 'opacity-100 z-0'
-                      : 'opacity-0 -z-10'
+                      ? "opacity-100 z-0"
+                      : "opacity-0 -z-10"
                   }`}
                 >
                   <EventCardImage
@@ -208,14 +199,14 @@ export default function Page() {
                 </div>
 
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 animate-slide-up leading-tight drop-shadow-lg">
-                  {currentEvent?.eventName || 'Event Title'}
+                  {currentEvent?.eventName || "Event Title"}
                 </h1>
 
                 <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 mb-8 text-white/90 animate-slide-up animation-delay-200">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-emerald-400" />
                     <span className="text-base md:text-lg">
-                      {currentEvent?.location || 'Location'}
+                      {currentEvent?.location || "Location"}
                     </span>
                   </div>
                   <div className="hidden md:block w-1 h-1 bg-white/40 rounded-full" />
@@ -224,9 +215,9 @@ export default function Page() {
                     <span className="text-base md:text-lg">
                       {currentEvent
                         ? `${FormatDate(currentEvent.startDate)} - ${FormatDate(
-                            currentEvent.endDate
+                            currentEvent.endDate,
                           )}`
-                        : 'Date Unavailable'}
+                        : "Date Unavailable"}
                     </span>
                   </div>
                 </div>
@@ -262,7 +253,7 @@ export default function Page() {
 
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-10">
                 <div className="flex items-center gap-2 px-4 py-3 bg-black/30 backdrop-blur-md rounded-full">
-                  {eventData.map((_, index) => (
+                  {slideShowEvents.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => goToSlide(index)}
@@ -272,8 +263,8 @@ export default function Page() {
                       <div
                         className={`h-2 rounded-full transition-all duration-300 ${
                           index === currentEventIndex
-                            ? 'w-8 bg-emerald-400'
-                            : 'w-2 bg-white/40 group-hover:bg-white/60'
+                            ? "w-8 bg-emerald-400"
+                            : "w-2 bg-white/40 group-hover:bg-white/60"
                         }`}
                       />
                     </button>
@@ -295,9 +286,9 @@ export default function Page() {
 
               <div className="absolute top-24 right-4 md:top-8 md:right-8 px-4 py-2 bg-black/30 backdrop-blur-md rounded-full z-10">
                 <span className="text-white font-medium">
-                  {eventData.length > 0
-                    ? `${currentEventIndex + 1} / ${eventData.length}`
-                    : '0 / 0'}
+                  {slideShowEvents.length > 0
+                    ? `${currentEventIndex + 1} / ${slideShowEvents.length}`
+                    : "0 / 0"}
                 </span>
               </div>
             </div>
@@ -307,6 +298,10 @@ export default function Page() {
               <div className="absolute bottom-20 right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
             </div>
           </>
+        ) : (
+          <div className="h-full flex items-center justify-center text-white">
+            No active events featured.
+          </div>
         )}
       </section>
 
@@ -329,8 +324,8 @@ export default function Page() {
               onClick={() => setSelectedCategory(category)}
               className={`px-4 md:px-6 py-2 rounded-full transition text-sm md:text-base ${
                 selectedCategory === category
-                  ? 'bg-blue-900 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  ? "bg-blue-900 text-white"
+                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
               }`}
             >
               {category}
@@ -352,19 +347,6 @@ export default function Page() {
           )}
         </div>
       </section>
-
-      {/* ----------------------------------------------------------------------- */}
-      {/* --- Organizer Section --- */}
-      {/* ----------------------------------------------------------------------- */}
-
-      {/* {userId && (userRole === 'ORGANIZER' || userRole === 'ADMIN') && (
-        <section
-          id="organizer-section"
-          className="bg-gray-50 border-t border-gray-200"
-        >
-          <OrganizerEvents events={myOrganizedEvents} />
-        </section>
-      )} */}
     </div>
   );
 }

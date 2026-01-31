@@ -6,15 +6,7 @@ import { EventCardImage } from "@/utils/getImage";
 export default function EventCard({ event }) {
   const router = useRouter();
 
-  const isPastEvent = () => {
-    if (!event.endDate) return false;
-    const endDate = new Date(event.endDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); 
-    return endDate < today;
-  };
-
-  const isEventPast = isPastEvent();
+  const isEventPast = event.status === "FINISHED";
 
   return (
     <div 
@@ -23,7 +15,6 @@ export default function EventCard({ event }) {
         isEventPast ? 'opacity-70' : ''
       }`}
     >
-      {/* Image Section */}
       <div className="relative h-48 bg-gray-100 overflow-hidden">
         <div className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${isEventPast ? 'grayscale' : ''}`}>
           <EventCardImage
@@ -33,13 +24,12 @@ export default function EventCard({ event }) {
         </div>
         
         {isEventPast && (
-          <div className="absolute top-3 right-3 bg-gray-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold z-10">
+          <div className="absolute top-3 right-3 bg-red-600 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold z-10">
             Event Ended
           </div>
         )}
       </div>
 
-      {/* Content Section */}
       <div className="p-5 flex flex-col flex-1">
         <h3 className={`text-lg font-bold mb-3 line-clamp-1 transition-colors ${
           isEventPast ? 'text-gray-500' : 'text-gray-900 group-hover:text-blue-600'
@@ -60,7 +50,6 @@ export default function EventCard({ event }) {
             </p>
           </div>
           
-          {/* ปรับปรุงปุ่มตรงนี้ */}
           <div className="pt-2">
             <button 
               className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
