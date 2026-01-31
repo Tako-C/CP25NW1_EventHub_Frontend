@@ -283,7 +283,7 @@ export default function Navbar({ token }) {
 
   const organizerOptions = [
     // { label: 'Dashboard', path: '/organizer/dashboard' },
-    { label: "Manage Events", path: "/organizer/event" },
+    { label: "Events Manager", path: "/organizer/event" },
     { label: "My Survey", path: "/organizer/survey" },
   ];
 

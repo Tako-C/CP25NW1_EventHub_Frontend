@@ -13,7 +13,7 @@ export default function OrganizerEvents({ events = [] }) {
       <div className="text-center mb-6 md:mb-8 mt-10">
         <div className="inline-block">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-            My Events
+            Events <Manager></Manager>
           </h2>
         </div>
       </div>
