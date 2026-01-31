@@ -1,25 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  ArrowLeft,
-  Plus,
-  Eye,
-  Save,
-  Type,
-} from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Plus, Eye, Save, Type } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createSurvey } from "@/libs/fetch";
 import QuestionEditor from "../components/QuestionEditor";
 import SurveyPreview from "../components/SurveyPreview";
+import Notification from "@/components/Notification/Notification";
 
 export default function CreateSurveyPage() {
   const searchParams = useSearchParams();
   const surveyType = searchParams.get("type");
   const role = searchParams.get("role");
   const eventId = parseInt(searchParams.get("eventId"));
-    const router = useRouter();
-  
+  const router = useRouter();
 
   const [surveyTitle, setSurveyTitle] = useState("");
   const [surveyPoint, setSurveyPoint] = useState("");
@@ -40,6 +34,26 @@ export default function CreateSurveyPage() {
     },
   ]);
   const [showPreview, setShowPreview] = useState(false);
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (msg, isError = false) => {
+    setNotification({
+      isVisible: true,
+      isError: isError,
+      message: msg,
+    });
+    setTimeout(() => {
+      setNotification((prev) => ({ ...prev, isVisible: false }));
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   const handleAddQuestion = () => {
     // setQuestions([
@@ -97,41 +111,48 @@ export default function CreateSurveyPage() {
     return null;
   };
 
-const handleSave = async () => {
-  const eventDetail = {
-    name: surveyTitle || "",
-    description: surveyDescription || "",
-    points: parseInt(surveyPoint) || 0,
-    type: surveyTypeFunction() || "",
-  };
-
-  const formattedQuestions = questions.map((q) => {
-    let apiType = "SUGGESTION"; 
-    if (q.questionType === "multiple_choice") apiType = "SINGLE";
-    if (q.questionType === "checkbox") apiType = "MULTIPLE"; 
-    if (q.questionType === "text") apiType = "SUGGESTION";
-
-    return {
-      question: q.question,
-      questionType: apiType, 
-      choices: q.choices || [],
+  const handleSave = async () => {
+    const eventDetail = {
+      name: surveyTitle || "",
+      description: surveyDescription || "",
+      points: parseInt(surveyPoint) || 0,
+      type: surveyTypeFunction() || "",
     };
-  });
 
-  try {
-    const res = await createSurvey(eventDetail, eventId, formattedQuestions);
-    if (res.statusCode === 200) {
-      // alert("บันทึกแบบสำรวจสำเร็จ!");
-      router.push(`${eventId}`)
+    const formattedQuestions = questions.map((q) => {
+      let apiType = "TEXT";
+      if (q.questionType === "multiple_choice") apiType = "SINGLE";
+      if (q.questionType === "checkbox") apiType = "MULTIPLE";
+      if (q.questionType === "text") apiType = "TEXT";
+
+      return {
+        question: q.question,
+        questionType: apiType,
+        choices: q.choices || [],
+      };
+    });
+
+    try {
+      const res = await createSurvey(eventDetail, eventId, formattedQuestions);
+      if (res.statusCode === 200 || res.statusCode === 201) {
+        showNotification(`${res?.message}`, false);
+        setTimeout(() => {
+        router.back();
+        }, 1000);
+      }
+    } catch (error) {
+        showNotification(`${error}`, true);
     }
-  } catch (error) {
-    console.error("Error:", error);
-    // alert(error.message); 
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Notification
+        isVisible={notification.isVisible}
+        onClose={closeNotification}
+        isError={notification.isError}
+        message={notification.message}
+      />
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">

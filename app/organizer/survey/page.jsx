@@ -1,31 +1,44 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import {
-  ClipboardList,
-} from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { getDataNoToken } from "@/libs/fetch";
-import Cookies from "js-cookie"; 
-import { jwtDecode } from "jwt-decode"; 
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import SurveyEventCard from "./components/SurveyEventCard";
-
+import Notification from "@/components/Notification/Notification";
 
 export default function Page() {
   const [eventData, setEventData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState("GUEST");
-  const [userId, setUserId] = useState(null); 
-  const mockFeedbackData = [];
+  const [userId, setUserId] = useState(null);
   const router = useRouter();
+
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (msg, isError = false) => {
+    setNotification({
+      isVisible: true,
+      isError: isError,
+      message: msg,
+    });
+    setTimeout(() => {
+      setNotification((prev) => ({ ...prev, isVisible: false }));
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   useEffect(() => {
     fetchData();
     checkUserToken();
-    // setTimeout(() => {
-    //   setEventData(mockFeedbackData);
-    //   setLoading(false);
-    // }, 500);
   }, []);
 
   const fetchData = async () => {
@@ -34,11 +47,9 @@ export default function Page() {
       const res = await getDataNoToken("events");
       const fetchedEvents = res.data || [];
       setEventData(fetchedEvents);
-      // setFeedbackData(mockFeedbackData);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      showNotification(`${error}`, true);
       setEventData([]);
-      // setFeedbackData([]);
     } finally {
       setLoading(false);
     }
@@ -49,16 +60,11 @@ export default function Page() {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        const rawRole =
-          decoded.role || decoded.auth || decoded.authorities || "guest";
-        const role = String(rawRole).toUpperCase();
         const id = decoded.id || decoded.userId || decoded.sub;
 
-        setUserRole(role);
         setUserId(id);
-
       } catch (error) {
-        console.error("Token decode error", error);
+        showNotification(`${error}`, true);
       }
     }
   };
@@ -73,9 +79,6 @@ export default function Page() {
       return event.createdBy?.id == userId;
     });
 
-    console.log(
-      `📋 Found ${myEvents.length} events for Organizer ID ${userId}`,
-    );
     return myEvents;
   }, [userId, eventData]);
 
@@ -96,6 +99,12 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Notification
+        isVisible={notification.isVisible}
+        onClose={closeNotification}
+        isError={notification.isError}
+        message={notification.message}
+      />
       <section className="max-w-7xl mx-auto py-12 px-4 md:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">

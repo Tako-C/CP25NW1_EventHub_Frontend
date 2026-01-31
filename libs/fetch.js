@@ -3,16 +3,16 @@ const url = process.env.NEXT_PUBLIC_API_URL;
 const getCookie = (name) => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+  if (parts.length === 2) return parts.pop().split(";").shift();
 };
 
 const apiFetch = async (endpoint, options = {}, isBlob = false) => {
-  const token = getCookie('token');
+  const token = getCookie("token");
 
   const isFormData = options.body instanceof FormData;
 
   const defaultHeaders = {
-    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
@@ -44,103 +44,103 @@ const apiFetch = async (endpoint, options = {}, isBlob = false) => {
   return data;
 };
 
-export const getData = (path) => apiFetch(path, { method: 'GET' });
+export const getData = (path) => apiFetch(path, { method: "GET" });
 
 export const getDataNoToken = (path) =>
   fetch(`${url}/${path}`).then((res) => res.json());
 
 export const authLoginPassword = (email, password) =>
-  apiFetch('auth/login', {
-    method: 'POST',
+  apiFetch("auth/login", {
+    method: "POST",
     body: JSON.stringify({ email, password }),
   });
 
 export const authRegisterRequest = (firstName, lastName, email, password) =>
-  apiFetch('auth/register/otp/request', {
-    method: 'POST',
+  apiFetch("auth/register/otp/request", {
+    method: "POST",
     body: JSON.stringify({ firstName, lastName, email, password }),
   });
 
 export const authRegisterVerify = (email, otp, password) =>
-  apiFetch('auth/register/otp/verify', {
-    method: 'POST',
+  apiFetch("auth/register/otp/verify", {
+    method: "POST",
     body: JSON.stringify({ email, otp, password }),
   });
 
 export const authLoginOTPRequest = (email) =>
-  apiFetch('auth/login/otp/request', {
-    method: 'POST',
+  apiFetch("auth/login/otp/request", {
+    method: "POST",
     body: JSON.stringify({ email }),
   });
 
 export const authLoginOTPVerify = (email, otp) =>
-  apiFetch('auth/login/otp/verify', {
-    method: 'POST',
+  apiFetch("auth/login/otp/verify", {
+    method: "POST",
     body: JSON.stringify({ email, otp }),
   });
 
-export const postEventRegister = (path) => apiFetch(path, { method: 'POST' });
+export const postEventRegister = (path) => apiFetch(path, { method: "POST" });
 
 export const requestEmailOTP = (id, payload) =>
   apiFetch(`events/${id}/register/otp/request`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(payload),
   });
 
 export const verifyEmailOTP = (id, email, otp) =>
   apiFetch(`events/${id}/register/otp/verify`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ email, otp }),
   });
 
 export const postQRCheckIn = (qrContent) =>
-  apiFetch('qr/check-in', {
-    method: 'POST',
+  apiFetch("qr/check-in", {
+    method: "POST",
     body: JSON.stringify({ qrContent }),
   });
 
 export const postQRUserInfo = (qrContent) =>
-  apiFetch('qr/user-info', {
-    method: 'POST',
+  apiFetch("qr/user-info", {
+    method: "POST",
     body: JSON.stringify({ qrContent }),
   });
 
 export const postUpdateProfile = (data) =>
-  apiFetch('users/me/profile', {
-    method: 'POST',
+  apiFetch("users/me/profile", {
+    method: "POST",
     body: JSON.stringify(data),
   });
 
 export const postUserCheckIn = (path, eventId, userId) =>
   apiFetch(path, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ eventId, userId }),
   });
 
 export const getListUser = (path, payload) =>
   apiFetch(path, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify(payload),
   });
 
 export const createEvent = (formData) =>
-  apiFetch('events', {
-    method: 'POST',
+  apiFetch("events", {
+    method: "POST",
     body: formData,
   });
 
-export const getEventTypes = () => apiFetch('events/types', { method: 'GET' });
+export const getEventTypes = () => apiFetch("events/types", { method: "GET" });
 
-export const getEventById = (id) => apiFetch(`events/${id}`, { method: 'GET' });
+export const getEventById = (id) => apiFetch(`events/${id}`, { method: "GET" });
 
 export const updateEvent = (id, formData) =>
   apiFetch(`events/${id}`, {
-    method: 'PUT',
+    method: "PUT",
     body: formData,
   });
 
 export const deleteEvent = (id) =>
-  apiFetch(`events/${id}`, { method: 'DELETE' });
+  apiFetch(`events/${id}`, { method: "DELETE" });
 
 export const deleteEventImage = (id, category, index = null) => {
   let endpoint = `events/${id}/images?category=${category}`;
@@ -148,17 +148,17 @@ export const deleteEventImage = (id, category, index = null) => {
     endpoint += `&index=${index}`;
   }
   return apiFetch(endpoint, {
-    method: 'DELETE',
+    method: "DELETE",
   });
 };
 
-export const getUpdateImage = (path) => apiFetch(path, { method: 'GET' }, true);
+export const getUpdateImage = (path) => apiFetch(path, { method: "GET" }, true);
 
-export const getImage = (path) => apiFetch(path, { method: 'GET' }, true);
+export const getImage = (path) => apiFetch(path, { method: "GET" }, true);
 
 export const createSurvey = (events, id, questions) =>
   apiFetch(`events/${id}/surveys`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({
       name: events.name,
       description: events.description,
@@ -168,14 +168,31 @@ export const createSurvey = (events, id, questions) =>
     }),
   });
 
+export const updateSurvey = (id, events, questions) =>
+  apiFetch(`events/${id}/surveys/${events?.surveyId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      name: events.name,
+      description: events.description,
+      points: events.points,
+      type: events.type,
+      questions,
+    }),
+  });
+
+export const deleteSurvey = (eventId, surveyId) =>
+  apiFetch(`events/${eventId}/surveys/${surveyId}`, {
+    method: 'DELETE',
+  });
+
 export const authPasswordForgot = (email) =>
-  apiFetch('auth/password/forgot', {
-    method: 'POST',
+  apiFetch("auth/password/forgot", {
+    method: "POST",
     body: JSON.stringify({ email }),
   });
 
 export const authPasswordReset = (email, otp, newPassword, confirmPassword) =>
-  apiFetch('auth/password/reset', {
-    method: 'POST',
+  apiFetch("auth/password/reset", {
+    method: "POST",
     body: JSON.stringify({ email, otp, newPassword, confirmPassword }),
   });
