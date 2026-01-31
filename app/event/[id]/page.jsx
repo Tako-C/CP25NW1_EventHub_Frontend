@@ -34,6 +34,26 @@ export default function Page() {
     fetchData();
   }, []);
 
+  // เพิ่มส่วนนี้ก่อน return หลักของ Page
+if (!eventData) {
+  return (
+    <div className="min-h-screen bg-gray-50 mt-20 animate-pulse">
+      <div className="h-[400px] md:h-[600px] bg-gray-200 flex items-center justify-center">
+        <div className="max-w-7xl mx-auto px-4 w-full flex flex-col md:flex-row gap-8 items-center">
+          <div className="w-72 h-72 md:w-96 md:h-96 bg-gray-300 rounded-3xl" />
+          <div className="flex-1 space-y-4 w-full max-w-lg">
+            <div className="h-10 bg-gray-300 rounded-lg w-3/4 mx-auto md:mx-0" />
+            <div className="h-6 bg-gray-300 rounded-lg w-1/2 mx-auto md:mx-0" />
+            <div className="h-12 bg-gray-300 rounded-full w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ... หลังจากนั้นค่อยตามด้วย return ( <div className="min-h-screen... ) ตัวเดิมของคุณ
+
   return (
     <div className="min-h-screen bg-gray-50 mt-20">
       <div
@@ -83,7 +103,7 @@ export default function Page() {
                     isEventPast ? 'text-gray-600' : 'text-gray-900'
                   }`}
                 >
-                  {eventData?.eventName || 'null'}
+                  {eventData?.eventName || ( <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" /> )}
                 </h1>
 
                 <div className="space-y-4 text-left">
@@ -94,7 +114,7 @@ export default function Page() {
                   >
                     <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     <span className="text-base md:text-lg font-medium break-words">
-                      {eventData?.location || 'null'}
+                      {eventData ? eventData.location : "Loading location..."}
                     </span>
                   </div>
 

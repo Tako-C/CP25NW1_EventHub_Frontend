@@ -18,59 +18,60 @@ export default function EventCard({ event }) {
 
   return (
     <div 
-      className={`bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition flex flex-col h-full ${
-        isEventPast ? 'opacity-60' : ''
+      onClick={() => router.push(`/event/${event.id}`)}
+      className={`group bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full min-h-[300px] cursor-pointer overflow-hidden ${
+        isEventPast ? 'opacity-70' : ''
       }`}
     >
-      <div className="relative">
-        <div className={isEventPast ? 'grayscale' : ''}>
+      {/* Image Section */}
+      <div className="relative h-48 bg-gray-100 overflow-hidden">
+        <div className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${isEventPast ? 'grayscale' : ''}`}>
           <EventCardImage
-            imageCard={event?.images?.imgCard}
+            imageCard={event?.images?.imgCard || event?.imageCard}
             eventName={event.eventName}
           />
         </div>
+        
         {isEventPast && (
-          <div className="absolute top-3 right-3 bg-red-700 text-white px-3 py-1 rounded-full text-xs font-medium">
+          <div className="absolute top-3 right-3 bg-gray-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-semibold z-10">
             Event Ended
           </div>
         )}
-        <div className="hidden h-48 w-full bg-gray-200 items-center justify-center text-gray-500">
-          No Image
-        </div>
       </div>
 
-      <div className="p-4 md:p-5 flex flex-col flex-1">
-        <p className={`text-xs md:text-sm mb-1 ${
-          isEventPast ? 'text-gray-500' : 'text-gray-600'
+      {/* Content Section */}
+      <div className="p-5 flex flex-col flex-1">
+        <h3 className={`text-lg font-bold mb-3 line-clamp-1 transition-colors ${
+          isEventPast ? 'text-gray-500' : 'text-gray-900 group-hover:text-blue-600'
         }`}>
-          {`${FormatDate(event.startDate)} - ${FormatDate(event.endDate)}` ||
-            "Date Unavailable"}
-        </p>
-        <h3 className={`text-base md:text-lg font-semibold mb-2 md:mb-3 line-clamp-2 ${
-          isEventPast ? 'text-gray-500' : 'text-gray-900'
-        }`}>
-          {event.eventName || "Event Title"}
+          {event.eventName || "Untitled Event"}
         </h3>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-auto">
-          <p className={`text-xs md:text-sm line-clamp-1 ${
-            isEventPast ? 'text-gray-500' : 'text-gray-600'
-          }`}>
-            Location : {event.location || "No Location"}
-          </p>
-          <button
-            className={`px-4 md:px-5 py-1.5 rounded-full text-xs md:text-sm font-medium transition whitespace-nowrap ${
-              isEventPast 
-                ? 'bg-gray-400 hover:bg-gray-500 text-white' 
-                : 'bg-blue-400 hover:bg-blue-500 text-white'
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/event/${event.id}`);
-            }}
-          >
-            {isEventPast ? 'View Details' : 'Read More'}
-          </button>
+        <div className="space-y-3 mt-auto">
+          <div className="flex flex-col gap-1">
+            <p className={`text-xs font-medium uppercase tracking-wider ${isEventPast ? 'text-gray-400' : 'text-blue-500'}`}>
+              Date & Location
+            </p>
+            <p className="text-sm text-gray-600 font-medium">
+              {event.startDate ? FormatDate(event.startDate) : 'TBA'}
+            </p>
+            <p className="text-sm text-gray-500 line-clamp-1">
+              {event.location || "Online Event"}
+            </p>
+          </div>
+          
+          {/* ปรับปรุงปุ่มตรงนี้ */}
+          <div className="pt-2">
+            <button 
+              className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${
+                isEventPast 
+                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed' 
+                  : 'bg-blue-600 text-white shadow-md shadow-blue-100 group-hover:bg-blue-700 group-hover:shadow-blue-200 active:scale-[0.98]'
+              }`}
+            >
+              {isEventPast ? 'VIEW DETAIL' : 'READ MORE'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

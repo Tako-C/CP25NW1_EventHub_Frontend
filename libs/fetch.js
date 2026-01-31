@@ -154,7 +154,18 @@ export const deleteEventImage = (id, category, index = null) => {
 
 export const getUpdateImage = (path) => apiFetch(path, { method: "GET" }, true);
 
-export const getImage = (path) => apiFetch(path, { method: "GET" }, true);
+const imageCache = new Map();
+
+export const getImage = async (path) => {
+  if (imageCache.has(path)) {
+    return imageCache.get(path);
+  }
+
+  const result = await apiFetch(path, { method: "GET" }, true);
+  
+  imageCache.set(path, result);
+  return result;
+};
 
 export const createSurvey = (events, id, questions) =>
   apiFetch(`events/${id}/surveys`, {
