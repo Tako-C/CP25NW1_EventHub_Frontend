@@ -159,8 +159,10 @@ export default function Navbar({ token }) {
             setData({ user: res.data, event: resEventRegis?.data });
           }
         } catch (err) {
-          console.error("Fetch user error:", err);
+          // console.error("Fetch user error:", err);
+          Cookie.remove("token");
           setUser(null);
+          router.push("/home");
         }
       }
     };
@@ -504,8 +506,8 @@ export default function Navbar({ token }) {
                 item.label === "Check-in"
                   ? staffOptions
                   : item.label === "Events"
-                  ? organizerOptions
-                  : [];
+                    ? organizerOptions
+                    : [];
 
               return (
                 <div key={item.label} className="flex flex-col">
