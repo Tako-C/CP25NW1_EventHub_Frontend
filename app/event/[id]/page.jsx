@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { MapPin, Calendar, ChevronDown } from 'lucide-react';
-import Link from 'next/link';
-import { FormatDate } from '@/utils/format';
-import { useRouter } from 'next/navigation';
-import { getData, getDataNoToken } from '@/libs/fetch';
-import { EventCardImage } from '@/utils/getImage';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { MapPin, Calendar, ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { FormatDate } from "@/utils/format";
+import { useRouter } from "next/navigation";
+import { getData, getDataNoToken } from "@/libs/fetch";
+import { EventCardImage } from "@/utils/getImage";
 
 export default function Page() {
   const { id } = useParams();
@@ -34,36 +34,33 @@ export default function Page() {
     fetchData();
   }, []);
 
-  // เพิ่มส่วนนี้ก่อน return หลักของ Page
-if (!eventData) {
-  return (
-    <div className="min-h-screen bg-gray-50 mt-20 animate-pulse">
-      <div className="h-[400px] md:h-[600px] bg-gray-200 flex items-center justify-center">
-        <div className="max-w-7xl mx-auto px-4 w-full flex flex-col md:flex-row gap-8 items-center">
-          <div className="w-72 h-72 md:w-96 md:h-96 bg-gray-300 rounded-3xl" />
-          <div className="flex-1 space-y-4 w-full max-w-lg">
-            <div className="h-10 bg-gray-300 rounded-lg w-3/4 mx-auto md:mx-0" />
-            <div className="h-6 bg-gray-300 rounded-lg w-1/2 mx-auto md:mx-0" />
-            <div className="h-12 bg-gray-300 rounded-full w-full" />
+  if (!eventData) {
+    return (
+      <div className="min-h-screen bg-gray-50 mt-20 animate-pulse">
+        <div className="h-[400px] md:h-[600px] bg-gray-200 flex items-center justify-center">
+          <div className="max-w-7xl mx-auto px-4 w-full flex flex-col md:flex-row gap-8 items-center">
+            <div className="w-72 h-72 md:w-96 md:h-96 bg-gray-300 rounded-3xl" />
+            <div className="flex-1 space-y-4 w-full max-w-lg">
+              <div className="h-10 bg-gray-300 rounded-lg w-3/4 mx-auto md:mx-0" />
+              <div className="h-6 bg-gray-300 rounded-lg w-1/2 mx-auto md:mx-0" />
+              <div className="h-12 bg-gray-300 rounded-full w-full" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// ... หลังจากนั้นค่อยตามด้วย return ( <div className="min-h-screen... ) ตัวเดิมของคุณ
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 mt-20">
       <div
         className={`relative h-auto md:h-[600px] bg-gradient-to-r from-gray-200 to-gray-300 ${
-          isEventPast ? 'opacity-80' : ''
+          isEventPast ? "opacity-80" : ""
         }`}
       >
         <div
           className={`absolute inset-0 opacity-40 ${
-            isEventPast ? 'grayscale' : ''
+            isEventPast ? "grayscale" : ""
           }`}
         >
           {eventData && (
@@ -81,7 +78,7 @@ if (!eventData) {
             <div className="bg-white rounded-3xl shadow-2xl w-72 h-72 md:w-96 md:h-96 p-4 flex-shrink-0 relative">
               <div
                 className={`w-full h-full bg-gray-100 rounded-2xl overflow-hidden relative ${
-                  isEventPast ? 'grayscale' : ''
+                  isEventPast ? "grayscale" : ""
                 }`}
               >
                 <EventCardImage
@@ -100,16 +97,18 @@ if (!eventData) {
               <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center w-full max-w-lg">
                 <h1
                   className={`text-2xl md:text-4xl font-bold mb-4 md:mb-6 ${
-                    isEventPast ? 'text-gray-600' : 'text-gray-900'
+                    isEventPast ? "text-gray-600" : "text-gray-900"
                   }`}
                 >
-                  {eventData?.eventName || ( <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" /> )}
+                  {eventData?.eventName || (
+                    <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+                  )}
                 </h1>
 
                 <div className="space-y-4 text-left">
                   <div
                     className={`flex items-center gap-3 ${
-                      isEventPast ? 'text-gray-600' : 'text-gray-700'
+                      isEventPast ? "text-gray-600" : "text-gray-700"
                     }`}
                   >
                     <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
@@ -120,14 +119,14 @@ if (!eventData) {
 
                   <div
                     className={`flex items-center gap-3 ${
-                      isEventPast ? 'text-gray-600' : 'text-gray-700'
+                      isEventPast ? "text-gray-600" : "text-gray-700"
                     }`}
                   >
                     <Calendar className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     <span className="text-base md:text-lg font-medium">
                       {`${FormatDate(eventData?.startDate)} - ${FormatDate(
-                        eventData?.endDate
-                      )}` || 'null'}
+                        eventData?.endDate,
+                      )}` || "null"}
                     </span>
                   </div>
                 </div>
@@ -136,8 +135,8 @@ if (!eventData) {
               <button
                 className={`w-full md:w-auto font-semibold px-8 md:px-32 py-4 rounded-full shadow-lg transition-all ${
                   isEventPast
-                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                    : 'bg-blue-900 hover:bg-blue-800 text-white transform hover:scale-105 active:scale-95'
+                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    : "bg-blue-900 hover:bg-blue-800 text-white transform hover:scale-105 active:scale-95"
                 }`}
                 onClick={() => {
                   if (!isEventPast) {
@@ -146,7 +145,7 @@ if (!eventData) {
                 }}
                 disabled={isEventPast}
               >
-                {isEventPast ? 'Registration Closed' : 'Register Now'}
+                {isEventPast ? "Registration Closed" : "Register Now"}
               </button>
               {isEventPast && (
                 <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 w-full md:w-auto">
@@ -171,7 +170,7 @@ if (!eventData) {
             </h2>
             <ChevronDown
               className={`w-6 h-6 text-gray-500 transition-transform ${
-                isDescriptionOpen ? 'rotate-180' : ''
+                isDescriptionOpen ? "rotate-180" : ""
               }`}
             />
           </button>
@@ -179,7 +178,7 @@ if (!eventData) {
           {isDescriptionOpen && (
             <div
               className={`mt-6 space-y-4 text-sm md:text-base leading-relaxed ${
-                isEventPast ? 'text-gray-600' : 'text-gray-700'
+                isEventPast ? "text-gray-600" : "text-gray-700"
               }`}
             >
               <p>{eventData?.eventDesc}</p>
@@ -187,6 +186,23 @@ if (!eventData) {
           )}
         </div>
       </div>
+
+      {eventData?.images?.imgMap && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
+              Location Map
+            </h2>
+            <div className="rounded-xl overflow-hidden border border-gray-100 shadow-inner">
+              <EventCardImage
+                imageCard={eventData.images.imgMap}
+                eventName={`Map of ${eventData.eventName}`}
+                className="w-full h-auto object-cover"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
