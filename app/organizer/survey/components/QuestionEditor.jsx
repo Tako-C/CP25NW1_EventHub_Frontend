@@ -91,18 +91,20 @@ export default function QuestionEditor({ questions, index, onUpdate, onDelete })
                   </button>
                 </div>
               ))}
-              <button
-                onClick={() => {
-                  onUpdate(index, "choices", [
-                    ...(questions.choices || []),
-                    "",
-                  ]);
-                }}
-                className="text-purple-600 hover:text-purple-700 text-sm font-medium flex items-center gap-1"
-              >
-                <Plus className="w-4 h-4" />
-                เพิ่มตัวเลือก
-              </button>
+              {questions.choices?.length < 10 && (
+                <button
+                  onClick={() => {
+                    onUpdate(index, "choices", [
+                      ...(questions.choices || []),
+                      "",
+                    ]);
+                  }}
+                  className="text-purple-600 hover:text-purple-700 text-sm font-medium flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  เพิ่มตัวเลือก
+                </button>
+              )}
             </div>
           )}
 

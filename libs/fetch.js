@@ -174,7 +174,7 @@ export const createSurvey = (events, id, questions) =>
       name: events.name,
       description: events.description,
       points: events.points,
-      type: events.type,
+      surveyType: events.type,
       questions,
     }),
   });
@@ -186,7 +186,7 @@ export const updateSurvey = (id, events, questions) =>
       name: events.name,
       description: events.description,
       points: events.points,
-      type: events.type,
+      surveyType: events.type,
       questions,
     }),
   });

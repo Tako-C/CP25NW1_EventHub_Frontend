@@ -116,6 +116,57 @@ export default function EditSurveyPage() {
   };
 
   const handleUpdate = async () => {
+    if (!surveyTitle.trim())
+      return showNotification("กรุณาระบุชื่อแบบสำรวจ", true);
+    if (!surveyDescription.trim())
+      return showNotification("กรุณากรอกรายละเอียดของอีเว้นท์", true);
+    const point = parseInt(surveyPoint);
+    if (isNaN(point) || point < 0)
+      return showNotification(
+        "Survey Points ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0",
+        true,
+      );
+    if (questions.length === 0)
+      return showNotification("ต้องมีคำถามอย่างน้อย 1 ข้อ", true);
+    if (questions.length > 10)
+      return showNotification("มีคำถามได้ไม่เกิน 10 ข้อ", true);
+
+    for (let i = 0; i < questions.length; i++) {
+      let q = questions[i];
+      let questionNumber = i + 1;
+
+      if (!q.question.trim())
+        return showNotification(
+          `กรุณาระบุหัวข้อคำถามที่ ${questionNumber}`,
+          true,
+        );
+
+      if (
+        q.questionType === "multiple_choice" ||
+        q.questionType === "checkbox"
+      ) {
+        if (!q.choices || q.choices.length < 3) {
+          return showNotification(
+            `คำถามที่ ${questionNumber} ต้องมีอย่างน้อย 3 ตัวเลือก`,
+            true,
+          );
+        }
+        if (q.choices.length > 10) {
+          return showNotification(
+            `คำถามที่ ${questionNumber} มีตัวเลือกได้ไม่เกิน 10 ข้อ`,
+            true,
+          );
+        }
+        const emptyChoice = q.choices.some((choice) => !choice.trim());
+        if (emptyChoice) {
+          return showNotification(
+            `กรุณากรอกข้อความในทุกตัวเลือกของคำถามที่ ${questionNumber}`,
+            true,
+          );
+        }
+      }
+    }
+
     const eventDetail = {
       name: surveyTitle || "",
       surveyId: surveyId || null,
@@ -271,14 +322,15 @@ export default function EditSurveyPage() {
                 />
               ))}
             </div>
-
-            <button
-              onClick={handleAddQuestion}
-              className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-purple-500 hover:text-purple-600 transition-all flex items-center justify-center gap-2 font-semibold"
-            >
-              <Plus className="w-5 h-5" />
-              เพิ่มคำถามใหม่
-            </button>
+            {questions?.length < 10 && (
+              <button
+                onClick={handleAddQuestion}
+                className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-purple-500 hover:text-purple-600 transition-all flex items-center justify-center gap-2 font-semibold"
+              >
+                <Plus className="w-5 h-5" />
+                เพิ่มคำถามใหม่
+              </button>
+            )}
           </>
         ) : (
           <SurveyPreview
