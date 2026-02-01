@@ -239,7 +239,13 @@ export default function EditSurveyPage() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   แก้ไขแบบสำรวจ
                 </h1>
-                <p className="text-sm text-gray-500">ID: {id}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-semibold inline-block">
+                    {surveyType === "pre"
+                      ? "Pre-Event Survey"
+                      : "Post-Event Survey"}
+                  </div>
+                </div>
               </div>
             </div>
 
