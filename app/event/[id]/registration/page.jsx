@@ -7,6 +7,7 @@ import {
   postEventRegister,
   getDataNoToken,
   requestEmailOTP,
+  sendSurveyAnswer,
 } from "@/libs/fetch";
 import { useParams, useRouter } from "next/navigation";
 import SuccessPage from "@/components/Notification/Success_Regis_Page";
@@ -42,8 +43,7 @@ export default function ExpoRegisterForm() {
     firstName: "",
     lastName: "",
     email: "",
-    expectations: [],
-    source: [],
+    surveyAnswers: [],
     agreeTerms: false,
   });
   const [eventDetail, setEventDetail] = useState(null);
@@ -68,8 +68,9 @@ export default function ExpoRegisterForm() {
         firstName: res?.data?.firstName,
         lastName: res?.data?.lastName,
         email: res?.data?.email,
-        expectations: [],
-        source: [],
+        // expectations: [],
+        // source: [],
+        surveyAnswers: [],
         agreeTerms: false,
       });
     }
@@ -88,7 +89,7 @@ export default function ExpoRegisterForm() {
       pre: {
         visitor: preRes?.data?.visitor || null,
         exhibitor: preRes?.data?.exhibitor || null,
-      }
+      },
     });
   };
 
@@ -105,19 +106,6 @@ export default function ExpoRegisterForm() {
       ...prev,
       [name]: value,
     }));
-  };
-
-  const handleCheckboxChange = (category, value) => {
-    setFormData((prev) => {
-      const currentArray = prev[category];
-      const newArray = currentArray.includes(value)
-        ? currentArray.filter((item) => item !== value)
-        : [...currentArray, value];
-      return {
-        ...prev,
-        [category]: newArray,
-      };
-    });
   };
 
   const handleSubmit = async () => {
@@ -175,9 +163,11 @@ export default function ExpoRegisterForm() {
     }
     if (token) {
       console.log("Form submitted:", formData);
-      const res = await postEventRegister(`events/${id}/register`);
-      console.log(res);
-      if (res.statusCode === 200) {
+      const [resRegister, resSurvey] = await Promise.all([
+        postEventRegister(`events/${id}/register`),
+        sendSurveyAnswer(formData?.surveyAnswers, id),
+      ]);
+      if (resRegister.statusCode === 200 && resSurvey.statusCode === 200) {
         setIsSuccess(true);
       } else {
         setNotification({
@@ -187,6 +177,38 @@ export default function ExpoRegisterForm() {
         });
       }
     }
+  };
+
+  const handleSurveyChange = (questionId, value, type) => {
+    setFormData((prev) => {
+      const currentAnswers = [...prev.surveyAnswers];
+      const questionIndex = currentAnswers.findIndex(
+        (a) => a.questionId === questionId,
+      );
+
+      let newAnswers;
+      if (questionIndex > -1) {
+        if (type === "MULTIPLE") {
+          const prevSelected = currentAnswers[questionIndex].answers;
+          newAnswers = prevSelected.includes(value)
+            ? prevSelected.filter((item) => item !== value)
+            : [...prevSelected, value]; 
+        } else {
+          newAnswers = [value];
+        }
+        currentAnswers[questionIndex] = {
+          ...currentAnswers[questionIndex],
+          answers: newAnswers,
+        };
+      } else {
+        currentAnswers.push({
+          questionId: questionId,
+          answers: [value],
+        });
+      }
+
+      return { ...prev, surveyAnswers: currentAnswers };
+    });
   };
 
   return (
@@ -202,12 +224,11 @@ export default function ExpoRegisterForm() {
       ) : (
         <div className="relative min-h-screen">
           <div className="relative max-w-4xl mx-auto px-4 py-8 md:py-12">
-            {/* Event Header - Matching Preview Style */}
             <div className="bg-gradient-to-br from-purple-50 via-white to-blue-50 rounded-2xl border border-gray-200 shadow-xl overflow-hidden mb-8">
               <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-10 text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24"></div>
-                
+
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-3">
                     <FileText className="w-6 h-6" />
@@ -226,7 +247,6 @@ export default function ExpoRegisterForm() {
                 </div>
               </div>
 
-              {/* Event Dates */}
               <div className="px-8 py-6 bg-white">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-start gap-3">
@@ -260,9 +280,7 @@ export default function ExpoRegisterForm() {
               </div>
             </div>
 
-            {/* Registration Form - Matching Preview Style */}
             <div className="space-y-6">
-              {/* Question 1: First Name */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
@@ -289,7 +307,6 @@ export default function ExpoRegisterForm() {
                 </div>
               </div>
 
-              {/* Question 2: Last Name */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
@@ -316,7 +333,6 @@ export default function ExpoRegisterForm() {
                 </div>
               </div>
 
-              {/* Question 3: Email */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
                 <div className="flex items-start gap-3 mb-4">
                   <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
@@ -343,83 +359,86 @@ export default function ExpoRegisterForm() {
                 </div>
               </div>
 
-              {/* Question 4: How did you hear */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                    4
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">
-                      How did you hear about the show? (คุณรู้จักงานนี้ได้อย่างไร)
-                    </h3>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <div className="p-2 bg-green-50 rounded-lg" title="เลือกได้หลายคำตอบ">
-                      <CheckSquare className="w-4 h-4 text-green-600" />
+              {surveys.pre.visitor?.questions?.map((q, index) => (
+                <div
+                  key={q.id}
+                  className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                      {index + 4}
                     </div>
-                  </div>
-                </div>
-                <div className="mt-4 space-y-2">
-                  {MOCK_OPTIONS.sources.map((option, idx) => (
-                    <label
-                      key={idx}
-                      className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl bg-gray-50 hover:bg-green-50 hover:border-green-300 transition-all cursor-pointer group"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.source.includes(option)}
-                        onChange={() => handleCheckboxChange("source", option)}
-                        className="w-5 h-5 rounded border-2 border-gray-400 group-hover:border-green-500 flex-shrink-0 transition-colors accent-green-600"
-                      />
-                      <span className="text-gray-700 group-hover:text-gray-900 transition-colors">
-                        {option}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Question 5: Expectations */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                    5
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">
-                      What do you expect from this event? – Select all that applies
-                      <br className="hidden md:block" />
-                      (คุณคาดหวังอะไรจากงานนี้ - เลือกได้หลายตัว)
-                    </h3>
-                  </div>
-                  <div className="flex-shrink-0">
-                    <div className="p-2 bg-green-50 rounded-lg" title="เลือกได้หลายคำตอบ">
-                      <CheckSquare className="w-4 h-4 text-green-600" />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">
+                        {q.question}
+                      </h3>
+                      {q.questionType === "MULTIPLE" && (
+                        <span className="text-xs text-blue-600 font-medium italic">
+                          * เลือกได้หลายคำตอบ
+                        </span>
+                      )}
                     </div>
+                    {(q.questionType === "MULTIPLE" ||
+                      q.questionType === "SINGLE") && (
+                      <div className="flex-shrink-0">
+                        <div className="p-2 bg-green-50 rounded-lg">
+                          <CheckSquare className="w-4 h-4 text-green-600" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    {(q.questionType === "SINGLE" ||
+                      q.questionType === "MULTIPLE") &&
+                      q.choices.map((choice, cIdx) => (
+                        <label
+                          key={cIdx}
+                          className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl bg-gray-50 hover:bg-green-50 hover:border-green-300 transition-all cursor-pointer group"
+                        >
+                          <input
+                            type={
+                              q.questionType === "MULTIPLE"
+                                ? "checkbox"
+                                : "radio"
+                            }
+                            name={`question-${q.id}`}
+                            value={choice}
+                            onChange={() =>
+                              handleSurveyChange(q.id, choice, q.questionType)
+                            }
+                            checked={
+                              formData.surveyAnswers
+                                .find((a) => a.questionId === q.id)
+                                ?.answers.includes(choice) || false
+                            }
+                            className="w-5 h-5 rounded border-2 border-gray-400 group-hover:border-green-500 flex-shrink-0 transition-colors accent-green-600"
+                          />
+                          <span className="text-gray-700 group-hover:text-gray-900 transition-colors">
+                            {choice}
+                          </span>
+                        </label>
+                      ))}
+
+                    {q.questionType === "TEXT" && (
+                      <input
+                        type="text"
+                        placeholder="พิมพ์คำตอบของคุณที่นี่..."
+                        value={
+                          formData.surveyAnswers.find(
+                            (a) => a.questionId === q.id,
+                          )?.answers[0] || ""
+                        }
+                        onChange={(e) =>
+                          handleSurveyChange(q.id, e.target.value, "TEXT")
+                        }
+                        className="w-full p-4 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700 focus:border-purple-400 focus:bg-white transition-all outline-none"
+                      />
+                    )}
                   </div>
                 </div>
-                <div className="mt-4 space-y-2">
-                  {MOCK_OPTIONS.expectations.map((option, idx) => (
-                    <label
-                      key={idx}
-                      className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl bg-gray-50 hover:bg-green-50 hover:border-green-300 transition-all cursor-pointer group"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.expectations.includes(option)}
-                        onChange={() => handleCheckboxChange("expectations", option)}
-                        className="w-5 h-5 rounded border-2 border-gray-400 group-hover:border-green-500 flex-shrink-0 transition-colors accent-green-600"
-                      />
-                      <span className="text-gray-700 group-hover:text-gray-900 transition-colors">
-                        {option}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+              ))}
 
-              {/* Terms & Conditions */}
               <div className="bg-white rounded-xl border-2 border-purple-200 p-6 shadow-sm">
                 <label className="flex items-start gap-3 cursor-pointer group">
                   <input
@@ -435,13 +454,12 @@ export default function ExpoRegisterForm() {
                   />
                   <span className="text-gray-700 group-hover:text-gray-900 transition-colors">
                     By checking this box, I hereby agree that my{" "}
-                    <span className="underline font-medium">information</span> will be shared
-                    to our website.
+                    <span className="underline font-medium">information</span>{" "}
+                    will be shared to our website.
                   </span>
                 </label>
               </div>
 
-              {/* Submit Button */}
               <div className="flex justify-center pt-4 pb-8">
                 <button
                   onClick={handleSubmit}

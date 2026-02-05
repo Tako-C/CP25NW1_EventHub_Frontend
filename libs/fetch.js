@@ -196,6 +196,14 @@ export const deleteSurvey = (eventId, surveyId) =>
     method: 'DELETE',
   });
 
+export const sendSurveyAnswer = (answers, id) =>
+  apiFetch(`events/${id}/surveys/answers`, {
+    method: "POST",
+    body: JSON.stringify({
+      answers
+    }),
+  });
+
 export const authPasswordForgot = (email) =>
   apiFetch("auth/password/forgot", {
     method: "POST",
