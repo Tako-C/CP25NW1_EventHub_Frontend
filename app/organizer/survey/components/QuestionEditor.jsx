@@ -1,4 +1,4 @@
-import { GripVertical, ChevronDown, Trash2, Plus, Type, Circle, ListChecks } from "lucide-react";
+import { GripVertical, ChevronDown, Trash2, Plus, Type, Circle, ListChecks, MessageSquare, Star, Hash, Mail, Phone, Calendar } from "lucide-react";
 
 // const questionTypes = [
 //   { value: 'text', label: 'ข้อความสั้น', icon: Type },
@@ -6,10 +6,6 @@ import { GripVertical, ChevronDown, Trash2, Plus, Type, Circle, ListChecks } fro
 //   { value: 'multiple_choice', label: 'เลือกตอบ (เลือกได้ 1)', icon: Circle },
 //   { value: 'checkbox', label: 'เลือกตอบ (เลือกได้หลายข้อ)', icon: ListChecks },
 //   { value: 'rating', label: 'ให้คะแนน', icon: Star },
-//   { value: 'number', label: 'ตัวเลข', icon: Hash },
-//   { value: 'email', label: 'อีเมล', icon: Mail },
-//   { value: 'phone', label: 'เบอร์โทรศัพท์', icon: Phone },
-//   { value: 'date', label: 'วันที่', icon: Calendar }
 // ];
 
 const questionTypes = [
