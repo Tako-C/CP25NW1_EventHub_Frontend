@@ -1,10 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, MessageSquare, Send, Heart } from "lucide-react";
-import { getDataNoToken, postEventRegister } from "@/libs/fetch"; // ปรับตามความเหมาะสมของ API
+import {
+  Calendar,
+  FileText,
+  CheckSquare,
+  Star,
+  MessageSquare,
+} from "lucide-react";
+import { getData, getDataNoToken, sendSurveyAnswer } from "@/libs/fetch";
 import { useParams, useRouter } from "next/navigation";
-import SuccessPage from "@/components/Notification/Success_Regis_Page";
+import { FormatDate } from "@/utils/format";
+import Cookie from "js-cookie";
 import Notification from "@/components/Notification/Notification";
 
 const RATING_OPTIONS = [
@@ -16,137 +23,271 @@ const RATING_OPTIONS = [
 ];
 
 export default function PostSurveyForm() {
-  const router = useRouter();
+  const token = Cookie.get("token");
   const { id } = useParams();
+
   const [formData, setFormData] = useState({
-    satisfaction: null,
-    recommend: null,
-    feedback: "",
-    usefulContent: "",
+    surveyAnswers: [],
   });
+  const [eventDetail, setEventDetail] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
     message: "",
   });
+  const [surveyData, setSurveyData] = useState(null);
+  const router = useRouter()
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
+  const fetchPostSurvey = async () => {
+    const eventRes = await getDataNoToken(`events/${id}`);
+
+    if (eventRes?.statusCode === 200) {
+      setEventDetail(eventRes?.data);
+    }
+
+    const surveyRes = await getDataNoToken(`/events/${id}/surveys/post`);
+    console.log(eventRes);
+    console.log(surveyRes);
+    if (surveyRes?.statusCode === 200) {
+      setSurveyData(surveyRes?.data?.visitor || null);
+    }
+  };
+
+  useEffect(() => {
+    fetchPostSurvey();
+  }, [id]);
+
+  const handleSurveyChange = (questionId, value, type) => {
+    setFormData((prev) => {
+      const currentAnswers = [...prev.surveyAnswers];
+      const questionIndex = currentAnswers.findIndex(
+        (a) => a.questionId === questionId,
+      );
+
+      let newAnswers;
+      if (questionIndex > -1) {
+        if (type === "MULTIPLE" || type === "checkbox") {
+          const prevSelected = currentAnswers[questionIndex].answers;
+          newAnswers = prevSelected.includes(value)
+            ? prevSelected.filter((item) => item !== value)
+            : [...prevSelected, value];
+        } else {
+          newAnswers = [value];
+        }
+        currentAnswers[questionIndex] = {
+          ...currentAnswers[questionIndex],
+          answers: newAnswers,
+        };
+      } else {
+        currentAnswers.push({
+          questionId: questionId,
+          answers: [value],
+        });
+      }
+
+      return { ...prev, surveyAnswers: currentAnswers };
+    });
+  };
 
   const handleSubmit = async () => {
-    if (!formData.satisfaction) {
+    if (formData.surveyAnswers.length === 0) {
       setNotification({
         isVisible: true,
         isError: true,
-        message: "กรุณาเลือกความพึงพอใจก่อนส่งข้อมูล",
+        message: "กรุณาตอบแบบสำรวจก่อนส่ง",
       });
       return;
     }
 
-    // จำลองการส่งข้อมูล (ปรับเป็น API จริงของคุณ)
-    console.log("Survey Submitted:", formData);
-    setIsSuccess(true);
+    const resSurvey = await sendSurveyAnswer(formData?.surveyAnswers, id);
+    if (resSurvey.statusCode === 200) {
+      // setIsSuccess(true);
+      setNotification({
+        isVisible: true,
+        isError: false,
+        message: resSurvey?.message,
+      });
+      router.back()
+    } else {
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: resSurvey?.message || "เกิดข้อผิดพลาดในการส่งข้อมูล",
+      });
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 mt-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 mt-20">
       <Notification
         isVisible={notification.isVisible}
         isError={notification.isError}
         message={notification.message}
-        onClose={() => setNotification({ ...notification, isVisible: false })}
+        onClose={closeNotification}
       />
 
       {isSuccess ? (
-        <div className="max-w-2xl mx-auto py-20 text-center">
-          <div className="bg-white p-8 rounded-3xl shadow-xl border border-green-100">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Heart className="w-10 h-10 text-green-600 fill-current" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">ขอบคุณสำหรับความคิดเห็น!</h2>
-            <p className="text-gray-600 mb-8">ข้อมูลของคุณจะถูกนำไปพัฒนาการจัดงานในครั้งถัดไปให้ดียิ่งขึ้น</p>
-            <button 
-              onClick={() => router.push('/')}
-              className="bg-purple-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-purple-700 transition-all"
-            >
-              กลับสู่หน้าหลัก
-            </button>
-          </div>
-        </div>
+        <SuccessPage detail={eventDetail} />
       ) : (
-        <div className="max-w-4xl mx-auto px-4 py-12">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-10 text-white mb-8 shadow-lg">
-            <h1 className="text-3xl font-bold mb-2">แบบสอบถามหลังจบงาน (Post-Event Survey)</h1>
-            <p className="text-blue-100">ความคิดเห็นของคุณมีความสำคัญต่อเราอย่างยิ่ง</p>
+        <div className="relative max-w-4xl mx-auto px-4 py-8 md:py-12">
+          <div className="bg-gradient-to-br from-purple-50 via-white to-blue-50 rounded-2xl border border-gray-200 shadow-xl overflow-hidden mb-8">
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-10 text-white relative">
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-6 h-6" />
+                  <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                    Post-Event Survey
+                  </span>
+                </div>
+                <h1 className="text-3xl md:text-4xl font-bold mb-3">
+                  แบบประเมินความพึงพอใจ
+                </h1>
+                <p className="text-purple-100 text-lg">
+                  {eventDetail?.eventName || "Loading..."}
+                </p>
+              </div>
+            </div>
+
+            <div className="px-8 py-6 bg-white border-b border-gray-100">
+              <div className="flex items-start gap-3">
+                <Calendar className="w-5 h-5 text-purple-500 mt-1" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 uppercase">
+                    Event Date
+                  </p>
+                  <p className="text-lg font-medium text-gray-800">
+                    {FormatDate(eventDetail?.startDate)} -{" "}
+                    {FormatDate(eventDetail?.endDate)}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-6">
-            {/* 1. Overall Satisfaction */}
-            <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold">1</div>
-                <h3 className="text-xl font-semibold text-gray-800">ความพึงพอใจโดยรวมต่อกิจกรรม</h3>
-              </div>
-              <div className="grid grid-cols-5 gap-4">
-                {RATING_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setFormData({ ...formData, satisfaction: opt.value })}
-                    className={`flex flex-col items-center p-4 rounded-2xl border-2 transition-all ${
-                      formData.satisfaction === opt.value 
-                      ? "border-blue-500 bg-blue-50" 
-                      : "border-gray-100 hover:border-blue-200"
-                    }`}
-                  >
-                    <span className="text-4xl mb-2">{opt.emoji}</span>
-                    <span className="text-xs font-medium text-gray-500">{opt.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 2. Most Useful Content */}
-            <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold">2</div>
-                <h3 className="text-xl font-semibold text-gray-800">ส่วนใดของงานที่คุณประทับใจหรือคิดว่ามีประโยชน์ที่สุด?</h3>
-              </div>
-              <textarea
-                className="w-full p-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-indigo-400 outline-none transition-all"
-                rows="3"
-                placeholder="ระบุสิ่งที่ท่านชอบ..."
-                value={formData.usefulContent}
-                onChange={(e) => setFormData({ ...formData, usefulContent: e.target.value })}
-              />
-            </div>
-
-            {/* 3. Feedback / Suggestion */}
-            <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold">3</div>
-                <h3 className="text-xl font-semibold text-gray-800">ข้อเสนอแนะเพิ่มเติมเพื่อการปรับปรุง</h3>
-              </div>
-              <div className="flex gap-4 items-start">
-                <div className="flex-shrink-0 mt-1">
-                  <MessageSquare className="text-gray-400" />
+            {surveyData?.questions?.map((q, index) => (
+              <div
+                key={q.id}
+                className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all"
+              >
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">
+                      {q.question}
+                    </h3>
+                    {q.required && (
+                      <span className="text-xs text-red-500">
+                        * จำเป็นต้องตอบ
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <textarea
-                  className="w-full p-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-400 outline-none transition-all"
-                  rows="4"
-                  placeholder="เราควรปรับปรุงเรื่องใดในครั้งต่อไป?"
-                  value={formData.feedback}
-                  onChange={(e) => setFormData({ ...formData, feedback: e.target.value })}
-                />
-              </div>
-            </div>
 
-            {/* Submit */}
-            <div className="flex justify-center pt-6">
+                <div className="mt-4">
+                  {q.questionType === "RATING" && (
+                    <div className="grid grid-cols-5 gap-2 md:gap-4">
+                      {RATING_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() =>
+                            handleSurveyChange(
+                              q.id,
+                              opt.value.toString(),
+                              "rating",
+                            )
+                          }
+                          className={`flex flex-col items-center p-3 rounded-2xl border-2 transition-all ${
+                            formData.surveyAnswers.find(
+                              (a) => a.questionId === q.id,
+                            )?.answers[0] === opt.value.toString()
+                              ? "border-purple-500 bg-purple-50"
+                              : "border-gray-100 bg-gray-50 hover:border-purple-200"
+                          }`}
+                        >
+                          <span className="text-2xl md:text-3xl mb-1">
+                            {opt.emoji}
+                          </span>
+                          <span className="text-[10px] md:text-xs text-center font-medium text-gray-600">
+                            {opt.label}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {(q.questionType === "MULTIPLE" ||
+                    q.questionType === "SINGLE") && (
+                    <div className="space-y-2">
+                      {q.choices.map((choice, cIdx) => (
+                        <label
+                          key={cIdx}
+                          className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl bg-gray-50 hover:bg-purple-50 hover:border-purple-300 transition-all cursor-pointer group"
+                        >
+                          <input
+                            type={
+                              q.questionType === "MULTIPLE"
+                                ? "checkbox"
+                                : "radio"
+                            }
+                            name={`q-${q.id}`}
+                            checked={
+                              formData.surveyAnswers
+                                .find((a) => a.questionId === q.id)
+                                ?.answers.includes(choice) || false
+                            }
+                            onChange={() =>
+                              handleSurveyChange(q.id, choice, q.questionType)
+                            }
+                            className="w-5 h-5 accent-purple-600"
+                          />
+                          <span className="text-gray-700">{choice}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+
+                  {q.questionType === "TEXTAREA" && (
+                    <div className="relative">
+                      <MessageSquare className="absolute top-4 left-4 w-5 h-5 text-gray-400" />
+                      <textarea
+                        rows="4"
+                        placeholder="พิมพ์ความเห็นเพิ่มเติมของคุณที่นี่..."
+                        onChange={(e) =>
+                          handleSurveyChange(q.id, e.target.value, "textarea")
+                        }
+                        className="w-full p-4 pl-12 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700 focus:border-purple-400 focus:bg-white outline-none transition-all"
+                      />
+                    </div>
+                  )}
+
+                  {q.questionType === "TEXT" && (
+                    <input
+                      type="text"
+                      placeholder="พิมพ์คำตอบของคุณที่นี่..."
+                      onChange={(e) =>
+                        handleSurveyChange(q.id, e.target.value, "text")
+                      }
+                      className="w-full p-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-purple-400 outline-none transition-all"
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
+
+            <div className="flex justify-center pt-6 pb-12">
               <button
                 onClick={handleSubmit}
-                className="group flex items-center gap-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-16 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all"
+                className="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 px-24 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95"
               >
-                <span>ส่งแบบประเมิน</span>
-                <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                ส่งแบบประเมิน
               </button>
             </div>
           </div>
