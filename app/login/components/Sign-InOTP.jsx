@@ -32,7 +32,7 @@ export default function SignInPageOTP({
       onSuccess={handleSuccess}
       onSwitchMode={handleBackToSignIn}
       switchModeText="Sign in with Email"
-      storageKeyPrefix="otp_login"
+      storageKeyPrefix="otp_end_time"
     />
   );
 }
