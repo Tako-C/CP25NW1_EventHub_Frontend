@@ -330,7 +330,10 @@ export default function Navbar({ token }) {
                   ref={staffDropdownRef}
                 >
                   <button
-                    onClick={() => setIsStaffOpen(!isStaffOpen)}
+                    onClick={() => {
+                      setIsStaffOpen(!isStaffOpen);
+                      setIsOrganizerOpen(false);
+                    }}
                     className="flex items-center gap-2 px-2 py-2 rounded-full text-gray-600 font-medium hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 group"
                   >
                     <span className="opacity-70 group-hover:opacity-100">
@@ -366,7 +369,10 @@ export default function Navbar({ token }) {
                   ref={organizerDropdownRef}
                 >
                   <button
-                    onClick={() => setIsOrganizerOpen(!isOrganizerOpen)}
+                    onClick={() => {
+                      setIsOrganizerOpen(!isOrganizerOpen);
+                      setIsStaffOpen(false);
+                    }}
                     className="flex items-center gap-2 px-2 py-2 rounded-full text-gray-600 font-medium hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 group"
                   >
                     <span className="opacity-70 group-hover:opacity-100">
