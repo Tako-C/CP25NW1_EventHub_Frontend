@@ -125,57 +125,43 @@ export default function ExpoRegisterForm() {
       });
       return;
     }
-    if (!token) {
-      console.log(formData);
-      const signupData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        eventId: id,
-      };
-      const res = await requestEmailOTP(
-        signupData?.email,
-        signupData?.firstName,
-        signupData?.lastName,
-        signupData?.eventId,
-      );
-      console.log(res);
-      if (
-        res?.statusCode === 200 &&
-        res?.message === "Registration OTP has been sent to your email."
-      ) {
-        Cookie.set("signupDataFromRegis", JSON.stringify(signupData));
-        router.push("/login/otp");
+    try {
+      if (!token) {
+        const signupData = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          eventId: id,
+        };
+        const res = await requestEmailOTP(
+          signupData?.email,
+          signupData?.firstName,
+          signupData?.lastName,
+          signupData?.eventId,
+        );
+
+        if (res?.statusCode === 200) {
+          const cookieName = res?.message.includes("Registration")
+            ? "signupDataFromRegis"
+            : "signinDataFromRegis";
+          Cookie.set(cookieName, JSON.stringify(signupData));
+          return router.push("/login/otp");
+        }
       }
-      if (
-        res?.statusCode === 200 &&
-        res?.message === "Login OTP has been sent to your email."
-      ) {
-        Cookie.set("signinDataFromRegis", JSON.stringify(signupData));
-        router.push("/login/otp");
-      } else {
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: res?.message,
-        });
+      if (token) {
+        const responses = [postEventRegister(`events/${id}/register`)];
+        if (surveys.pre.visitor || surveys.pre.exhibitor) responses.push(sendSurveyAnswer(formData?.surveyAnswers, id));
+        const res = await Promise.all(responses);
+        if (res?.statusCode === 200) {
+          setIsSuccess(true);
+        }
       }
-    }
-    if (token) {
-      console.log("Form submitted:", formData);
-      const [resRegister, resSurvey] = await Promise.all([
-        postEventRegister(`events/${id}/register`),
-        sendSurveyAnswer(formData?.surveyAnswers, id),
-      ]);
-      if (resRegister.statusCode === 200 && resSurvey.statusCode === 200) {
-        setIsSuccess(true);
-      } else {
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: res?.message,
-        });
-      }
+    } catch (error) {
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: error.message || "Something went wrong",
+      });
     }
   };
 
@@ -192,7 +178,7 @@ export default function ExpoRegisterForm() {
           const prevSelected = currentAnswers[questionIndex].answers;
           newAnswers = prevSelected.includes(value)
             ? prevSelected.filter((item) => item !== value)
-            : [...prevSelected, value]; 
+            : [...prevSelected, value];
         } else {
           newAnswers = [value];
         }
