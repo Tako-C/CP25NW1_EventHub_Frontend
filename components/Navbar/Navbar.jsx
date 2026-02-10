@@ -68,15 +68,12 @@ export default function Navbar({ token }) {
     }
 
     const rolePriority = {
-      // admin: 4,
-      organizer: 3,
-      staff: 2,
-      // visitor: 1,
-      user: 1,
+      admin: 3,
+      organizer: 2,
+      staff: 1,
       default: 0,
     };
 
-    // let highestRole = userData.role.roleName.toLowerCase().trim();
     let highestRole = userData.role.toLowerCase().trim();
     if (rolePriority[highestRole] === undefined) {
       highestRole = "default";
@@ -104,48 +101,6 @@ export default function Navbar({ token }) {
     return highestRole;
   };
 
-  // const fetchData = async () => {
-  //   if (token) {
-  //     const resUser = await getData('users/me/profile');
-  //     const resEventRegis = await getData('users/me/registered-events');
-
-  //     setUser(resUser?.data);
-  //     let mergeData = { user: resUser?.data, event: resEventRegis?.data };
-  //     // console.log(mergeData);
-  //     setData(mergeData);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   fetchData();
-
-  //   function handleClickOutside(event) {
-  //     if (
-  //       profileDropdownRef.current &&
-  //       !profileDropdownRef.current.contains(event.target)
-  //     ) {
-  //       setIsProfileOpen(false);
-  //     }
-  //     if (
-  //       staffDropdownRef.current &&
-  //       !staffDropdownRef.current.contains(event.target)
-  //     ) {
-  //       setIsStaffOpen(false);
-  //     }
-  //     if (
-  //       organizerDropdownRef.current &&
-  //       !organizerDropdownRef.current.contains(event.target)
-  //     ) {
-  //       setIsOrganizerOpen(false);
-  //     }
-  //   }
-
-  //   document.addEventListener('mousedown', handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener('mousedown', handleClickOutside);
-  //   };
-  // }, []);
-
   useEffect(() => {
     const fetchUser = async () => {
       const tokenFromCookie = Cookie.get("token");
@@ -159,7 +114,6 @@ export default function Navbar({ token }) {
             setData({ user: res.data, event: resEventRegis?.data });
           }
         } catch (err) {
-          // console.error("Fetch user error:", err);
           Cookie.remove("token");
           setUser(null);
           router.push("/home");
@@ -177,7 +131,7 @@ export default function Navbar({ token }) {
     window.addEventListener("user-logged-in", handleLoginSuccess);
     return () =>
       window.removeEventListener("user-logged-in", handleLoginSuccess);
-  }, []); // ใช้ [] เพื่อให้สมัคร Event แค่ครั้งเดียว
+  }, []); 
 
   useEffect(() => {
     if (user && data) {
@@ -223,19 +177,11 @@ export default function Navbar({ token }) {
         }
       }
     } else {
-      // console.log(path);
       router.push(path);
     }
   };
 
   const getMenuItems = () => {
-    if (activeRole === "default") {
-      return [
-        { label: "Home", path: "#home" },
-        { label: "Events", path: "#events" },
-      ];
-    }
-
     switch (activeRole) {
       case "admin":
         return [
@@ -256,22 +202,11 @@ export default function Navbar({ token }) {
           { label: "Events", path: "#events" },
           { label: "Check-in", path: "/staff", hasDropdown: true },
         ];
-      case "user":
-        return [
-          { label: "Home", path: "#home" },
-          { label: "Events", path: "#events" },
-          // { label: "Reward", path: "/reward" },
-        ];
-      // case "visitor":
-      //   return [
-      //     { label: "Home", path: "#home" },
-      //     { label: "Events", path: "#events" },
-      //     { label: "Reward", path: "/reward" },
-      //   ];
       default:
         return [
           { label: "Home", path: "#home" },
           { label: "Events", path: "#events" },
+          // { label: "Reward", path: "/reward" },
         ];
     }
   };

@@ -138,9 +138,9 @@ export default function Page() {
       return event.createdBy?.id == userId;
     });
 
-    console.log(
-      `📋 Found ${myEvents.length} events for Organizer ID ${userId}`
-    );
+    // console.log(
+    //   `📋 Found ${myEvents.length} events for Organizer ID ${userId}`
+    // );
     return myEvents;
   }, [userId, eventData]);
 
@@ -164,20 +164,12 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
-
-      {/* ----------------------------------------------------------------------- */}
-      {/* --- Organizer Section --- */}
-      {/* ----------------------------------------------------------------------- */}
-
-      {userId && (userRole === 'ORGANIZER' || userRole === 'ADMIN') && (
         <section
           id="organizer-section"
           className="bg-gray-50 border-t border-gray-200"
         >
           <OrganizerEvents events={myOrganizedEvents} />
         </section>
-      )}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// 1. Token Parser Function
 function parseJwt(token) {
   if (!token) return null;
   try {
@@ -27,35 +26,32 @@ export async function middleware(req) {
   const url = req.nextUrl.clone();
   const pathname = req.nextUrl.pathname;
 
-  // ถ้าไม่มี Token ให้เด้งไปหน้า Home
   if (!token) {
     url.pathname = '/home';
     return NextResponse.redirect(url);
   }
 
-  // ตัวแปรสำหรับเก็บ Role ที่ได้จาก Event (API)
   let currentEventRole = 'DEFAULT';
 
   // --- ด่านที่ 1: ดึง Role จาก Event ผ่าน API ---
   try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL
     const res = await fetch(
-      'http://eventhub_backend:8080/users/me/registered-events',
+      `${apiUrl}/users/me/registered-events`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }
     );
-
     if (res.ok) {
       const data = await res.json();
       const events = data?.data || [];
 
       const rolePriority = {
-        admin: 4,
-        organizer: 3,
-        staff: 2,
-        user: 1,
+        admin: 3,
+        organizer: 2,
+        staff: 1,
         default: 0,
       };
 
@@ -76,12 +72,8 @@ export async function middleware(req) {
       console.warn('Middleware Fetch API failed status:', res.status);
     }
   } catch (fetchError) {
-    // console.warn('Middleware Fetch Exception (Skipped):', fetchError);
+    console.warn('Middleware Fetch Exception (Skipped):', fetchError);
   }
-
-  // -----------------------------------------------------------
-  // ส่วนตรวจสอบสิทธิ์ (Permission Check)
-  // -----------------------------------------------------------
 
   try {
     const allowedInOrganizer = ['ADMIN', 'ORGANIZER'];
