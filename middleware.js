@@ -92,7 +92,7 @@ export async function middleware(req) {
         // );
 
         if (!allowedInOrganizer.includes(globalRole)) {
-          url.pathname = '/home';
+          url.pathname = '/error';
           return NextResponse.redirect(url);
         }
       }
