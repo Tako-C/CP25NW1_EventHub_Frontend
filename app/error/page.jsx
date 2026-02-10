@@ -41,9 +41,6 @@ export default function Error403() {
               onClick={() => {
                 // (window.location.href = '/home')
                 router.push("/home");
-                setTimeout(() => {
-                  window.location.reload();
-                }, 100);
               }}
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
             >
