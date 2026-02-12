@@ -127,7 +127,7 @@ export default function PostSurveyForm() {
         isError: false,
         message: resSurvey?.message,
       });
-      router.back();
+      router.push('/home');
     } else {
       setNotification({
         isVisible: true,
