@@ -149,10 +149,20 @@ export default function ExpoRegisterForm() {
         }
       }
       if (token) {
-        const responses = [postEventRegister(`events/${id}/register`)];
-        if (surveys.pre.visitor || surveys.pre.exhibitor) responses.push(sendSurveyAnswer(formData?.surveyAnswers, id));
-        const res = await Promise.all(responses);
-        if (res?.statusCode === 200) {
+        const registerRes = await postEventRegister(`events/${id}/register`);
+
+        if (registerRes?.statusCode === 200) {
+          if (surveys.pre.visitor || surveys.pre.exhibitor) {
+            try {
+              await sendSurveyAnswer(formData?.surveyAnswers, id);
+            } catch (error) {
+              setNotification({
+                isVisible: true,
+                isError: true,
+                message: error.message || "Something went wrong",
+              });
+            }
+          }
           setIsSuccess(true);
         }
       }
