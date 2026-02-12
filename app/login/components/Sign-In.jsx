@@ -1,7 +1,7 @@
 "use client";
 
 import Cookie from "js-cookie";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authLoginPassword } from "@/libs/fetch";
@@ -47,6 +47,11 @@ export default function SignInPage({
       if (res.statusCode === 200) {
         Cookie.set("token", res?.data.token, { path: "/" });
         window.dispatchEvent(new Event("user-logged-in"));
+        if (Cookie.get("surveyPost")) {
+          router.push(`${Cookie.get("surveyPost")}`);
+          Cookie.remove("surveyPost");
+          return;
+        }
         router.push("/home");
       }
     } catch (error) {
@@ -109,6 +114,16 @@ export default function SignInPage({
   const handleSignUp = () => {
     router.push("/sign-up");
   };
+  useEffect(() => {
+    if (Cookie.get("surveyPost")) {
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: "กรุณาล็อคอินเข้าสู่ระบบ ก่อนทำแบบฟอร์ม",
+      });
+    }
+  }, []);
+
   if (!isOpen) return null;
   return (
     <>

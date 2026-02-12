@@ -37,28 +37,43 @@ export default function PostSurveyForm() {
     message: "",
   });
   const [surveyData, setSurveyData] = useState(null);
-  const router = useRouter()
+  const router = useRouter();
 
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
 
   const fetchPostSurvey = async () => {
+    const resEventRegis = await getData("users/me/registered-events");
     const eventRes = await getDataNoToken(`events/${id}`);
 
-    if (eventRes?.statusCode === 200) {
-      setEventDetail(eventRes?.data);
-    }
+    if (!resEventRegis || eventRes?.statusCode !== 200) return;
 
-    const surveyRes = await getDataNoToken(`/events/${id}/surveys/post`);
-    console.log(eventRes);
-    console.log(surveyRes);
-    if (surveyRes?.statusCode === 200) {
-      setSurveyData(surveyRes?.data?.visitor || null);
-    }
+    setEventDetail(eventRes?.data);
+
+    const currentEvent = resEventRegis?.data?.find(
+      (ev) => ev.eventId.toString() === id.toString(),
+    );
+    const hasPostSurvey = eventRes.data?.hasPostSurvey;
+
+    if (!currentEvent || !hasPostSurvey) return;
+
+    const surveyRes = await getDataNoToken(`events/${id}/surveys/post`);
+    if (surveyRes?.statusCode !== 200) return;
+
+    const roleDataMap = {
+      "VISITOR": surveyRes.data?.visitor,
+      "EXHIBITOR": surveyRes.data?.exhibitor,
+    };
+
+    setSurveyData(roleDataMap[currentEvent.eventRole] || null);
   };
 
   useEffect(() => {
+    if (!token) {
+      Cookie.set("surveyPost", `/event/${id}/survey/post`);
+      return router.push("/login");
+    }
     fetchPostSurvey();
   }, [id]);
 
@@ -112,7 +127,7 @@ export default function PostSurveyForm() {
         isError: false,
         message: resSurvey?.message,
       });
-      router.back()
+      router.back();
     } else {
       setNotification({
         isVisible: true,

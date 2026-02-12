@@ -134,39 +134,6 @@ export default function Page() {
     }
   };
 
-  // const handleContinue = async () => {
-  //   const otpCode = otp.join("");
-  //   console.log(otpCode);
-  //   if (otpCode.length === 6) {
-  //     if (eventId) {
-  //       const res = await verifyEmailOTP(data, otpCode, eventId);
-  //       console.log(res);
-  //       if (res.statusCode === 200) {
-  //         Cookie.set("token", res?.data.token);
-  //         // window.location.href = `/profile?tab=events`;
-  //         router.push("/profile?tab=events");
-  //         setTimeout(() => {
-  //           window.location.reload();
-  //         }, 100);
-  //       }
-  //     } else {
-  //       const res = await authLoginOTPVerify(data, otpCode);
-  //       console.log("res", res);
-  //       if (res.statusCode === 200) {
-  //         Cookie.set("token", res?.data.token);
-  //         Cookie.remove("signinData");
-  //         // window.location.href = '/home';
-  //         router.push("/home");
-  //         setTimeout(() => {
-  //           window.location.reload();
-  //         }, 100);
-  //       } else {
-  //         setErrors("ใส่ OTP ให้ถูกต้อง");
-  //       }
-  //     }
-  //   }
-  // };
-
   const handleContinue = async () => {
     try {
       const otpCode = otp.join("");
@@ -181,6 +148,11 @@ export default function Page() {
         if (!eventId) Cookie.remove("signinData");
 
         window.dispatchEvent(new Event("user-logged-in"));
+        if (Cookie.get("surveyPost")) {
+          router.push(`${Cookie.get("surveyPost")}`);
+          Cookie.remove("surveyPost");
+          return;
+        }
         router.push(eventId ? "/profile?tab=events" : "/home");
       }
     } catch (error) {
