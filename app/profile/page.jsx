@@ -51,10 +51,27 @@ export default function Page() {
     }
   };
 
-  const fetchEventData = async () => {
+const fetchEventData = async () => {
     const res = await getData('users/me/registered-events');
-    if (res?.statusCode === 200) {
-      setEvent(res?.data);
+
+    if (res?.statusCode === 200 && Array.isArray(res?.data)) {
+      const detailedEventsPromises = res.data.map(async (registeredEvent) => {
+        const eventId = registeredEvent.eventId;
+        
+        const eventRes = await getData(`/events/${eventId}`);
+
+        if (eventRes?.statusCode === 200) {
+
+          return {
+            ...registeredEvent,
+            ...eventRes.data   
+          };
+        }
+        
+        return registeredEvent;
+      });
+      const detailedEvents = await Promise.all(detailedEventsPromises);
+      setEvent(detailedEvents);
     }
   };
 

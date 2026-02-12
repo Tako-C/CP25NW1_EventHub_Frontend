@@ -135,12 +135,14 @@ export default function MyEventPage({ events }) {
                         <ClipboardCheck size={16} />
                         Manual Check-in
                       </button>
-                    ) : event.isEnded && !event.feedbackSubmitted ? (
+                    ) : !event.postSurveyCompleted ? (
+                    // ) : !event.hasPostSurvey ? (
                       <button className="w-full sm:w-auto justify-center flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95">
                         <MessageSquare size={16} />
                         Give Feedback
                       </button>
-                    ) : event.feedbackSubmitted ? (
+                    ) : event.postSurveyCompleted ? (
+                    // ) : event.hasPostSurvey ? (
                       <div className="w-full sm:w-auto justify-center flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg text-sm font-medium border border-green-100">
                         <span className="text-lg">✓</span> Feedback Sent
                       </div>

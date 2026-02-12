@@ -80,9 +80,9 @@ export default function CheckInStaff() {
   };
 
   const handleSearch = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    // if (!validateForm()) {
+    //   return;
+    // }
 
     if (!selectedEventId) {
       setNotification({
@@ -99,11 +99,10 @@ export default function CheckInStaff() {
 
     try {
       const result = await getListUser("manual/search", {
-        email: searchEmail,
+        query: searchEmail,
         eventId: selectedEventId,
       });
 
-      console.log(result);
       if (result?.userId) {
         if (Array.isArray(result)) {
           setVisitors(result);

@@ -107,7 +107,7 @@ export async function middleware(req) {
         const globalRole = payload?.role ? payload.role.toUpperCase() : '';
 
         if (!allowedInStaff.includes(globalRole)) {
-          url.pathname = '/home';
+          url.pathname = '/error';
           return NextResponse.redirect(url);
         }
       }

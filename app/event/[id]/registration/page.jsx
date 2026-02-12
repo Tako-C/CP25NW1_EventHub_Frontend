@@ -133,12 +133,14 @@ export default function ExpoRegisterForm() {
           email: formData.email,
           eventId: id,
         };
-        const res = await requestEmailOTP(
-          signupData?.email,
-          signupData?.firstName,
-          signupData?.lastName,
-          signupData?.eventId,
-        );
+
+        const res = await requestEmailOTP(signupData?.eventId, {
+          email: signupData?.email,
+          firstName: signupData?.firstName,
+          lastName: signupData?.lastName,
+        });
+
+        console.log(res);
 
         if (res?.statusCode === 200) {
           const cookieName = res?.message.includes("Registration")

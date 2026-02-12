@@ -59,11 +59,12 @@ export default function PostSurveyForm() {
     if (!currentEvent || !hasPostSurvey) return;
 
     const surveyRes = await getDataNoToken(`events/${id}/surveys/post`);
+    console.log(surveyRes)
     if (surveyRes?.statusCode !== 200) return;
 
     const roleDataMap = {
-      "VISITOR": surveyRes.data?.visitor,
-      "EXHIBITOR": surveyRes.data?.exhibitor,
+      "VISITOR": surveyRes.data?.visitor[0],
+      "EXHIBITOR": surveyRes.data?.exhibitor[0],
     };
 
     setSurveyData(roleDataMap[currentEvent.eventRole] || null);
