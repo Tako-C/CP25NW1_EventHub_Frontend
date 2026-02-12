@@ -207,7 +207,8 @@ export default function EventSurveysDetailPage() {
             <ClipboardCheck className="w-6 h-6 text-blue-600" />
             Pre-Event Surveys
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> */}
+          <div className="grid grid-cols-1 gap-6">
             <SurveyCard
               survey={surveys.pre.visitor}
               type="pre"
@@ -225,7 +226,7 @@ export default function EventSurveysDetailPage() {
               onView={(sId) => router.push(`/organizer/survey/results/${sId}`)}
               onDelete={(sId) => handleDelete(sId)}
             />
-            <SurveyCard
+            {/* <SurveyCard
               survey={surveys.pre.exhibitor}
               type="pre"
               userType="exhibitor"
@@ -241,7 +242,7 @@ export default function EventSurveysDetailPage() {
               }
               onView={(sId) => router.push(`/organizer/survey/results/${sId}`)}
               onDelete={(sId) => handleDelete(sId)}
-            />
+            /> */}
           </div>
         </div>
 
