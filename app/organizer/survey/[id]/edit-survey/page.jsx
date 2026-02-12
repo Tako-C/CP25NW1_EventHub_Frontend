@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Eye, Save, Type, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Eye, Save, Type, Loader2, Minus } from "lucide-react";
 import { useSearchParams, useRouter, useParams } from "next/navigation";
 import { getDataNoToken, updateSurvey } from "@/libs/fetch";
 import QuestionEditor from "../../components/QuestionEditor";
@@ -217,6 +217,18 @@ export default function EditSurveyPage() {
     );
   }
 
+  const handleIncrementPoints = () => {
+    const current = parseInt(surveyPoint) || 0;
+    setSurveyPoint((current + 1).toString());
+  };
+
+  const handleDecrementPoints = () => {
+    const current = parseInt(surveyPoint) || 0;
+    if (current > 0) {
+      setSurveyPoint((current - 1).toString());
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Notification
@@ -304,15 +316,42 @@ export default function EditSurveyPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Points
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Survey Points
                   </label>
-                  <input
-                    type="number"
-                    value={surveyPoint}
-                    onChange={(e) => setSurveyPoint(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg"
-                  />
+
+                  <div className="relative flex items-center w-full max-w-[200px] group">
+                    <button
+                      type="button"
+                      onClick={handleDecrementPoints}
+                      className="absolute left-1 z-10 w-10 h-10 flex items-center justify-center bg-white text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 active:scale-90 border border-transparent"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </button>
+
+                    <input
+                      type="text"
+                      value={surveyPoint}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, "");
+                        setSurveyPoint(val);
+                      }}
+                      className="w-full h-12 text-center text-lg font-bold text-purple-700 bg-gray-50 border-2 border-gray-200 rounded-xl px-12 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none transition-all duration-300 group-hover:border-gray-300"
+                      placeholder="0"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleIncrementPoints}
+                      className="absolute right-1 z-10 w-10 h-10 flex items-center justify-center bg-white text-gray-500 hover:text-green-500 hover:bg-green-50 rounded-lg transition-all duration-200 active:scale-90 border border-transparent"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <p className="mt-2 text-xs text-gray-400">
+                    * ระบุแต้มที่ผู้ใช้จะได้รับเมื่อทำแบบสำรวจสำเร็จ
+                  </p>
                 </div>
               </div>
             </div>

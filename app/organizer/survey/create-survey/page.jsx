@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Plus, Eye, Save, Type } from "lucide-react";
+import { ArrowLeft, Plus, Eye, Save, Type, Minus } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createSurvey } from "@/libs/fetch";
 import QuestionEditor from "../components/QuestionEditor";
@@ -188,11 +188,23 @@ export default function CreateSurveyPage() {
       if (res.statusCode === 200 || res.statusCode === 201) {
         showNotification(`${res?.message}`, false);
         setTimeout(() => {
-        router.back();
+          router.back();
         }, 1000);
       }
     } catch (error) {
       showNotification(`${error}`, true);
+    }
+  };
+
+  const handleIncrementPoints = () => {
+    const current = parseInt(surveyPoint) || 0;
+    setSurveyPoint((current + 1).toString());
+  };
+
+  const handleDecrementPoints = () => {
+    const current = parseInt(surveyPoint) || 0;
+    if (current > 0) {
+      setSurveyPoint((current - 1).toString());
     }
   };
 
@@ -209,7 +221,7 @@ export default function CreateSurveyPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => console.log("Go back")}
+                onClick={() => router.back()}
                 className="text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeft className="w-6 h-6" />
@@ -285,16 +297,42 @@ export default function CreateSurveyPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Survey Points
                   </label>
-                  <input
-                    type="text"
-                    value={surveyPoint}
-                    onChange={(e) => setSurveyPoint(e.target.value)}
-                    placeholder="กำหนดคะแนนสำหรับให้ผู้ที่ทำแบบสอบถาม"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+
+                  <div className="relative flex items-center w-full max-w-[200px] group">
+                    <button
+                      type="button"
+                      onClick={handleDecrementPoints}
+                      className="absolute left-1 z-10 w-10 h-10 flex items-center justify-center bg-white text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 active:scale-90 border border-transparent"
+                    >
+                      <Minus className="w-5 h-5" />
+                    </button>
+
+                    <input
+                      type="text"
+                      value={surveyPoint}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, "");
+                        setSurveyPoint(val);
+                      }}
+                      className="w-full h-12 text-center text-lg font-bold text-purple-700 bg-gray-50 border-2 border-gray-200 rounded-xl px-12 focus:bg-white focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none transition-all duration-300 group-hover:border-gray-300"
+                      placeholder="0"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleIncrementPoints}
+                      className="absolute right-1 z-10 w-10 h-10 flex items-center justify-center bg-white text-gray-500 hover:text-green-500 hover:bg-green-50 rounded-lg transition-all duration-200 active:scale-90 border border-transparent"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <p className="mt-2 text-xs text-gray-400">
+                    * ระบุแต้มที่ผู้ใช้จะได้รับเมื่อทำแบบสำรวจสำเร็จ
+                  </p>
                 </div>
               </div>
             </div>
