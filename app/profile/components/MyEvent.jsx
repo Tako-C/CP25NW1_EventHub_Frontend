@@ -1,23 +1,32 @@
-import { useState, useMemo } from 'react';
-import { Calendar, MapPin, MessageSquare, ClipboardCheck, Ticket, Filter } from 'lucide-react';
-import { FormatDate } from '@/utils/format';
-import { EventCardImage, QrCodeImage } from '@/utils/getImage';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo } from "react";
+import {
+  Calendar,
+  MapPin,
+  MessageSquare,
+  ClipboardCheck,
+  Ticket,
+  Filter,
+} from "lucide-react";
+import { FormatDate } from "@/utils/format";
+import { EventCardImage, QrCodeImage } from "@/utils/getImage";
+import { useRouter } from "next/navigation";
 
 export default function MyEventPage({ events }) {
   const router = useRouter();
-  const [selectedRole, setSelectedRole] = useState('ALL');
+  const [selectedRole, setSelectedRole] = useState("ALL");
 
   const availableRoles = useMemo(() => {
-    if (!events || !Array.isArray(events)) return ['ALL'];
-    const roles = events.map(event => event.eventRole?.toUpperCase() || 'VISITOR');
-    return ['ALL', ...new Set(roles)];
+    if (!events || !Array.isArray(events)) return ["ALL"];
+    const roles = events.map(
+      (event) => event.eventRole?.toUpperCase() || "VISITOR",
+    );
+    return ["ALL", ...new Set(roles)];
   }, [events]);
 
   const filteredEvents = useMemo(() => {
-    if (selectedRole === 'ALL') return events;
-    return events.filter(event => 
-      (event.eventRole?.toUpperCase() || 'VISITOR') === selectedRole
+    if (selectedRole === "ALL") return events;
+    return events.filter(
+      (event) => (event.eventRole?.toUpperCase() || "VISITOR") === selectedRole,
     );
   }, [events, selectedRole]);
 
@@ -43,7 +52,7 @@ export default function MyEventPage({ events }) {
           >
             {availableRoles.map((role) => (
               <option key={role} value={role}>
-                {role === 'ALL' ? 'ALL EVENTS' : role}
+                {role === "ALL" ? "ALL EVENTS" : role}
               </option>
             ))}
           </select>
@@ -53,16 +62,16 @@ export default function MyEventPage({ events }) {
       {filteredEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 p-4">
           <Calendar className="w-12 h-12 text-gray-300 mb-2" />
-          <p className="text-gray-500 text-lg font-medium">
-            No events found.
+          <p className="text-gray-500 text-lg font-medium">No events found.</p>
+          <p className="text-gray-400 text-sm">
+            Try changing your filter or join an event.
           </p>
-          <p className="text-gray-400 text-sm">Try changing your filter or join an event.</p>
         </div>
       ) : (
         <div className="space-y-4 md:space-y-6">
           {filteredEvents.map((event, index) => {
-            const isStaffOrOrganizer = ['STAFF', 'ORGANIZER'].includes(
-              event.eventRole?.toUpperCase()
+            const isStaffOrOrganizer = ["STAFF", "ORGANIZER"].includes(
+              event.eventRole?.toUpperCase(),
             );
 
             return (
@@ -71,7 +80,7 @@ export default function MyEventPage({ events }) {
                 className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-6 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group"
               >
                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-purple-500 rounded-l-2xl"></div>
-                
+
                 <div className="flex-shrink-0 w-full md:w-60 h-48 md:h-40 bg-gray-100 rounded-xl overflow-hidden relative shadow-inner">
                   <EventCardImage
                     imageCard={event.imageCard}
@@ -98,24 +107,32 @@ export default function MyEventPage({ events }) {
                       <span
                         className={`self-start sm:self-auto flex-shrink-0 px-3 py-1 text-xs font-bold uppercase tracking-wide rounded-full ${
                           isStaffOrOrganizer
-                            ? 'bg-indigo-100 text-indigo-700'
-                            : 'bg-purple-100 text-purple-700'
+                            ? "bg-indigo-100 text-indigo-700"
+                            : "bg-purple-100 text-purple-700"
                         }`}
                       >
-                        {event.eventRole || 'Visitor'}
+                        {event.eventRole || "Visitor"}
                       </span>
                     </div>
 
                     <div className="space-y-2 mt-2 md:mt-3">
                       <p className="text-gray-600 flex items-start gap-2 text-sm">
-                        <Calendar size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
-                        <span className="font-medium whitespace-nowrap">Date:</span>
+                        <Calendar
+                          size={16}
+                          className="text-purple-500 mt-0.5 flex-shrink-0"
+                        />
+                        <span className="font-medium whitespace-nowrap">
+                          Date:
+                        </span>
                         <span>{FormatDate(event.dateStart)}</span>
                       </p>
 
                       {event.location && (
                         <p className="text-gray-600 flex items-start gap-2 text-sm">
-                          <MapPin size={16} className="text-purple-500 mt-0.5 flex-shrink-0" />
+                          <MapPin
+                            size={16}
+                            className="text-purple-500 mt-0.5 flex-shrink-0"
+                          />
                           <span className="line-clamp-1">{event.location}</span>
                         </p>
                       )}
@@ -127,7 +144,7 @@ export default function MyEventPage({ events }) {
                       <button
                         onClick={() =>
                           router.push(
-                            `/staff/event/check-in?eventId=${event.eventId}`
+                            `/staff/event/check-in?eventId=${event.eventId}`,
                           )
                         }
                         className="w-full sm:w-auto justify-center flex items-center gap-2 bg-purple-700 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95"
@@ -136,13 +153,16 @@ export default function MyEventPage({ events }) {
                         Manual Check-in
                       </button>
                     ) : !event.postSurveyCompleted ? (
-                    // ) : !event.hasPostSurvey ? (
-                      <button className="w-full sm:w-auto justify-center flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95">
+                      <button
+                        onClick={() =>
+                          router.push(`/event/${event?.eventId}/survey/post`)
+                        }
+                        className="w-full sm:w-auto justify-center flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95"
+                      >
                         <MessageSquare size={16} />
                         Give Feedback
                       </button>
                     ) : event.postSurveyCompleted ? (
-                    // ) : event.hasPostSurvey ? (
                       <div className="w-full sm:w-auto justify-center flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg text-sm font-medium border border-green-100">
                         <span className="text-lg">✓</span> Feedback Sent
                       </div>
@@ -154,8 +174,8 @@ export default function MyEventPage({ events }) {
                   </div>
                 </div>
 
-                <div className="md:hidden w-full h-px bg-gray-100 my-2"></div> 
-                <div className="hidden md:block w-px bg-gray-100 mx-2"></div>                 
+                <div className="md:hidden w-full h-px bg-gray-100 my-2"></div>
+                <div className="hidden md:block w-px bg-gray-100 mx-2"></div>
                 <div className="flex-shrink-0 flex flex-col items-center justify-center gap-3 md:gap-2 min-w-[120px] pt-2 md:pt-0">
                   <div className="flex items-center gap-2 md:hidden text-gray-500 text-sm font-medium">
                     <Ticket size={16} />
