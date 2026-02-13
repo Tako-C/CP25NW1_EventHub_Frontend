@@ -209,7 +209,7 @@ export default function EventSurveysDetailPage() {
           {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6"> */}
           <div className="grid grid-cols-1 gap-6">
             <SurveyCard
-              survey={surveys.pre.visitor[0]}
+              survey={surveys.pre.visitor?.[0]}
               type="pre"
               userType="visitor"
               onCreate={() =>
@@ -252,7 +252,7 @@ export default function EventSurveysDetailPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <SurveyCard
-              survey={surveys.post.visitor[0]}
+              survey={surveys.post.visitor?.[0]}
               type="post"
               userType="visitor"
               onCreate={() =>
@@ -269,7 +269,7 @@ export default function EventSurveysDetailPage() {
               onDelete={(sId) => handleDelete(sId)}
             />
             <SurveyCard
-              survey={surveys.post.exhibitor[0]}
+              survey={surveys.post.exhibitor?.[0]}
               type="post"
               userType="exhibitor"
               onCreate={() =>

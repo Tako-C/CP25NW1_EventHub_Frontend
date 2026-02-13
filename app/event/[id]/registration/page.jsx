@@ -87,8 +87,8 @@ export default function ExpoRegisterForm() {
     console.log(preRes);
     setSurveys({
       pre: {
-        visitor: preRes?.data?.visitor || null,
-        exhibitor: preRes?.data?.exhibitor || null,
+        visitor: preRes?.data?.visitor[0] || null,
+        exhibitor: preRes?.data?.exhibitor[0] || null,
       },
     });
   };

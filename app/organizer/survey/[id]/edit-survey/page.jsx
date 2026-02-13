@@ -53,13 +53,14 @@ export default function EditSurveyPage() {
         if (res.statusCode === 200) {
           const data = res.data;
           const surveyData = data?.[role];
-          setSurveyTitle(surveyData?.name);
-          setSurveyDescription(surveyData?.description);
-          setSurveyPoint(surveyData?.points.toString());
-          setSurveyType(surveyData?.type);
-          setSurveyId(surveyData?.id);
+          console.log(surveyData)
+          setSurveyTitle(surveyData[0]?.name);
+          setSurveyDescription(surveyData[0]?.description);
+          setSurveyPoint(surveyData[0]?.points.toString());
+          setSurveyType(surveyData[0]?.type);
+          setSurveyId(surveyData[0]?.id);
 
-          const mappedQuestions = surveyData.questions.map((q) => {
+          const mappedQuestions = surveyData[0].questions.map((q) => {
             let localType = "text";
             if (q.questionType === "SINGLE") localType = "multiple_choice";
             if (q.questionType === "MULTIPLE") localType = "checkbox";
