@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import Notification from "@/components/Notification/Notification";
 
 export default function CheckInStaff() {
-  const [searchEmail, setSearchEmail] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [visitors, setVisitors] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -16,8 +16,7 @@ export default function CheckInStaff() {
   const [events, setEvents] = useState([]);
   const [selectedEventId, setSelectedEventId] = useState("");
   const [userId, setUserId] = useState("");
-  const [errors, setErrors] = useState({});
-
+  
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
@@ -48,13 +47,13 @@ export default function CheckInStaff() {
       const result = await postUserCheckIn(
         "manual/check-in",
         selectedEventId,
-        userId
+        visitorData.userId 
       );
 
       if (result?.statusCode === 200) {
         setVisitors((prevVisitors) =>
           prevVisitors.map((v) => {
-            if (v.email === visitorData.email) {
+            if (v.userId === visitorData.userId) {
               return { ...v, status: "check_in" };
             }
             return v;
@@ -64,7 +63,7 @@ export default function CheckInStaff() {
         setNotification({
           isVisible: true,
           isError: true,
-          message: result?.message,
+          message: result?.message || "Check-in failed",
         });
       }
     } catch (error) {
@@ -80,15 +79,20 @@ export default function CheckInStaff() {
   };
 
   const handleSearch = async () => {
-    // if (!validateForm()) {
-    //   return;
-    // }
-
     if (!selectedEventId) {
       setNotification({
         isVisible: true,
         isError: true,
         message: "กรุณาเลือก Event ที่ต้องการค้นหา",
+      });
+      return;
+    }
+
+    if (!searchQuery.trim()) {
+       setNotification({
+        isVisible: true,
+        isError: true,
+        message: "กรุณากรอกข้อมูลเพื่อค้นหา (ชื่อ, เบอร์โทร, หรืออีเมล)",
       });
       return;
     }
@@ -99,22 +103,25 @@ export default function CheckInStaff() {
 
     try {
       const result = await getListUser("manual/search", {
-        query: searchEmail,
+        query: searchQuery.trim(),
         eventId: selectedEventId,
       });
 
-      if (result?.userId) {
+      if (result) {
         if (Array.isArray(result)) {
           setVisitors(result);
-        } else if (result) {
+        } else if (result.userId) {
           setVisitors([result]);
+          setUserId(result.userId);
+        } else {
+             if(Array.isArray(result) && result.length === 0) {
+             }
         }
-        setUserId(result?.userId);
       } else {
         setNotification({
           isVisible: true,
           isError: true,
-          message: result?.message,
+          message: result?.message || "ไม่พบข้อมูล",
         });
       }
     } catch (error) {
@@ -125,32 +132,8 @@ export default function CheckInStaff() {
     }
   };
 
-  const validateField = (field, value) => {
-    switch (field) {
-      case "email":
-        if (!value.trim()) return "* กรุณากรอกอีเมล";
-        if (!value.includes("@") || !value.endsWith(".com"))
-          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
-        return "";
-      default:
-        return "";
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    const emailErr = validateField("email", searchEmail);
-    if (emailErr) {
-      newErrors.email = emailErr;
-    }
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleReset = () => {
-    setSearchEmail("");
+    setSearchQuery("");
     setVisitors([]);
     setHasSearched(false);
   };
@@ -176,7 +159,6 @@ export default function CheckInStaff() {
   const handleEventChange = (e) => {
     const newId = e.target.value;
     setSelectedEventId(newId);
-
     setVisitors([]);
     setHasSearched(false);
   };
@@ -254,9 +236,9 @@ export default function CheckInStaff() {
               <div className="relative flex-1 w-full">
                 <input
                   type="text"
-                  placeholder="Search by email"
-                  value={searchEmail}
-                  onChange={(e) => setSearchEmail(e.target.value)}
+                  placeholder="Search by Name, Email, or Phone"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={!selectedEventId}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -291,9 +273,6 @@ export default function CheckInStaff() {
                 * กรุณาเลือก Event ด้านบนก่อนเริ่มค้นหา
               </p>
             )}
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-            )}
           </div>
 
           <div className="space-y-4 max-h-[60vh] md:max-h-96 overflow-y-auto">
@@ -305,10 +284,10 @@ export default function CheckInStaff() {
               <>
                 {visitors.length > 0 ? (
                   visitors.map((visitor, index) => {
-                    const isCheckedIn = visitor.status === "CHECK_IN";
+                    const isCheckedIn = visitor.status === "check_in" || visitor.status === "CHECK_IN";
                     return (
                       <div
-                        key={index}
+                        key={visitor.userId || index}
                         className="bg-gray-100 rounded-lg p-4 md:p-6"
                       >
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
