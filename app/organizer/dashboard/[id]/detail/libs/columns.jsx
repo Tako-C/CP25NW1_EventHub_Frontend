@@ -5,10 +5,34 @@ export const participantColumns = [
   { title: "No.", dataIndex: "no", key: "no", width: 60 },
   { title: "Name", dataIndex: "name", key: "name" },
   { title: "Email", dataIndex: "email", key: "email" },
+  // {
+  //   title: "Registration Date",
+  //   dataIndex: "registration_date",
+  //   render: (date) => FormatDate(date, "datetime"),
+  // },
+  // {
+  //   title: "Check-in Date",
+  //   dataIndex: "check_in_at",
+  //   render: (date) =>
+  //     date ? (
+  //       <span className="text-green-600 font-medium">
+  //         {FormatDate(date, "datetime")}
+  //       </span>
+  //     ) : (
+  //       <span className="text-gray-400">-</span>
+  //     ),
+  // },
   {
     title: "Registration Date",
     dataIndex: "registration_date",
-    render: (date) => FormatDate(date, "datetime"),
+    key: "registration_date",
+    render: (date) =>
+      date
+        ? FormatDate(
+            new Date(new Date(date).getTime() + 7 * 60 * 60 * 1000),
+            "datetime",
+          )
+        : "-",
   },
   {
     title: "Check-in Date",
@@ -16,7 +40,10 @@ export const participantColumns = [
     render: (date) =>
       date ? (
         <span className="text-green-600 font-medium">
-          {FormatDate(date, "datetime")}
+          {FormatDate(
+            new Date(new Date(date).getTime() + 7 * 60 * 60 * 1000),
+            "datetime",
+          )}
         </span>
       ) : (
         <span className="text-gray-400">-</span>
@@ -36,7 +63,9 @@ export const createSurveyColumns = (badgeColor = "blue") => [
     title: "Survey Type",
     dataIndex: "surveyType",
     render: (text) => (
-      <span className={`text-xs bg-${badgeColor}-50 text-${badgeColor}-600 px-2 py-1 rounded-md`}>
+      <span
+        className={`text-xs bg-${badgeColor}-50 text-${badgeColor}-600 px-2 py-1 rounded-md`}
+      >
         {text}
       </span>
     ),
