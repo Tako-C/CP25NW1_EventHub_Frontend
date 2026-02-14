@@ -123,8 +123,12 @@ export default function EditEventPage() {
           eventType: eventData.eventTypeId?.id,
 
           // Date
-          startDate: eventData.startDate ? dayjs(eventData.startDate) : null,
-          endDate: eventData.endDate ? dayjs(eventData.endDate) : null,
+          startDate: eventData.startDate
+            ? dayjs.utc(eventData.startDate).local()
+            : null,
+          endDate: eventData.endDate
+            ? dayjs.utc(eventData.endDate).local()
+            : null,
 
           // Contacts
           contactEmail: eventData.contactEmail || "",
