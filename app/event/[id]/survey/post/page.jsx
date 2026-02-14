@@ -50,18 +50,75 @@ export default function PostSurveyForm() {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
 
+  // const fetchPostSurvey = async () => {
+  //   let currentEvent
+  //   if (u) {
+  //     const res = await surveyPostValidate(u);
+  //     currentEvent = res?.data
+  //     console.log(currentEvent?.statusCode)
+  //     if(currentEvent?.statusCode === 403) {
+  //       return router.push("/error")
+  //     }
+  //   }
+  //   const eventRes = await getDataNoToken(`events/${id}`);
+
+  //   if (eventRes?.statusCode !== 200) return;
+
+  //   setEventDetail(eventRes?.data);
+
+  //   const hasPostSurvey = eventRes.data?.hasPostSurvey;
+
+  //   if (!currentEvent || !hasPostSurvey) return;
+
+  //   const surveyRes = await getDataNoToken(`events/${id}/surveys/post`);
+  //   if (surveyRes?.statusCode !== 200) return;
+
+  //   const roleDataMap = {
+  //     VISITOR: surveyRes.data?.visitor[0],
+  //     EXHIBITOR: surveyRes.data?.exhibitor[0],
+  //   };
+
+  //   console.log(roleDataMap)
+  //   setSurveyData(roleDataMap[currentEvent.eventRole] || null);
+  // };
+
   const fetchPostSurvey = async () => {
-    let currentEvent
+    let currentEvent;
+
     if (u) {
       const res = await surveyPostValidate(u);
-      currentEvent = res
-    }
-    const eventRes = await getDataNoToken(`events/${id}`);
 
-    if (eventRes?.statusCode !== 200) return;
+      if (res?.statusCode === 403) {
+        return router.push("/error");
+      }
+
+      if (res?.statusCode && res.statusCode !== 200) {
+        setNotification({
+          isVisible: true,
+          isError: true,
+          message: res?.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์",
+        });
+
+        setTimeout(() => {
+          router.push("/home");
+        }, 3000);
+        return;
+      }
+
+      currentEvent = res?.data;
+    }
+
+    const eventRes = await getDataNoToken(`events/${id}`);
+    if (eventRes?.statusCode !== 200) {
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: "ไม่พบข้อมูลกิจกรรม",
+      });
+      return;
+    }
 
     setEventDetail(eventRes?.data);
-
     const hasPostSurvey = eventRes.data?.hasPostSurvey;
 
     if (!currentEvent || !hasPostSurvey) return;
@@ -74,7 +131,6 @@ export default function PostSurveyForm() {
       EXHIBITOR: surveyRes.data?.exhibitor[0],
     };
 
-    console.log(roleDataMap)
     setSurveyData(roleDataMap[currentEvent.eventRole] || null);
   };
 
@@ -85,7 +141,6 @@ export default function PostSurveyForm() {
     // }
     fetchPostSurvey();
   }, [id]);
-
 
   const handleSurveyChange = (questionId, value, type) => {
     setFormData((prev) => {
