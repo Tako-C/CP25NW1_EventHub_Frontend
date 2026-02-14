@@ -4,7 +4,7 @@ import { Typography } from 'antd';
 import { useRouter } from 'next/navigation';
 import EventForm from '../../components/EventForm';
 import dayjs from 'dayjs';
-import { createEvent } from '@/libs/fetch';
+import { createEvent, getData } from '@/libs/fetch';
 import Notification from '@/components/Notification/Notification';
 
 const { Title, Text } = Typography;
@@ -13,6 +13,7 @@ export default function CreateEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [country, setCountry] = useState([])
 
   const [notification, setNotification] = useState({
     isVisible: false,
@@ -71,6 +72,17 @@ export default function CreateEventPage() {
       router.push('/login');
     }
   }, [router]);
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    const res = await getData('users/countrys');
+    const resCity = await getData(`users/country/${res?.data[0].id}/citys`)
+    console.log(resCity)
+    setCountry(resCity?.data || [])
+  }
 
   const handleCreate = async (values) => {
     if (!currentUserId) {
@@ -171,6 +183,7 @@ export default function CreateEventPage() {
         onFinish={handleCreate}
         isLoading={loading}
         isEditMode={false}
+        locationOptions={country}
         onValidationFailed={() =>
           showNotification('Please fill all required fields.', true)
         }

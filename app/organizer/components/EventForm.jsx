@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   User,
   MapPin,
@@ -14,7 +14,7 @@ import {
   Globe,
   Plus,
   Trash2,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   Form,
   DatePicker,
@@ -25,18 +25,18 @@ import {
   Popconfirm,
   Spin,
   Input,
-} from 'antd';
-import dayjs from 'dayjs';
-import { useRouter } from 'next/navigation';
-import { getEventTypes } from '@/libs/fetch';
-import EventPreview from './EventPreview';
+} from "antd";
+import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
+import { getEventTypes } from "@/libs/fetch";
+import EventPreview from "./EventPreview";
 
 // --- Custom Input Field ---
 function CustomInputField({
   label,
   value,
   onChange,
-  type = 'text',
+  type = "text",
   icon,
   placeholder,
   disabled = false,
@@ -55,25 +55,25 @@ function CustomInputField({
 
         {isTextArea ? (
           <textarea
-            value={value || ''}
+            value={value || ""}
             onChange={(e) => onChange(e.target.value)}
             rows={rows}
             placeholder={placeholder}
             className={`w-full ${
-              icon ? 'pl-10' : 'pl-4'
+              icon ? "pl-10" : "pl-4"
             } pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base resize-none placeholder-gray-400`}
           />
         ) : (
           <input
             type={type}
-            value={value || ''}
+            value={value || ""}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
             placeholder={placeholder}
             className={`w-full ${
-              icon ? 'pl-10' : 'pl-4'
+              icon ? "pl-10" : "pl-4"
             } pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base placeholder-gray-400 ${
-              disabled ? 'opacity-60 cursor-not-allowed' : ''
+              disabled ? "opacity-60 cursor-not-allowed" : ""
             }`}
           />
         )}
@@ -91,23 +91,24 @@ export default function EventForm({
   isLoading,
   isEditMode = false,
   onValidationFailed,
+  locationOptions,
 }) {
   const router = useRouter();
   const [form] = Form.useForm();
-  const startDate = Form.useWatch('startDate', form);
+  const startDate = Form.useWatch("startDate", form);
 
   const formValues = Form.useWatch([], form);
 
   const disabledDate = (current) => {
-    return current && current < dayjs().startOf('day');
+    return current && current < dayjs().startOf("day");
   };
 
   const disabledEndDate = (current) => {
-    if (current && current < dayjs().startOf('day')) {
+    if (current && current < dayjs().startOf("day")) {
       return true;
     }
     if (startDate) {
-      return current && current < dayjs(startDate).startOf('day');
+      return current && current < dayjs(startDate).startOf("day");
     }
     return false;
   };
@@ -117,24 +118,24 @@ export default function EventForm({
       // return false เพื่อระงับการ auto upload
       return false;
     },
-    listType: 'picture-card',
+    listType: "picture-card",
     maxCount: 1,
     showUploadList: { showPreviewIcon: false }, // ปรับตามต้องการ
-    accept: 'image/*',
+    accept: "image/*",
   };
 
   const [eventTypes, setEventTypes] = useState([]);
   const [isTypeLoading, setIsTypesLoading] = useState(true);
 
   const [formData, setFormData] = useState({
-    eventName: '',
-    hostOrganization: '',
-    location: '',
-    eventDescription: '',
-    contactEmail: '',
-    contactPhone: '',
-    contactLine: '',
-    contactFacebook: '',
+    eventName: "",
+    hostOrganization: "",
+    location: "",
+    eventDescription: "",
+    contactEmail: "",
+    contactPhone: "",
+    contactLine: "",
+    contactFacebook: "",
   });
 
   useEffect(() => {
@@ -150,7 +151,7 @@ export default function EventForm({
         const data = await getEventTypes();
         setEventTypes(data.data || []);
       } catch (error) {
-        console.error('Failed to load types:', error);
+        console.error("Failed to load types:", error);
         setEventTypes([]);
       } finally {
         setIsTypesLoading(false);
@@ -181,12 +182,12 @@ export default function EventForm({
       <div className="mb-6 md:mb-8 border-b border-gray-100 pb-4 flex justify-between items-start">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-            {isEditMode ? 'Edit Event' : 'Create New Event'}
+            {isEditMode ? "Edit Event" : "Create New Event"}
           </h2>
           <p className="text-gray-500 text-sm mt-1">
             {isEditMode
-              ? 'Update your event details.'
-              : 'Fill in the details to publish your event.'}
+              ? "Update your event details."
+              : "Fill in the details to publish your event."}
           </p>
         </div>
 
@@ -236,7 +237,7 @@ export default function EventForm({
                   <Form.Item
                     name="eventName"
                     rules={[
-                      { required: true, message: 'Please enter event name' },
+                      { required: true, message: "Please enter event name" },
                     ]}
                     className="mb-0"
                   >
@@ -256,7 +257,7 @@ export default function EventForm({
                   <Form.Item
                     name="eventType"
                     rules={[
-                      { required: true, message: 'Please select event type' },
+                      { required: true, message: "Please select event type" },
                     ]}
                     className="mb-0"
                   >
@@ -264,7 +265,7 @@ export default function EventForm({
                       placeholder="Select Type"
                       size="large"
                       className="w-full"
-                      style={{ height: '46px' }}
+                      style={{ height: "46px" }}
                       popupMatchSelectWidth={false}
                       // 3. แก้ไขตรงนี้: ใช้ state ตัวใหม่แทน eventTypes.length
                       loading={isTypeLoading}
@@ -283,7 +284,7 @@ export default function EventForm({
                 <CustomInputField
                   label="Host Organization"
                   value={formData.hostOrganization}
-                  onChange={(v) => handleChange('hostOrganization', v)}
+                  onChange={(v) => handleChange("hostOrganization", v)}
                   icon={<Briefcase size={18} />}
                 />
 
@@ -291,19 +292,22 @@ export default function EventForm({
                 <div className="md:col-span-2">
                   <Form.Item
                     name="location"
+                    label="Location"
                     rules={[
-                      {
-                        required: true,
-                        message: 'Please enter event location',
-                      },
+                      { required: true, message: "Please select a location!" },
                     ]}
-                    className="mb-0"
                   >
-                    <CustomInputField
-                      label="Location"
-                      icon={<MapPin size={18} />}
-                      placeholder="Location of the event"
-                    />
+                    <Select
+                      placeholder="Select a location"
+                      loading={!locationOptions}
+                    >
+                      {locationOptions &&
+                        locationOptions.map((item) => (
+                          <Select.Option key={item.id} value={item.cityNameTh}>
+                            {item.name}
+                          </Select.Option>
+                        ))}
+                    </Select>
                   </Form.Item>
                 </div>
 
@@ -314,7 +318,7 @@ export default function EventForm({
                     rules={[
                       {
                         required: true,
-                        message: 'Please enter event description',
+                        message: "Please enter event description",
                       },
                     ]}
                     className="mb-0"
@@ -335,7 +339,7 @@ export default function EventForm({
                   <Form.Item
                     name="startDate"
                     rules={[
-                      { required: true, message: 'Please select start date' },
+                      { required: true, message: "Please select start date" },
                     ]}
                     className="mb-0"
                   >
@@ -355,17 +359,17 @@ export default function EventForm({
                   <Form.Item
                     name="endDate"
                     rules={[
-                      { required: true, message: 'Please select end date' },
+                      { required: true, message: "Please select end date" },
                       ({ getFieldValue }) => ({
                         validator(_, value) {
-                          if (!value || !getFieldValue('startDate')) {
+                          if (!value || !getFieldValue("startDate")) {
                             return Promise.resolve();
                           }
-                          if (value.isAfter(getFieldValue('startDate'))) {
+                          if (value.isAfter(getFieldValue("startDate"))) {
                             return Promise.resolve();
                           }
                           return Promise.reject(
-                            new Error('End date must be after start date!')
+                            new Error("End date must be after start date!"),
                           );
                         },
                       }),
@@ -399,8 +403,8 @@ export default function EventForm({
                 <Form.Item
                   name="contactEmail"
                   rules={[
-                    { required: true, message: 'Please enter contact email' },
-                    { type: 'email', message: 'Invalid email format' },
+                    { required: true, message: "Please enter contact email" },
+                    { type: "email", message: "Invalid email format" },
                   ]}
                   className="mb-0"
                 >
@@ -415,10 +419,10 @@ export default function EventForm({
                 <Form.Item
                   name="contactPhone"
                   rules={[
-                    { required: true, message: 'Please enter contact phone' },
+                    { required: true, message: "Please enter contact phone" },
                     {
                       pattern: /^[0-9+\-()\s]+$/,
-                      message: 'Invalid phone number',
+                      message: "Invalid phone number",
                     },
                   ]}
                   className="mb-0"
@@ -433,13 +437,13 @@ export default function EventForm({
                 <CustomInputField
                   label="Line ID"
                   value={formData.contactLine}
-                  onChange={(v) => handleChange('contactLine', v)}
+                  onChange={(v) => handleChange("contactLine", v)}
                   icon={<Globe size={18} />}
                 />
                 <CustomInputField
                   label="Facebook"
                   value={formData.contactFacebook}
-                  onChange={(v) => handleChange('contactFacebook', v)}
+                  onChange={(v) => handleChange("contactFacebook", v)}
                   icon={<Facebook size={18} />}
                 />
               </div>
@@ -497,37 +501,37 @@ export default function EventForm({
                     name="slideshowSlot1"
                     normFile={normFile}
                     onRemove={onFileRemove}
-                    desc={isEditMode ? 'Change/Delete Slide 1' : 'Image 1'}
+                    desc={isEditMode ? "Change/Delete Slide 1" : "Image 1"}
                   />
                   <UploadBox
                     label="Slide 2"
                     name="slideshowSlot2"
                     normFile={normFile}
                     onRemove={onFileRemove}
-                    desc={isEditMode ? 'Change/Delete Slide 2' : 'Image 2'}
+                    desc={isEditMode ? "Change/Delete Slide 2" : "Image 2"}
                   />
                   <UploadBox
                     label="Slide 3"
                     name="slideshowSlot3"
                     normFile={normFile}
                     onRemove={onFileRemove}
-                    desc={isEditMode ? 'Change/Delete Slide 3' : 'Image 3'}
+                    desc={isEditMode ? "Change/Delete Slide 3" : "Image 3"}
                   />
                 </div>
 
                 <Form.Item
                   name="slideshowValidator"
                   dependencies={[
-                    'slideshowSlot1',
-                    'slideshowSlot2',
-                    'slideshowSlot3',
+                    "slideshowSlot1",
+                    "slideshowSlot2",
+                    "slideshowSlot3",
                   ]}
                   rules={[
                     ({ getFieldValue }) => ({
                       validator() {
-                        const s1 = getFieldValue('slideshowSlot1');
-                        const s2 = getFieldValue('slideshowSlot2');
-                        const s3 = getFieldValue('slideshowSlot3');
+                        const s1 = getFieldValue("slideshowSlot1");
+                        const s2 = getFieldValue("slideshowSlot2");
+                        const s3 = getFieldValue("slideshowSlot3");
 
                         const hasSlide =
                           (s1 && s1.length > 0) ||
@@ -538,7 +542,7 @@ export default function EventForm({
                           return Promise.resolve();
                         }
                         return Promise.reject(
-                          new Error('At least 1 slideshow image is required!')
+                          new Error("At least 1 slideshow image is required!"),
                         );
                       },
                     }),
@@ -567,10 +571,10 @@ export default function EventForm({
                 className="w-full sm:w-auto px-8 py-2.5 rounded-full font-medium bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
               >
                 {isLoading
-                  ? 'Saving...'
+                  ? "Saving..."
                   : isEditMode
-                  ? 'Update Event'
-                  : 'Create Event'}
+                    ? "Update Event"
+                    : "Create Event"}
               </button>
             </div>
           </div>
@@ -596,7 +600,7 @@ function UploadBox({
         name={name}
         valuePropName="fileList"
         getValueFromEvent={normFile}
-        rules={required ? [{ required: true, message: 'Required' }] : []}
+        rules={required ? [{ required: true, message: "Required" }] : []}
         className="mb-1 [&_.ant-form-item-explain]:text-center"
       >
         <Upload
@@ -605,12 +609,14 @@ function UploadBox({
           beforeUpload={(file) => {
             const isLt5M = file.size / 1024 / 1024 < 5;
             if (!isLt5M) {
-              message.error(`ไฟล์ "${file.name}" ใหญ่เกินไป! กรุณาใช้ไฟล์ขนาดไม่เกิน 5MB`);
+              message.error(
+                `ไฟล์ "${file.name}" ใหญ่เกินไป! กรุณาใช้ไฟล์ขนาดไม่เกิน 5MB`,
+              );
               return Upload.LIST_IGNORE;
             }
-            const isImage = file.type.startsWith('image/');
+            const isImage = file.type.startsWith("image/");
             if (!isImage) {
-              message.error('กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ');
+              message.error("กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ");
               return Upload.LIST_IGNORE;
             }
 
