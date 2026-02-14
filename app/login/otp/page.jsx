@@ -139,7 +139,7 @@ export default function Page() {
       const otpCode = otp.join("");
       if (otpCode.length === 6) {
         const res = eventId
-          ? await verifyEmailOTP(data, otpCode, eventId)
+          ? await verifyEmailOTP(eventId, data, otpCode)
           : await authLoginOTPVerify(data, otpCode);
 
         localStorage.removeItem(`otp_end_time_${data}`);
