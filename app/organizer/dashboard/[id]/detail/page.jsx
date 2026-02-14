@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { UserOutlined, MailOutlined, CheckCircleOutlined } from "@ant-design/icons";
-import { getData, postUserCheckIn } from "@/libs/fetch";
+import { getData, postUserCheckIn, getDataNoToken } from "@/libs/fetch";
 import { FormatDate } from "@/utils/format";
 
 // Imports Components & Columns
@@ -60,13 +60,22 @@ const fetchData = async () => {
         const endpoint = isPre ? "pre" : "post";
         // ดึง Config ก่อน
         const surveyConfig = await getData(`events/${id}/surveys/${endpoint}`);
-        const visitorId = surveyConfig.data?.visitor?.id;
-        const exhibitorId = surveyConfig.data?.exhibitor?.id;
+        // ค้นหารายการที่มี status เป็น ACTIVE จาก Array
+        const activeVisitor = surveyConfig.data?.visitor?.find(
+          (v) => v.status === "ACTIVE",
+        );
+        const activeExhibitor = surveyConfig.data?.exhibitor?.find(
+          (e) => e.status === "ACTIVE",
+        );
+
+        // นำ id มาใช้
+        const visitorId = activeVisitor?.id;
+        const exhibitorId = activeExhibitor?.id;
 
         // ยิงดึง Visitor และ Exhibitor พร้อมกัน (Parallel ในระดับย่อย)
         const [visRes, exRes] = await Promise.all([
-          visitorId ? getData(`events/${id}/surveys/${visitorId}/submission-status`) : Promise.resolve(null),
-          exhibitorId ? getData(`events/${id}/surveys/${exhibitorId}/submission-status`) : Promise.resolve(null)
+          visitorId ? getData(`events/${id}/surveys/${visitorId}/submission-status/visitor`) : Promise.resolve(null),
+          exhibitorId ? getData(`events/${id}/surveys/${exhibitorId}/submission-status/exhibitor`) : Promise.resolve(null)
         ]);
 
         let results = [];
@@ -113,6 +122,7 @@ const fetchData = async () => {
       const allVisitors = allSurveys.filter(s => s.role === 'VISITOR');
       const allExhibitors = allSurveys.filter(s => s.role === 'EXHIBITOR');
 
+      console.log(preSurveyPromise)
       setSurveyVisitor(allVisitors.map((item, index) => ({ ...item, no: index + 1 })));
       setSurveyExhibitor(allExhibitors.map((item, index) => ({ ...item, no: index + 1 })));
 
