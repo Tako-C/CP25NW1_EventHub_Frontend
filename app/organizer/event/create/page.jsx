@@ -6,8 +6,10 @@ import EventForm from '../../components/EventForm';
 import dayjs from 'dayjs';
 import { createEvent, getData } from '@/libs/fetch';
 import Notification from '@/components/Notification/Notification';
+import utc from 'dayjs/plugin/utc';
 
 const { Title, Text } = Typography;
+dayjs.extend(utc);
 
 export default function CreateEventPage() {
   const router = useRouter();
@@ -106,12 +108,19 @@ export default function CreateEventPage() {
       formData.append('location', values.location);
       formData.append('createdBy', currentUserId);
 
+      // const startDateStr = values.startDate
+      //   ? dayjs(values.startDate).format('YYYY-MM-DDTHH:mm:ss')
+      //   : '';
+      // const endDateStr = values.endDate
+      //   ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ss')
+      //   : '';
       const startDateStr = values.startDate
-        ? dayjs(values.startDate).format('YYYY-MM-DDTHH:mm:ss')
+        ? dayjs(values.startDate).utc().format('YYYY-MM-DDTHH:mm:ss')
         : '';
       const endDateStr = values.endDate
-        ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ss')
+        ? dayjs(values.endDate).utc().format('YYYY-MM-DDTHH:mm:ss')
         : '';
+
       formData.append('startDate', startDateStr);
       formData.append('endDate', endDateStr);
       formData.append('contactEmail', values.contactEmail || '');

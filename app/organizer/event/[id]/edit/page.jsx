@@ -1,17 +1,20 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import dayjs from 'dayjs';
-import EventForm from '@/app/organizer/components/EventForm';
-import Notification from '@/components/Notification/Notification';
+import React, { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import dayjs from "dayjs";
+import EventForm from "@/app/organizer/components/EventForm";
+import Notification from "@/components/Notification/Notification";
 import {
   getEventById,
   updateEvent,
   deleteEvent,
   deleteEventImage,
   getUpdateImage,
-} from '@/libs/fetch';
+} from "@/libs/fetch";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 export default function EditEventPage() {
   const { id } = useParams();
@@ -24,7 +27,7 @@ export default function EditEventPage() {
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
-    message: '',
+    message: "",
   });
 
   const showNotification = (msg, isError = false) => {
@@ -55,21 +58,21 @@ export default function EditEventPage() {
           try {
             let fetchPath = imgFilename;
             if (
-              !fetchPath.startsWith('upload/events') &&
-              !fetchPath.includes('/')
+              !fetchPath.startsWith("upload/events") &&
+              !fetchPath.includes("/")
             ) {
               fetchPath = `upload/events/${fetchPath}`;
             }
 
             // ลบ / ตัวแรกออก ถ้ามี
-            if (fetchPath.startsWith('/')) {
+            if (fetchPath.startsWith("/")) {
               fetchPath = fetchPath.substring(1);
             }
 
             // ดึง Blob URL
             const blobUrl = await getUpdateImage(fetchPath);
 
-            if (!blobUrl || typeof blobUrl !== 'string') {
+            if (!blobUrl || typeof blobUrl !== "string") {
               return [];
             }
 
@@ -77,7 +80,7 @@ export default function EditEventPage() {
               {
                 uid: `-existing-${uidSuffix}`, // สำคัญ: ใช้ prefix นี้เพื่อเช็คตอนลบ
                 name: imgFilename,
-                status: 'done',
+                status: "done",
                 url: blobUrl,
                 thumbUrl: blobUrl,
               },
@@ -98,13 +101,13 @@ export default function EditEventPage() {
         // Parallel Fetching: ดึงทุกรูปพร้อมกัน
         const [fileCard, fileDetail, fileMap, slide1, slide2, slide3] =
           await Promise.all([
-            loadAndFormatImage(pathCard, 'card'),
-            loadAndFormatImage(pathDetail, 'detail'),
-            loadAndFormatImage(pathMap, 'map'),
+            loadAndFormatImage(pathCard, "card"),
+            loadAndFormatImage(pathDetail, "detail"),
+            loadAndFormatImage(pathMap, "map"),
             // Slideshow: ดึงตาม Index
-            loadAndFormatImage(slidesArray[0], 'slide1'),
-            loadAndFormatImage(slidesArray[1], 'slide2'),
-            loadAndFormatImage(slidesArray[2], 'slide3'),
+            loadAndFormatImage(slidesArray[0], "slide1"),
+            loadAndFormatImage(slidesArray[1], "slide2"),
+            loadAndFormatImage(slidesArray[2], "slide3"),
           ]);
 
         setInitialData({
@@ -124,10 +127,10 @@ export default function EditEventPage() {
           endDate: eventData.endDate ? dayjs(eventData.endDate) : null,
 
           // Contacts
-          contactEmail: eventData.contactEmail || '',
-          contactPhone: eventData.contactPhone || '',
-          contactLine: eventData.contactLine || '',
-          contactFacebook: eventData.contactFacebook || '',
+          contactEmail: eventData.contactEmail || "",
+          contactPhone: eventData.contactPhone || "",
+          contactLine: eventData.contactLine || "",
+          contactFacebook: eventData.contactFacebook || "",
 
           // --- Image Data (FileList) ---
           eventCard: fileCard,
@@ -140,8 +143,8 @@ export default function EditEventPage() {
           slideshowSlot3: slide3,
         });
       } catch (error) {
-        console.error('Error fetching event:', error);
-        showNotification('Error fetching event data', true);
+        console.error("Error fetching event:", error);
+        showNotification("Error fetching event data", true);
       } finally {
         setFetching(false);
       }
@@ -157,78 +160,78 @@ export default function EditEventPage() {
       const formData = new FormData();
 
       // Text Data
-      formData.append('eventName', values.eventName);
-      formData.append('eventDesc', values.eventDescription);
-      formData.append('eventTypeId', values.eventType);
-      formData.append('hostOrganisation', values.hostOrganization || '');
-      formData.append('location', values.location);
-      formData.append('contactEmail', values.contactEmail || '');
-      formData.append('contactPhone', values.contactPhone || '');
-      formData.append('contactLine', values.contactLine || '');
-      formData.append('contactFacebook', values.contactFacebook || '');
+      formData.append("eventName", values.eventName);
+      formData.append("eventDesc", values.eventDescription);
+      formData.append("eventTypeId", values.eventType);
+      formData.append("hostOrganisation", values.hostOrganization || "");
+      formData.append("location", values.location);
+      formData.append("contactEmail", values.contactEmail || "");
+      formData.append("contactPhone", values.contactPhone || "");
+      formData.append("contactLine", values.contactLine || "");
+      formData.append("contactFacebook", values.contactFacebook || "");
       const creatorId = initialData.createdBy?.id || initialData.createdBy;
       if (creatorId) {
-        formData.append('createdBy', creatorId);
+        formData.append("createdBy", creatorId);
       }
       if (values.startDate)
         formData.append(
-          'startDate',
-          values.startDate.format('YYYY-MM-DDTHH:mm:ss')
+          "startDate",
+          values.startDate.utc().format("YYYY-MM-DDTHH:mm:ss"),
         );
       if (values.endDate)
         formData.append(
-          'endDate',
-          values.endDate.format('YYYY-MM-DDTHH:mm:ss')
+          "endDate",
+          values.endDate.utc().format("YYYY-MM-DDTHH:mm:ss"),
         );
 
       // Single Files
       if (values.eventCard?.[0]?.originFileObj)
-        formData.append('eventCard', values.eventCard[0].originFileObj);
+        formData.append("eventCard", values.eventCard[0].originFileObj);
       if (values.eventDetail?.[0]?.originFileObj)
-        formData.append('eventDetail', values.eventDetail[0].originFileObj);
+        formData.append("eventDetail", values.eventDetail[0].originFileObj);
       if (values.eventMap?.[0]?.originFileObj)
-        formData.append('eventMap', values.eventMap[0].originFileObj);
+        formData.append("eventMap", values.eventMap[0].originFileObj);
 
       // Slideshow Files
       const indices = [];
 
       if (values.slideshowSlot1?.[0]?.originFileObj) {
         formData.append(
-          'eventSlideshow',
-          values.slideshowSlot1[0].originFileObj
+          "eventSlideshow",
+          values.slideshowSlot1[0].originFileObj,
         );
         indices.push(1);
       }
       if (values.slideshowSlot2?.[0]?.originFileObj) {
         formData.append(
-          'eventSlideshow',
-          values.slideshowSlot2[0].originFileObj
+          "eventSlideshow",
+          values.slideshowSlot2[0].originFileObj,
         );
         indices.push(2);
       }
       if (values.slideshowSlot3?.[0]?.originFileObj) {
         formData.append(
-          'eventSlideshow',
-          values.slideshowSlot3[0].originFileObj
+          "eventSlideshow",
+          values.slideshowSlot3[0].originFileObj,
         );
         indices.push(3);
       }
 
       // ส่ง Indices ถ้ามีรูป Slideshow ใหม่
       if (indices.length > 0) {
-        indices.forEach((idx) => formData.append('slideshowIndices', idx));
+        indices.forEach((idx) => formData.append("slideshowIndices", idx));
       } else {
         // กรณีไม่มีการแก้ไข Slideshow เลย ให้ส่งค่า null
-        formData.append('slideshowIndices', '');
+        formData.append("slideshowIndices", "");
       }
 
       await updateEvent(id, formData);
 
-      showNotification('Update Success!', false);
-      setTimeout(() => router.push('/home#organizer-section'), 1000);
+      showNotification("Update Success!", false);
+      setTimeout(() => router.push("/home#organizer-section"), 1000);
     } catch (error) {
       console.error(error);
-      showNotification('Update failed', true);
+      showNotification("Update failed", true);
     } finally {
       setLoading(false);
     }
@@ -240,48 +243,48 @@ export default function EditEventPage() {
     try {
       await deleteEvent(id);
 
-      showNotification('Delete event success!', false);
+      showNotification("Delete event success!", false);
 
       setTimeout(() => {
-        router.push('/home#organizer-section');
+        router.push("/home#organizer-section");
       }, 1000);
     } catch (error) {
-      console.error('Delete error:', error);
-      showNotification(error.message || 'Cannot delete event', true);
+      console.error("Delete error:", error);
+      showNotification(error.message || "Cannot delete event", true);
     } finally {
       setLoading(false);
     }
   };
 
   const handleImageRemove = async (file, fieldName) => {
-    if (!file.uid.startsWith('-existing-')) return true;
+    if (!file.uid.startsWith("-existing-")) return true;
 
     try {
-      let category = '';
+      let category = "";
       let index = null;
 
-      if (fieldName === 'eventCard') category = 'card';
-      else if (fieldName === 'eventDetail') category = 'detail';
-      else if (fieldName === 'eventMap') category = 'map';
-      else if (fieldName === 'slideshowSlot1') {
-        category = 'slideshow';
+      if (fieldName === "eventCard") category = "card";
+      else if (fieldName === "eventDetail") category = "detail";
+      else if (fieldName === "eventMap") category = "map";
+      else if (fieldName === "slideshowSlot1") {
+        category = "slideshow";
         index = 1;
-      } else if (fieldName === 'slideshowSlot2') {
-        category = 'slideshow';
+      } else if (fieldName === "slideshowSlot2") {
+        category = "slideshow";
         index = 2;
-      } else if (fieldName === 'slideshowSlot3') {
-        category = 'slideshow';
+      } else if (fieldName === "slideshowSlot3") {
+        category = "slideshow";
         index = 3;
       }
 
       if (category) {
         await deleteEventImage(id, category, index);
-        showNotification('Delete image success', false);
+        showNotification("Delete image success", false);
         return true;
       }
     } catch (error) {
       console.error(error);
-      showNotification('Delete image failed', true);
+      showNotification("Delete image failed", true);
       return false;
     }
   };
@@ -303,7 +306,7 @@ export default function EditEventPage() {
         isLoading={loading}
         isEditMode={true}
         onValidationFailed={() =>
-          showNotification('Please fill all required fields.', true)
+          showNotification("Please fill all required fields.", true)
         }
       />
     </div>
