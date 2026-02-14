@@ -8,7 +8,12 @@ import {
   Star,
   MessageSquare,
 } from "lucide-react";
-import { getData, getDataNoToken, sendSurveyAnswer, surveyPostValidate } from "@/libs/fetch";
+import {
+  getData,
+  getDataNoToken,
+  sendSurveyAnswer,
+  surveyPostValidate,
+} from "@/libs/fetch";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FormatDate } from "@/utils/format";
 import Cookie from "js-cookie";
@@ -26,7 +31,7 @@ export default function PostSurveyForm() {
   const token = Cookie.get("token");
   const { id } = useParams();
   const searchParams = useSearchParams();
-  const u = searchParams.get('u');
+  const u = searchParams.get("u");
 
   const [formData, setFormData] = useState({
     surveyAnswers: [],
@@ -46,50 +51,41 @@ export default function PostSurveyForm() {
   };
 
   const fetchPostSurvey = async () => {
-    const resEventRegis = await getData("users/me/registered-events");
+    let currentEvent
+    if (u) {
+      const res = await surveyPostValidate(u);
+      currentEvent = res
+    }
     const eventRes = await getDataNoToken(`events/${id}`);
 
-    if (!resEventRegis || eventRes?.statusCode !== 200) return;
+    if (eventRes?.statusCode !== 200) return;
 
     setEventDetail(eventRes?.data);
 
-    const currentEvent = resEventRegis?.data?.find(
-      (ev) => ev.eventId.toString() === id.toString(),
-    );
     const hasPostSurvey = eventRes.data?.hasPostSurvey;
 
     if (!currentEvent || !hasPostSurvey) return;
 
     const surveyRes = await getDataNoToken(`events/${id}/surveys/post`);
-    console.log(surveyRes)
     if (surveyRes?.statusCode !== 200) return;
 
     const roleDataMap = {
-      "VISITOR": surveyRes.data?.visitor[0],
-      "EXHIBITOR": surveyRes.data?.exhibitor[0],
+      VISITOR: surveyRes.data?.visitor[0],
+      EXHIBITOR: surveyRes.data?.exhibitor[0],
     };
 
+    console.log(roleDataMap)
     setSurveyData(roleDataMap[currentEvent.eventRole] || null);
   };
 
   useEffect(() => {
-    if (!token) {
-      Cookie.set("surveyPost", `/event/${id}/survey/post`);
-      return router.push("/login");
-    }
-    if(u) {
-      validate(u)
-    }
+    // if (!token) {
+    //   Cookie.set("surveyPost", `/event/${id}/survey/post`);
+    //   return router.push("/login");
+    // }
     fetchPostSurvey();
   }, [id]);
 
-  const validate = async (u) => {
-    const res = await surveyPostValidate(u)
-    console.log(res)
-    if(res?.statusCode !== 200) {
-      return router.push("/home");
-    }
-  }
 
   const handleSurveyChange = (questionId, value, type) => {
     setFormData((prev) => {
@@ -141,7 +137,7 @@ export default function PostSurveyForm() {
         isError: false,
         message: resSurvey?.message,
       });
-      router.push('/home');
+      router.push("/home");
     } else {
       setNotification({
         isVisible: true,
@@ -174,10 +170,10 @@ export default function PostSurveyForm() {
                   </span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-3">
-                  แบบประเมินความพึงพอใจ
+                  {surveyData?.name || "แบบประเมินความพึงพอใจ"}
                 </h1>
                 <p className="text-purple-100 text-lg">
-                  {eventDetail?.eventName || "Loading..."}
+                  Event name: {eventDetail?.eventName || "Loading..."}
                 </p>
               </div>
             </div>

@@ -204,10 +204,13 @@ export const sendSurveyAnswer = (answers, id) =>
     }),
   });
 
-export const surveyPostValidate = (u) =>
-  apiFetch(`surveys/verify?t=${u}`, {
-    method: "GET",
-  });
+// export const surveyPostValidate = (u) =>
+//   apiFetch(`surveys/verify?t=${u}`, {
+//     method: "GET",
+//   });
+
+export const surveyPostValidate = (path) =>
+  fetch(`${url}/surveys/verify?t=${path}`).then((res) => res.json());
 
 export const authPasswordForgot = (email) =>
   apiFetch("auth/password/forgot", {
