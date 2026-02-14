@@ -56,6 +56,7 @@ export default function ExpoRegisterForm() {
   const [surveys, setSurveys] = useState({
     pre: { visitor: null, exhibitor: null },
   });
+  const [endedEvent, setEndedEvent] = useState(false);
 
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
@@ -78,6 +79,12 @@ export default function ExpoRegisterForm() {
 
   const fetchEventDetail = async () => {
     const res = await getDataNoToken(`events/${id}`);
+
+    if (res?.data?.eventStatus === "FINISHED") {
+      setEndedEvent(true);
+      router.push(`/event/${id}`); 
+      return; 
+    }
     let preRes = null;
 
     if (res?.statusCode === 200) setEventDetail(res?.data);

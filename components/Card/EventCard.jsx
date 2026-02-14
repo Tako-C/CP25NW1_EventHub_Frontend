@@ -6,7 +6,7 @@ import { EventCardImage } from "@/utils/getImage";
 export default function EventCard({ event }) {
   const router = useRouter();
 
-  const isEventPast = event.status === "FINISHED";
+  const isEventPast = event.eventStatus === "FINISHED";
 
   return (
     <div 
