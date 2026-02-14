@@ -131,13 +131,13 @@ export default function PostSurveyForm() {
 
     const resSurvey = await sendSurveyAnswer(formData?.surveyAnswers, id);
     if (resSurvey.statusCode === 200) {
-      // setIsSuccess(true);
       setNotification({
         isVisible: true,
         isError: false,
         message: resSurvey?.message,
       });
-      router.push("/home");
+      setIsSuccess(true);
+      // router.push("/home");
     } else {
       setNotification({
         isVisible: true,
