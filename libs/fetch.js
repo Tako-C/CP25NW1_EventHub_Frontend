@@ -162,7 +162,7 @@ export const getImage = async (path) => {
   }
 
   const result = await apiFetch(path, { method: "GET" }, true);
-  
+
   imageCache.set(path, result);
   return result;
 };
@@ -193,15 +193,20 @@ export const updateSurvey = (id, events, questions) =>
 
 export const deleteSurvey = (eventId, surveyId) =>
   apiFetch(`events/${eventId}/surveys/${surveyId}`, {
-    method: 'DELETE',
+    method: "DELETE",
   });
 
 export const sendSurveyAnswer = (answers, id) =>
   apiFetch(`events/${id}/surveys/answers`, {
     method: "POST",
     body: JSON.stringify({
-      answers
+      answers,
     }),
+  });
+
+export const surveyPostValidate = (u) =>
+  apiFetch(`surveys/verify?t=${u}`, {
+    method: "GET",
   });
 
 export const authPasswordForgot = (email) =>

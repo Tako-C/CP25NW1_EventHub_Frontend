@@ -8,8 +8,8 @@ import {
   Star,
   MessageSquare,
 } from "lucide-react";
-import { getData, getDataNoToken, sendSurveyAnswer } from "@/libs/fetch";
-import { useParams, useRouter } from "next/navigation";
+import { getData, getDataNoToken, sendSurveyAnswer, surveyPostValidate } from "@/libs/fetch";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FormatDate } from "@/utils/format";
 import Cookie from "js-cookie";
 import Notification from "@/components/Notification/Notification";
@@ -25,6 +25,8 @@ const RATING_OPTIONS = [
 export default function PostSurveyForm() {
   const token = Cookie.get("token");
   const { id } = useParams();
+  const searchParams = useSearchParams();
+  const u = searchParams.get('u');
 
   const [formData, setFormData] = useState({
     surveyAnswers: [],
@@ -75,8 +77,19 @@ export default function PostSurveyForm() {
       Cookie.set("surveyPost", `/event/${id}/survey/post`);
       return router.push("/login");
     }
+    if(u) {
+      validate(u)
+    }
     fetchPostSurvey();
   }, [id]);
+
+  const validate = async (u) => {
+    const res = await surveyPostValidate(u)
+    console.log(res)
+    if(res?.statusCode !== 200) {
+      return router.push("/home");
+    }
+  }
 
   const handleSurveyChange = (questionId, value, type) => {
     setFormData((prev) => {
