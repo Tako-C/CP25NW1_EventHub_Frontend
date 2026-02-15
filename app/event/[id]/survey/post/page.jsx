@@ -212,7 +212,7 @@ export default function PostSurveyForm() {
         onClose={closeNotification}
       />
 
-      {true ? (
+      {isSuccess ? (
         <SuccessPage detail={eventDetail} />
       ) : (
         <div className="relative max-w-4xl mx-auto px-4 py-8 md:py-12">
