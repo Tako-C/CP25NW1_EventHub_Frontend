@@ -66,6 +66,7 @@ export default function EditSurveyPage() {
             if (q.questionType === "MULTIPLE") localType = "checkbox";
 
             return {
+              id: q.id,
               questionType: localType,
               question: q.question,
               choices: q.choices || [],
@@ -184,14 +185,15 @@ export default function EditSurveyPage() {
         apiType = "MULTIPLE";
 
       const questionObj = {
+        id: q.id,
         question: q.question,
         questionType: apiType,
         choices: q.choices || [],
       };
 
-      if (q.id) {
-        questionObj.id = q.id;
-      }
+      // if (q.id) {
+      //   questionObj.id = q.id;
+      // }
 
       return questionObj;
     });

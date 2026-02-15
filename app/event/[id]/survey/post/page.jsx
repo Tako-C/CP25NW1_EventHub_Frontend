@@ -86,8 +86,9 @@ export default function PostSurveyForm() {
   const fetchPostSurvey = async () => {
     let currentEvent;
 
-    if (u) {
-      const res = await surveyPostValidate(u);
+    if (token) {
+      console.log("Searching for eventId:", id);
+      const res = await getData("users/me/registered-events");
 
       if (res?.statusCode === 403) {
         return router.push("/error");
@@ -106,7 +107,35 @@ export default function PostSurveyForm() {
         return;
       }
 
-      currentEvent = res?.data;
+      console.log("res?.data:", res?.data);
+      currentEvent = res?.data?.find(
+        (item) => String(item.eventId) === String(id),
+      );
+
+      console.log("Found currentEvent:", currentEvent);
+    } else {
+      if (u) {
+        const res = await surveyPostValidate(u);
+
+        if (res?.statusCode === 403) {
+          return router.push("/error");
+        }
+
+        if (res?.statusCode && res.statusCode !== 200) {
+          setNotification({
+            isVisible: true,
+            isError: true,
+            message: res?.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์",
+          });
+
+          setTimeout(() => {
+            router.push("/home");
+          }, 3000);
+          return;
+        }
+
+        currentEvent = res?.data;
+      }
     }
 
     const eventRes = await getDataNoToken(`events/${id}`);
@@ -122,7 +151,18 @@ export default function PostSurveyForm() {
     setEventDetail(eventRes?.data);
     const hasPostSurvey = eventRes.data?.hasPostSurvey;
 
-    if (!currentEvent || !hasPostSurvey) return;
+    if (!currentEvent || !hasPostSurvey) {
+      setNotification({
+        isVisible: true,
+        isError: true,
+        message: "ไม่พบ survey",
+      });
+
+      setTimeout(() => {
+        router.push("/home");
+      }, 3000);
+      return;
+    }
 
     const surveyRes = await getDataNoToken(`events/${id}/surveys/post`);
     if (surveyRes?.statusCode !== 200) return;
@@ -185,20 +225,22 @@ export default function PostSurveyForm() {
       return;
     }
 
-    const resSurvey = await sendSurveyAnswer(formData?.surveyAnswers, id);
-    if (resSurvey.statusCode === 200) {
-      setNotification({
-        isVisible: true,
-        isError: false,
-        message: resSurvey?.message,
-      });
-      setIsSuccess(true);
-      // router.push("/home");
-    } else {
+    try {
+      const resSurvey = await sendSurveyAnswer(formData?.surveyAnswers, id);
+      if (resSurvey.statusCode === 200) {
+        setNotification({
+          isVisible: true,
+          isError: false,
+          message: resSurvey?.message,
+        });
+        setIsSuccess(true);
+        // router.push("/home");
+      }
+    } catch (error) {
       setNotification({
         isVisible: true,
         isError: true,
-        message: resSurvey?.message || "เกิดข้อผิดพลาดในการส่งข้อมูล",
+        message: error?.message || "เกิดข้อผิดพลาดในการส่งข้อมูล",
       });
     }
   };

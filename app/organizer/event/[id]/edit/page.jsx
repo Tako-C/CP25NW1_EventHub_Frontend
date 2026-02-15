@@ -11,6 +11,7 @@ import {
   deleteEvent,
   deleteEventImage,
   getUpdateImage,
+  getData
 } from "@/libs/fetch";
 import utc from "dayjs/plugin/utc";
 
@@ -23,6 +24,7 @@ export default function EditEventPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [initialData, setInitialData] = useState(null);
+  const [country, setCountry] = useState([])
 
   const [notification, setNotification] = useState({
     isVisible: false,
@@ -44,6 +46,13 @@ export default function EditEventPage() {
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
+
+    const fetchData = async () => {
+      const res = await getData('users/countrys');
+      const resCity = await getData(`users/country/${res?.data[0].id}/citys`)
+      console.log(resCity)
+      setCountry(resCity?.data || [])
+    }
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -153,7 +162,7 @@ export default function EditEventPage() {
         setFetching(false);
       }
     };
-
+    fetchData()
     fetchEventData();
   }, [id]);
 
@@ -307,6 +316,7 @@ export default function EditEventPage() {
         onFinish={handleUpdate}
         onDelete={handleDelete}
         onFileRemove={handleImageRemove}
+        locationOptions={country}
         isLoading={loading}
         isEditMode={true}
         onValidationFailed={() =>
