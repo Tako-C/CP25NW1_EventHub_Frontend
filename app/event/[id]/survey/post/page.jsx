@@ -18,6 +18,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FormatDate } from "@/utils/format";
 import Cookie from "js-cookie";
 import Notification from "@/components/Notification/Notification";
+import SuccessPage from "@/components/Notification/SuccessSurvey";
 
 const RATING_OPTIONS = [
   { value: 1, label: "ควรปรับปรุง", emoji: "😞" },
@@ -211,7 +212,7 @@ export default function PostSurveyForm() {
         onClose={closeNotification}
       />
 
-      {isSuccess ? (
+      {true ? (
         <SuccessPage detail={eventDetail} />
       ) : (
         <div className="relative max-w-4xl mx-auto px-4 py-8 md:py-12">

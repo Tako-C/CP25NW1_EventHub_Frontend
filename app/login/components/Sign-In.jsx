@@ -114,15 +114,15 @@ export default function SignInPage({
   const handleSignUp = () => {
     router.push("/sign-up");
   };
-  useEffect(() => {
-    if (Cookie.get("surveyPost")) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: "กรุณาล็อคอินเข้าสู่ระบบ ก่อนทำแบบฟอร์ม",
-      });
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (Cookie.get("surveyPost")) {
+  //     setNotification({
+  //       isVisible: true,
+  //       isError: true,
+  //       message: "กรุณาล็อคอินเข้าสู่ระบบ ก่อนทำแบบฟอร์ม",
+  //     });
+  //   }
+  // }, []);
 
   if (!isOpen) return null;
   return (
