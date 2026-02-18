@@ -9,14 +9,16 @@ const getCookie = (name) => {
 const apiFetch = async (endpoint, options = {}, isBlob = false) => {
   const token = getCookie("token");
 
+  const finalToken = token || getCookie("accessToken");
+
   const isFormData = options.body instanceof FormData;
 
   const defaultHeaders = {
     ...(isFormData ? {} : { "Content-Type": "application/json" }),
-    ...(token && { Authorization: `Bearer ${token}` }),
+    ...(finalToken && { Authorization: `Bearer ${finalToken}` }),
     ...options.headers,
   };
-
+  
   const response = await fetch(`${url}/${endpoint}`, {
     ...options,
     headers: defaultHeaders,

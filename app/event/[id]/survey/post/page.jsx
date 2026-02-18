@@ -135,6 +135,7 @@ export default function PostSurveyForm() {
         }
 
         currentEvent = res?.data;
+        Cookie.set("accessToken", res?.data?.accessToken);
       }
     }
 
@@ -234,6 +235,7 @@ export default function PostSurveyForm() {
           message: resSurvey?.message,
         });
         setIsSuccess(true);
+        if(u) Cookie.remove("accessToken")
         // router.push("/home");
       }
     } catch (error) {
@@ -242,6 +244,7 @@ export default function PostSurveyForm() {
         isError: true,
         message: error?.message || "เกิดข้อผิดพลาดในการส่งข้อมูล",
       });
+      if(u) Cookie.remove("accessToken")
     }
   };
 
