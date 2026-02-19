@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
@@ -15,6 +15,9 @@ import {
   ScanLine,
   LayoutDashboard,
   Shield,
+  Bell,
+  MessageSquare,
+  X,
 } from "lucide-react";
 import Cookie from "js-cookie";
 import { getData } from "@/libs/fetch";
@@ -39,6 +42,8 @@ export default function Navbar({ token }) {
   // เพิ่ม state สำหรับจัดการ dropdown ในมือถือ
   const [mobileActiveDropdown, setMobileActiveDropdown] = useState(null);
 
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const notifDropdownRef = useRef(null);
   const [user, setUser] = useState();
   const [data, setData] = useState();
   const [activeRole, setActiveRole] = useState("default");
@@ -46,6 +51,15 @@ export default function Navbar({ token }) {
   const profileDropdownRef = useRef(null);
   const staffDropdownRef = useRef(null);
   const organizerDropdownRef = useRef(null);
+
+  // Events ที่ยังไม่ได้ทำ post survey
+  const pendingSurveyEvents = useMemo(() => {
+    if (!data?.event || !Array.isArray(data.event)) return [];
+    return data.event.filter(
+      (event) =>
+        event.hasPostSurvey && !event.postSurveyCompleted && event.isEnded,
+    );
+  }, [data]);
 
   // const MOCK_TODAY = new Date("2025-12-10T10:00:00");
 
@@ -111,6 +125,7 @@ export default function Navbar({ token }) {
           if (res?.data) {
             setUser(res.data);
             const resEventRegis = await getData("users/me/registered-events");
+            console.log(resEventRegis?.data);
             setData({ user: res.data, event: resEventRegis?.data });
           }
         } catch (err) {
@@ -131,7 +146,7 @@ export default function Navbar({ token }) {
     window.addEventListener("user-logged-in", handleLoginSuccess);
     return () =>
       window.removeEventListener("user-logged-in", handleLoginSuccess);
-  }, []); 
+  }, []);
 
   useEffect(() => {
     if (user && data) {
@@ -142,6 +157,20 @@ export default function Navbar({ token }) {
       setActiveRole("default");
     }
   }, [user, data]);
+
+  // Close notification dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        notifDropdownRef.current &&
+        !notifDropdownRef.current.contains(e.target)
+      ) {
+        setIsNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleProfileClick = () => {
     setIsProfileOpen(false);
@@ -349,6 +378,111 @@ export default function Navbar({ token }) {
             );
           })}
 
+          {user && (
+            <div className="relative" ref={notifDropdownRef}>
+              <button
+                onClick={() => {
+                  setIsNotifOpen(!isNotifOpen);
+                  setIsProfileOpen(false);
+                }}
+                className="relative flex items-center justify-center w-9 h-9 rounded-full text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-200"
+                aria-label="Notifications"
+              >
+                <Bell size={20} />
+                {pendingSurveyEvents.length > 0 && (
+                  <span className="absolute top-0.5 right-0.5 flex items-center justify-center min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full px-1 leading-none shadow-sm animate-pulse">
+                    {pendingSurveyEvents.length}
+                  </span>
+                )}
+              </button>
+
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-indigo-50">
+                    <div className="flex items-center gap-2">
+                      <Bell size={16} className="text-purple-600" />
+                      <span className="font-semibold text-gray-800 text-sm">
+                        Notifications
+                      </span>
+                      {pendingSurveyEvents.length > 0 && (
+                        <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          {pendingSurveyEvents.length}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setIsNotifOpen(false)}
+                      className="text-gray-400 hover:text-gray-600 transition"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  <div className="max-h-72 overflow-y-auto">
+                    {pendingSurveyEvents.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8 text-center px-4">
+                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+                          <Bell size={18} className="text-gray-400" />
+                        </div>
+                        <p className="text-sm text-gray-500 font-medium">
+                          All caught up!
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          No pending surveys
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="py-1">
+                        {pendingSurveyEvents.map((event, i) => (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              setIsNotifOpen(false);
+                              router.push(
+                                `/event/${event.eventId}/survey/post`,
+                              );
+                            }}
+                            className="w-full flex items-start gap-3 px-4 py-3 hover:bg-purple-50 transition text-left group"
+                          >
+                            <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mt-0.5 group-hover:bg-purple-200 transition-colors">
+                              <MessageSquare
+                                size={14}
+                                className="text-purple-600"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-800 truncate">
+                                {event.eventName}
+                              </p>
+                              <p className="text-xs text-purple-600 mt-0.5 font-medium">
+                                📋 Post-event survey awaiting
+                              </p>
+                            </div>
+                            <div className="flex-shrink-0 w-2 h-2 bg-red-400 rounded-full mt-2"></div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {pendingSurveyEvents.length > 0 && (
+                    <div className="px-4 py-3 border-t border-gray-100 bg-gray-50">
+                      <p className="text-xs text-gray-500 text-center">
+                        You have{" "}
+                        <span className="font-bold text-purple-600">
+                          {pendingSurveyEvents.length}
+                        </span>{" "}
+                        pending survey
+                        {pendingSurveyEvents.length > 1 ? "s" : ""} — share your
+                        feedback!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {!user ? (
             <button
               onClick={() => handleNavigation("/login")}
@@ -439,6 +573,35 @@ export default function Navbar({ token }) {
               className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500"
             /> */}
           </div>
+
+          {user && pendingSurveyEvents.length > 0 && (
+            <div className="p-3 bg-purple-50 rounded-xl border border-purple-100">
+              <div className="flex items-center gap-2 mb-2">
+                <Bell size={14} className="text-purple-600" />
+                <span className="text-xs font-bold text-purple-700 uppercase tracking-wide">
+                  Pending Surveys ({pendingSurveyEvents.length})
+                </span>
+              </div>
+              {pendingSurveyEvents.map((event, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    router.push(`/event/${event.eventId}/survey/post`);
+                  }}
+                  className="w-full flex items-center gap-2 py-2 px-3 rounded-lg bg-white border border-purple-100 hover:bg-purple-100 transition text-left mb-1 last:mb-0"
+                >
+                  <MessageSquare
+                    size={13}
+                    className="text-purple-500 flex-shrink-0"
+                  />
+                  <span className="text-sm text-gray-700 truncate font-medium">
+                    {event.eventName}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
 
           {menuItems.map((item) => {
             if (item.hasDropdown) {

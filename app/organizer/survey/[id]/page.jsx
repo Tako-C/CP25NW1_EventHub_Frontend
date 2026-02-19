@@ -16,7 +16,7 @@ import {
   Store,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { getDataNoToken, deleteSurvey } from "@/libs/fetch";
+import { getDataNoToken, deleteSurvey, patchSurvey } from "@/libs/fetch";
 import { EventCardImage } from "@/utils/getImage";
 import SurveyCard from "../components/SurveyCard";
 import Notification from "@/components/Notification/Notification";
@@ -66,28 +66,57 @@ export default function EventSurveysDetailPage() {
     if (id) fetchData();
   }, [id]);
 
-  const fetchData = async () => {
+  // const fetchData = async () => {
+  //   try {
+  //     const eventRes = await getDataNoToken(`/events/${id}`);
+  //     let preRes = null;
+  //     let postRes = null;
+
+  //     if (eventRes?.statusCode === 200) setEvent(eventRes.data);
+  //     if (eventRes?.data?.hasPreSurvey === true) {
+  //       preRes = await getDataNoToken(`/events/${id}/surveys/pre`);
+  //       console.log(preRes)
+  //     }
+  //     if (eventRes?.data?.hasPostSurvey === true) {
+  //       postRes = await getDataNoToken(`/events/${id}/surveys/post`);
+  //     }
+
+  //     setSurveys({
+  //       pre: {
+  //         visitor: preRes?.data?.visitor?.filter(s => s.status === 'ACTIVE') || null,
+  //         exhibitor: preRes?.data?.exhibitor?.filter(s => s.status === 'ACTIVE') || null,
+  //       },
+  //       post: {
+  //         visitor: postRes?.data?.visitor?.filter(s => s.status === 'ACTIVE') || null,
+  //         exhibitor: postRes?.data?.exhibitor?.filter(s => s.status === 'ACTIVE') || null,
+  //       },
+  //     });
+  //   } catch (error) {
+  //     showNotification(`${error}`, true);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+    const fetchData = async () => {
     try {
       const eventRes = await getDataNoToken(`/events/${id}`);
+      console.log(eventRes)
       let preRes = null;
       let postRes = null;
 
       if (eventRes?.statusCode === 200) setEvent(eventRes.data);
-      if (eventRes?.data?.hasPreSurvey === true) {
         preRes = await getDataNoToken(`/events/${id}/surveys/pre`);
-      }
-      if (eventRes?.data?.hasPostSurvey === true) {
         postRes = await getDataNoToken(`/events/${id}/surveys/post`);
-      }
 
       setSurveys({
         pre: {
-          visitor: preRes?.data?.visitor?.filter(s => s.status === 'ACTIVE') || null,
-          exhibitor: preRes?.data?.exhibitor?.filter(s => s.status === 'ACTIVE') || null,
+          visitor: preRes?.data?.visitor || null,
+          exhibitor: preRes?.data?.exhibitor || null,
         },
         post: {
-          visitor: postRes?.data?.visitor?.filter(s => s.status === 'ACTIVE') || null,
-          exhibitor: postRes?.data?.exhibitor?.filter(s => s.status === 'ACTIVE') || null,
+          visitor: postRes?.data?.visitor || null,
+          exhibitor: postRes?.data?.exhibitor || null,
         },
       });
     } catch (error) {
@@ -129,11 +158,26 @@ export default function EventSurveysDetailPage() {
     }
   };
 
-  <SurveyCard
-    survey={surveys.pre.visitor}
-    // ... props อื่นๆ
-    onDelete={(surveyId) => handleDelete(surveyId)}
-  />;
+  const isEventStarted = () => {
+    if (!event?.startDate) return false;
+    return new Date() >= new Date(event.startDate);
+  };
+
+  const handleToggleStatus = async (surveyId, currentStatus) => {
+    const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    try {
+      const res = await patchSurvey(id, surveyId);
+      if (res.statusCode === 200) {
+        showNotification(
+          `เปลี่ยนสถานะ Survey เป็น ${newStatus} สำเร็จ`,
+          false
+        );
+        fetchData();
+      }
+    } catch (error) {
+      showNotification(`${error}`, true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -224,6 +268,8 @@ export default function EventSurveysDetailPage() {
               }
               onView={(sId) => router.push(`/organizer/survey/results/${sId}`)}
               onDelete={(sId) => handleDelete(sId)}
+              onToggleStatus={(sId, status) => handleToggleStatus(sId, status)}
+              isEditDisabled={isEventStarted()}
             />
             {/* <SurveyCard
               survey={surveys.pre.exhibitor}
@@ -267,6 +313,8 @@ export default function EventSurveysDetailPage() {
               }
               onView={(sId) => router.push(`/organizer/survey/results/${sId}`)}
               onDelete={(sId) => handleDelete(sId)}
+              onToggleStatus={(sId, status) => handleToggleStatus(sId, status)}
+              isEditDisabled={isEventStarted()}
             />
             <SurveyCard
               survey={surveys.post.exhibitor?.[0]}
@@ -284,6 +332,8 @@ export default function EventSurveysDetailPage() {
               }
               onView={(sId) => router.push(`/organizer/survey/results/${sId}`)}
               onDelete={(sId) => handleDelete(sId)}
+              onToggleStatus={(sId, status) => handleToggleStatus(sId, status)}
+              isEditDisabled={isEventStarted()}
             />
           </div>
         </div>

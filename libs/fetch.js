@@ -18,7 +18,7 @@ const apiFetch = async (endpoint, options = {}, isBlob = false) => {
     ...(finalToken && { Authorization: `Bearer ${finalToken}` }),
     ...options.headers,
   };
-  
+
   const response = await fetch(`${url}/${endpoint}`, {
     ...options,
     headers: defaultHeaders,
@@ -204,6 +204,11 @@ export const sendSurveyAnswer = (answers, id) =>
     body: JSON.stringify({
       answers,
     }),
+  });
+
+export const patchSurvey = (eventId, surveyId) =>
+  apiFetch(`events/${eventId}/surveys/${surveyId}/status`, {
+    method: "PUT",
   });
 
 // export const surveyPostValidate = (u) =>

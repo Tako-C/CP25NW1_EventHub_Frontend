@@ -6,6 +6,8 @@ import {
   FileText,
   User,
   Store,
+  ToggleLeft,
+  ToggleRight,
 } from "lucide-react";
 
 function FormatDate(dateString) {
@@ -26,6 +28,8 @@ export default function SurveyCard({
   onEdit,
   onView,
   onDelete,
+  onToggleStatus,
+  isEditDisabled = false,
 }) {
   const typeColors = {
     pre: {
@@ -161,18 +165,38 @@ export default function SurveyCard({
       </div>
 
       <div className="flex gap-2 pt-3 border-t border-gray-200">
-        {/* <button
-          onClick={onView}
-          className="flex-1 bg-gray-900 text-white px-3 py-2 rounded-xl font-semibold hover:bg-gray-800 transition-all flex items-center justify-center gap-1.5 text-sm"
-        >
-          <Eye className="w-3.5 h-3.5" /> ผลลัพธ์
-        </button> */}
+        {/* Toggle Status */}
         <button
-          onClick={onEdit}
-          className="flex-1 border-2 border-gray-300 text-gray-700 px-3 py-2 rounded-xl font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 text-sm"
+          onClick={() => onToggleStatus(survey.id, survey.status)}
+          title={survey.status === "ACTIVE" ? "คลิกเพื่อปิดใช้งาน" : "คลิกเพื่อเปิดใช้งาน"}
+          className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border-2 font-semibold text-sm transition-all ${
+            survey.status === "ACTIVE"
+              ? "border-green-300 text-green-600 hover:bg-green-50"
+              : "border-gray-300 text-gray-500 hover:bg-gray-50"
+          }`}
+        >
+          {survey.status === "ACTIVE" ? (
+            <ToggleRight className="w-5 h-5" />
+          ) : (
+            <ToggleLeft className="w-5 h-5" />
+          )}
+        </button>
+
+        {/* Edit — disabled after event started */}
+        <button
+          onClick={!isEditDisabled ? onEdit : undefined}
+          disabled={isEditDisabled}
+          title={isEditDisabled ? "ไม่สามารถแก้ไขได้หลังจากงานเริ่มแล้ว" : "แก้ไข Survey"}
+          className={`flex-1 border-2 px-3 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 text-sm ${
+            isEditDisabled
+              ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+              : "border-gray-300 text-gray-700 hover:bg-gray-50 cursor-pointer"
+          }`}
         >
           <Edit3 className="w-3.5 h-3.5" /> แก้ไข
         </button>
+
+        {/* Delete */}
         <button
           onClick={() => onDelete(survey.id)}
           className="border-2 border-red-200 text-red-600 px-3 py-2 rounded-xl font-semibold hover:bg-red-50 transition-all"

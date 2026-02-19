@@ -12,6 +12,7 @@ import { EventCardImage, QrCodeImage } from "@/utils/getImage";
 import { useRouter } from "next/navigation";
 
 export default function MyEventPage({ events }) {
+  console.log(events)
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState("ALL");
 
@@ -138,7 +139,6 @@ export default function MyEventPage({ events }) {
                       )}
                     </div>
                   </div>
-
                   <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-5">
                     {isStaffOrOrganizer ? (
                       <button
@@ -152,7 +152,7 @@ export default function MyEventPage({ events }) {
                         <ClipboardCheck size={16} />
                         Manual Check-in
                       </button>
-                    ) : !event.postSurveyCompleted ? (
+                    ) : !event.postSurveyCompleted && event.hasPostSurvey ? (
                       <button
                         onClick={() =>
                           router.push(`/event/${event?.eventId}/survey/post`)
