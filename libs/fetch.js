@@ -211,13 +211,13 @@ export const patchSurvey = (eventId, surveyId) =>
     method: "PUT",
   });
 
-// export const surveyPostValidate = (u) =>
-//   apiFetch(`surveys/verify?t=${u}`, {
-//     method: "GET",
-//   });
+export const surveyPostValidate = () =>
+  apiFetch(`surveys/verify`, {
+    method: "GET",
+  });
 
-export const surveyPostValidate = (path) =>
-  fetch(`${url}/surveys/verify?t=${path}`).then((res) => res.json());
+// export const surveyPostValidate = (path) =>
+//   fetch(`${url}/surveys/verify?t=${path}`).then((res) => res.json());
 
 export const authPasswordForgot = (email) =>
   apiFetch("auth/password/forgot", {

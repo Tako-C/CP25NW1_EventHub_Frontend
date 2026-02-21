@@ -32,7 +32,7 @@ export default function PostSurveyForm() {
   const token = Cookie.get("token");
   const { id } = useParams();
   const searchParams = useSearchParams();
-  const u = searchParams.get("u");
+  const u = searchParams.get("t");
 
   const [formData, setFormData] = useState({
     surveyAnswers: [],
@@ -52,24 +52,86 @@ export default function PostSurveyForm() {
   };
 
   // const fetchPostSurvey = async () => {
-  //   let currentEvent
-  //   if (u) {
-  //     const res = await surveyPostValidate(u);
-  //     currentEvent = res?.data
-  //     console.log(currentEvent?.statusCode)
-  //     if(currentEvent?.statusCode === 403) {
-  //       return router.push("/error")
+  //   let currentEvent;
+
+  //   if (token) {
+  //     console.log("Searching for eventId:", id);
+  //     const res = await getData("users/me/registered-events");
+
+  //     if (res?.statusCode === 403) {
+  //       return router.push("/error");
+  //     }
+
+  //     if (res?.statusCode && res.statusCode !== 200) {
+  //       setNotification({
+  //         isVisible: true,
+  //         isError: true,
+  //         message: res?.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์",
+  //       });
+
+  //       setTimeout(() => {
+  //         router.push("/home");
+  //       }, 3000);
+  //       return;
+  //     }
+
+  //     console.log("res?.data:", res?.data);
+  //     currentEvent = res?.data?.find(
+  //       (item) => String(item.eventId) === String(id),
+  //     );
+
+  //     console.log("Found currentEvent:", currentEvent);
+  //   } else {
+  //     if (u) {
+  //       Cookie.set("accessToken", u);
+  //       const res = await surveyPostValidate();
+
+  //       if (res?.statusCode === 403) {
+  //         return router.push("/error");
+  //       }
+
+  //       if (res?.statusCode && res.statusCode !== 200) {
+  //         setNotification({
+  //           isVisible: true,
+  //           isError: true,
+  //           message: res?.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์",
+  //         });
+
+  //         setTimeout(() => {
+  //           router.push("/home");
+  //         }, 3000);
+  //         return;
+  //       }
+
+  //       currentEvent = res?.data;
   //     }
   //   }
-  //   const eventRes = await getDataNoToken(`events/${id}`);
 
-  //   if (eventRes?.statusCode !== 200) return;
+  //   const eventRes = await getDataNoToken(`events/${id}`);
+  //   if (eventRes?.statusCode !== 200) {
+  //     setNotification({
+  //       isVisible: true,
+  //       isError: true,
+  //       message: "ไม่พบข้อมูลกิจกรรม",
+  //     });
+  //     return;
+  //   }
 
   //   setEventDetail(eventRes?.data);
-
   //   const hasPostSurvey = eventRes.data?.hasPostSurvey;
 
-  //   if (!currentEvent || !hasPostSurvey) return;
+  //   if (!currentEvent || !hasPostSurvey) {
+  //     setNotification({
+  //       isVisible: true,
+  //       isError: true,
+  //       message: "ไม่พบ survey",
+  //     });
+
+  //     setTimeout(() => {
+  //       router.push("/home");
+  //     }, 3000);
+  //     return;
+  //   }
 
   //   const surveyRes = await getDataNoToken(`events/${id}/surveys/post`);
   //   if (surveyRes?.statusCode !== 200) return;
@@ -79,101 +141,74 @@ export default function PostSurveyForm() {
   //     EXHIBITOR: surveyRes.data?.exhibitor[0],
   //   };
 
-  //   console.log(roleDataMap)
   //   setSurveyData(roleDataMap[currentEvent.eventRole] || null);
   // };
 
   const fetchPostSurvey = async () => {
-    let currentEvent;
+    let currentEvent = null;
 
-    if (token) {
-      console.log("Searching for eventId:", id);
-      const res = await getData("users/me/registered-events");
+    const cleanupToken = () => {
+      Cookie.remove("accessToken");
+    };
 
-      if (res?.statusCode === 403) {
-        return router.push("/error");
+    try {
+      if (u) {
+        Cookie.set("accessToken", u);
+        try {
+          const res = await surveyPostValidate();
+
+          currentEvent = res?.data;
+          if (res?.data?.accessToken) {
+            Cookie.set("accessToken", res.data.accessToken);
+          }
+        } catch (error) {
+          cleanupToken();
+
+          if (error.status === 403) return router.push("/error");
+
+          setNotification({
+            isVisible: true,
+            isError: true,
+            message: error.message || "ลิงก์ไม่ถูกต้องหรือหมดอายุ",
+          });
+          setTimeout(() => {
+            router.push("/home");
+          }, 3000);
+          return;
+        }
+      } else if (token) {
+        const res = await getData("users/me/registered-events");
+        currentEvent = res?.data?.find(
+          (item) => String(item.eventId) === String(id),
+        );
       }
 
-      if (res?.statusCode && res.statusCode !== 200) {
+      const eventRes = await getDataNoToken(`events/${id}`);
+      setEventDetail(eventRes?.data);
+
+      if (!currentEvent || !eventRes.data?.hasPostSurvey) {
         setNotification({
           isVisible: true,
           isError: true,
-          message: res?.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์",
+          message: "คุณไม่มีสิทธิ์เข้าถึงแบบประเมินนี้ หรือไม่มีแบบประเมิน",
         });
-
         setTimeout(() => {
           router.push("/home");
         }, 3000);
         return;
       }
 
-      console.log("res?.data:", res?.data);
-      currentEvent = res?.data?.find(
-        (item) => String(item.eventId) === String(id),
-      );
+      const surveyRes = await getDataNoToken(`events/${id}/surveys/post`);
+      const roleDataMap = {
+        VISITOR: surveyRes.data?.visitor?.[0],
+        EXHIBITOR: surveyRes.data?.exhibitor?.[0],
+      };
 
-      console.log("Found currentEvent:", currentEvent);
-    } else {
-      if (u) {
-        const res = await surveyPostValidate(u);
-
-        if (res?.statusCode === 403) {
-          return router.push("/error");
-        }
-
-        if (res?.statusCode && res.statusCode !== 200) {
-          setNotification({
-            isVisible: true,
-            isError: true,
-            message: res?.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์",
-          });
-
-          setTimeout(() => {
-            router.push("/home");
-          }, 3000);
-          return;
-        }
-
-        currentEvent = res?.data;
-        Cookie.set("accessToken", res?.data?.accessToken);
-      }
+      setSurveyData(roleDataMap[currentEvent.eventRole] || null);
+    } catch (globalError) {
+      console.error("Fetch Survey Error:", globalError);
+      cleanupToken();
     }
-
-    const eventRes = await getDataNoToken(`events/${id}`);
-    if (eventRes?.statusCode !== 200) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: "ไม่พบข้อมูลกิจกรรม",
-      });
-      return;
-    }
-
-    setEventDetail(eventRes?.data);
-    const hasPostSurvey = eventRes.data?.hasPostSurvey;
-
-    if (!currentEvent || !hasPostSurvey) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: "ไม่พบ survey",
-      });
-
-      setTimeout(() => {
-        router.push("/home");
-      }, 3000);
-      return;
-    }
-
-    const surveyRes = await getDataNoToken(`events/${id}/surveys/post`);
-    if (surveyRes?.statusCode !== 200) return;
-
-    const roleDataMap = {
-      VISITOR: surveyRes.data?.visitor[0],
-      EXHIBITOR: surveyRes.data?.exhibitor[0],
-    };
-
-    setSurveyData(roleDataMap[currentEvent.eventRole] || null);
   };
 
   useEffect(() => {
@@ -235,7 +270,7 @@ export default function PostSurveyForm() {
           message: resSurvey?.message,
         });
         setIsSuccess(true);
-        if(u) Cookie.remove("accessToken")
+        if (u) Cookie.remove("accessToken");
         // router.push("/home");
       }
     } catch (error) {
@@ -244,7 +279,7 @@ export default function PostSurveyForm() {
         isError: true,
         message: error?.message || "เกิดข้อผิดพลาดในการส่งข้อมูล",
       });
-      if(u) Cookie.remove("accessToken")
+      if (u) Cookie.remove("accessToken");
     }
   };
 
