@@ -446,6 +446,7 @@ export default function CreateSurveyPage() {
               surveyTitle={surveyTitle}
               surveyDescription={surveyDescription}
               questions={questions}
+              surveyType={surveyType}
             />
           </div>
         )}

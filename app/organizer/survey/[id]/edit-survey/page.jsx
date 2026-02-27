@@ -57,7 +57,7 @@ export default function EditSurveyPage() {
           setSurveyTitle(surveyData[0]?.name);
           setSurveyDescription(surveyData[0]?.description);
           setSurveyPoint(surveyData[0]?.points.toString());
-          setSurveyType(surveyData[0]?.type);
+          setSurveyType(type);
           setSurveyId(surveyData[0]?.id);
 
           const mappedQuestions = surveyData[0].questions.map((q) => {
@@ -385,6 +385,7 @@ export default function EditSurveyPage() {
             surveyTitle={surveyTitle}
             surveyDescription={surveyDescription}
             questions={questions}
+            surveyType={surveyType}
           />
         )}
       </div>

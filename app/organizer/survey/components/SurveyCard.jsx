@@ -168,7 +168,11 @@ export default function SurveyCard({
         {/* Toggle Status */}
         <button
           onClick={() => onToggleStatus(survey.id, survey.status)}
-          title={survey.status === "ACTIVE" ? "คลิกเพื่อปิดใช้งาน" : "คลิกเพื่อเปิดใช้งาน"}
+          title={
+            survey.status === "ACTIVE"
+              ? "คลิกเพื่อปิดใช้งาน"
+              : "คลิกเพื่อเปิดใช้งาน"
+          }
           className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border-2 font-semibold text-sm transition-all ${
             survey.status === "ACTIVE"
               ? "border-green-300 text-green-600 hover:bg-green-50"
@@ -186,7 +190,11 @@ export default function SurveyCard({
         <button
           onClick={!isEditDisabled ? onEdit : undefined}
           disabled={isEditDisabled}
-          title={isEditDisabled ? "ไม่สามารถแก้ไขได้หลังจากงานเริ่มแล้ว" : "แก้ไข Survey"}
+          title={
+            isEditDisabled
+              ? "ไม่สามารถแก้ไขได้หลังจากงานเริ่มแล้ว"
+              : "แก้ไข Survey"
+          }
           className={`flex-1 border-2 px-3 py-2 rounded-xl font-semibold transition-all flex items-center justify-center gap-1.5 text-sm ${
             isEditDisabled
               ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"

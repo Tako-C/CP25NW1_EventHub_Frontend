@@ -9,7 +9,7 @@ const getCookie = (name) => {
 const apiFetch = async (endpoint, options = {}, isBlob = false) => {
   const token = getCookie("token");
 
-  const finalToken = token || getCookie("accessToken");
+  const finalToken = getCookie("accessToken") || token;
 
   const isFormData = options.body instanceof FormData;
 
