@@ -355,3 +355,49 @@ export function EventCardImage({ imageCard, eventName }) {
 
   return <img src={image} alt={eventName} className="w-full h-full object-cover" />;
 }
+export function RewardImage({ imagePath, rewardName }) {
+  console.log(imagePath)
+  const [image, setImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!imagePath) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchImage = async () => {
+      try {
+        const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+        const finalPath = cleanPath.startsWith('upload/events/') ? cleanPath : `upload/events/${cleanPath}`;
+        console.log(finalPath)
+        const res = await getImage(finalPath);
+        setImage(res);
+      } catch (error) {
+        setImage(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImage();
+  }, [imagePath]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+        <span className="text-gray-400 text-xs text-center px-2">{rewardName}</span>
+      </div>
+    );
+  }
+
+  if (!image) {
+    return (
+      <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400">
+        No Pic
+      </div>
+    );
+  }
+
+  return <img src={image} alt={rewardName} className="w-full h-full object-cover" />;
+}

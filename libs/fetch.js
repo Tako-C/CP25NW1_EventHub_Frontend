@@ -230,3 +230,27 @@ export const authPasswordReset = (email, otp, newPassword, confirmPassword) =>
     method: "POST",
     body: JSON.stringify({ email, otp, newPassword, confirmPassword }),
   });
+
+// export const getRewardsByOrganizer = (eventId) =>
+//   apiFetch(`events/${eventId}/rewards/organizer`, { method: "GET" });
+
+// export const getRewardById = (eventId, rewardId) =>
+//   apiFetch(`events/${eventId}/rewards/${rewardId}`, { method: "GET" });
+
+export const createReward = (eventId, formData) =>
+  apiFetch(`events/${eventId}/rewards`, {
+    method: "POST",
+    body: formData,
+  });
+
+export const updateReward = (eventId, rewardId, formData) =>
+  apiFetch(`events/${eventId}/rewards/${rewardId}`, {
+    method: "PUT",
+    body: formData,
+  });
+
+export const deleteReward = (eventId, rewardId) =>
+  apiFetch(`events/${eventId}/rewards/${rewardId}`, { method: "DELETE" });
+
+export const patchRewardStatus = (eventId, rewardId) =>
+  apiFetch(`events/${eventId}/rewards/${rewardId}/status`, { method: "PUT" });
