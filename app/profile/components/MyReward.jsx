@@ -176,12 +176,12 @@ export default function MyRewardPage({ rewards = [] }) {
                       <h3 className="text-base md:text-lg font-bold text-gray-900 line-clamp-1">
                         {reward.name}
                       </h3>
-                      <span
+                      {/* <span
                         className={`self-start flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${statusConfig.color}`}
                       >
                         <StatusIcon size={12} />
                         {statusConfig.label}
-                      </span>
+                      </span> */}
                     </div>
 
                     <p className="text-sm text-gray-500 line-clamp-2 mb-3">
