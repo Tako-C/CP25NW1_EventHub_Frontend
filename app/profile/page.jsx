@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronRight, User, Calendar } from 'lucide-react';
+import { ChevronRight, User, Calendar, Gift } from 'lucide-react';
 import ProfilePage from './components/MyProfile';
 import MyEventPage from './components/MyEvent';
+import MyRewardPage from './components/MyReward';
 import { getData } from '@/libs/fetch';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
 export default function Page() {
   const router = useRouter();
@@ -13,7 +16,7 @@ export default function Page() {
   const tab = searchParams.get('tab');
 
   const [activePage, setActivePage] = useState(
-    tab === 'events' ? 'events' : 'account'
+    tab === 'events' ? 'events' : tab === 'rewards' ? 'rewards' : 'account'
   );
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
@@ -28,6 +31,7 @@ export default function Page() {
   });
 
   const [events, setEvent] = useState([]);
+  const [rewards, setRewards] = useState([]);
 
   const fetchUserData = async () => {
     const res = await getData('users/me/profile');
@@ -78,10 +82,30 @@ const fetchEventData = async () => {
   useEffect(() => {
     fetchUserData();
     fetchEventData();
+    fetchRewardData();
     if (tab) {
       router.replace('/profile', { scroll: false });
     }
   }, []);
+
+  const fetchRewardData = async () => {
+    try {
+      const token = Cookies.get('token');
+      if (!token) return;
+
+      const decoded = jwtDecode(token);
+      const userId = decoded.id || decoded.userId || decoded.sub;
+      if (!userId) return;
+
+      const res = await getData(`events/rewards/${userId}`);
+      if (res?.statusCode === 200 && Array.isArray(res?.data)) {
+        console.log(res?.data)
+        setRewards(res.data);
+      }
+    } catch (error) {
+      console.error('Error fetching rewards:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 mt-16 md:mt-20">
@@ -122,6 +146,23 @@ const fetchEventData = async () => {
                 </div>
                 <ChevronRight size={24} className="hidden lg:block" />
               </button>
+
+              <button
+                onClick={() => setActivePage('rewards')}
+                className={`w-full p-3 md:p-4 rounded-xl shadow-sm flex justify-center lg:justify-between items-center hover:shadow-md transition-all ${
+                  activePage === 'rewards'
+                    ? 'bg-purple-600 text-white lg:bg-gray-200 lg:text-gray-900'
+                    : 'bg-white text-gray-600'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Gift size={20} className="lg:hidden" />
+                  <span className="font-semibold text-sm md:text-lg">
+                    My Rewards
+                  </span>
+                </div>
+                <ChevronRight size={24} className="hidden lg:block" />
+              </button>
             </div>
           </div>
 
@@ -136,6 +177,8 @@ const fetchEventData = async () => {
             )}
 
             {activePage === 'events' && <MyEventPage events={events} />}
+
+            {activePage === 'rewards' && <MyRewardPage rewards={rewards} />}
           </div>
         </div>
       </div>

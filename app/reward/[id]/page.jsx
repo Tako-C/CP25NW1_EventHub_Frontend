@@ -1,0 +1,324 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Gift,
+  Tag,
+  Clock,
+  Calendar,
+  Package,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+import Notification from "@/components/Notification/Notification";
+import { getDataNoToken, getData, redeemReward } from "@/libs/fetch";
+import { RewardImage } from "@/utils/getImage";
+import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
+
+const REQUIREMENT_CONFIG = {
+  NONE: {
+    label: "ไม่มีเงื่อนไข",
+    description: "ทุกคนสามารถรับรางวัลนี้ได้ทันที ไม่มีข้อกำหนดเพิ่มเติม",
+    color: "bg-green-50 border-green-200 text-green-800",
+    iconColor: "text-green-500",
+    Icon: CheckCircle2,
+  },
+  PRE_SURVEY_DONE: {
+    label: "ต้องทำ Pre-Survey ก่อน",
+    description: "คุณต้องกรอกแบบสอบถามก่อนงาน (Pre-Survey) ให้ครบถ้วนเสียก่อน จึงจะสามารถรับรางวัลนี้ได้",
+    color: "bg-blue-50 border-blue-200 text-blue-800",
+    iconColor: "text-blue-500",
+    Icon: AlertCircle,
+  },
+  POST_SURVEY_DONE: {
+    label: "ต้องทำ Post-Survey ก่อน",
+    description: "คุณต้องกรอกแบบสอบถามหลังงาน (Post-Survey) ให้ครบถ้วนเสียก่อน จึงจะสามารถรับรางวัลนี้ได้",
+    color: "bg-purple-50 border-purple-200 text-purple-800",
+    iconColor: "text-purple-500",
+    Icon: AlertCircle,
+  },
+  CHECK_IN: {
+    label: "ต้อง Check-in ก่อน",
+    description: "คุณต้อง Check-in เข้างานก่อนเท่านั้น จึงจะสามารถรับรางวัลนี้ได้",
+    color: "bg-orange-50 border-orange-200 text-orange-800",
+    iconColor: "text-orange-500",
+    Icon: AlertCircle,
+  },
+};
+
+function FormatDateTime(dateStr) {
+  if (!dateStr) return "-";
+  return new Date(dateStr).toLocaleDateString("th-TH", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export default function RewardDetailPage() {
+  const router = useRouter();
+  const { id } = useParams();
+
+  const [reward, setReward] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [redeeming, setRedeeming] = useState(false);
+  const [redeemed, setRedeemed] = useState(false);
+  const [userId, setUserId] = useState(null);
+
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (msg, isError = false) => {
+    setNotification({ isVisible: true, isError, message: msg });
+    setTimeout(() => setNotification((prev) => ({ ...prev, isVisible: false })), 3000);
+  };
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      setLoading(true);
+      try {
+        const res = await getDataNoToken("events/rewards");
+        const all = res?.data || [];
+        const found = all.find((r) => r.id == id);
+        setReward(found || null);
+
+        const token = Cookies.get("token");
+        if (token) {
+          const decoded = jwtDecode(token);
+          const uid = decoded.id || decoded.userId || decoded.sub;
+          setUserId(uid);
+
+          if (uid) {
+            const userRewardsRes = await getData(`events/rewards/${uid}`);
+            const userRewards = userRewardsRes?.data || [];
+            const userReward = userRewards.find((r) => r.id == id);
+            if (userReward !== null || userReward !== undefined) {
+              setRedeemed(true);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching reward:", error);
+        setReward(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, [id]);
+
+  const handleRedeem = async () => {
+    if (!reward || redeemed) return;
+    setRedeeming(true);
+    try {
+      await redeemReward(reward.eventId, userId, reward.id);
+      setRedeemed(true);
+      showNotification("รับรางวัลสำเร็จ! 🎉", false);
+    } catch (error) {
+      showNotification(error.message || "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง", true);
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!reward) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
+        <XCircle className="w-16 h-16 text-gray-300" />
+        <p className="text-gray-500 text-lg font-medium">ไม่พบรางวัลนี้</p>
+        <button onClick={() => router.back()} className="text-sm text-blue-600 hover:underline">
+          กลับหน้าก่อน
+        </button>
+      </div>
+    );
+  }
+
+  const reqConfig = REQUIREMENT_CONFIG[reward.requirementType] || REQUIREMENT_CONFIG.NONE;
+  const { Icon } = reqConfig;
+  const endDate = new Date(reward.endRedeemAt);
+  const startDate = new Date(reward.startRedeemAt);
+  const now = new Date();
+  const isExpired = endDate < now;
+  const isNotStarted = startDate > now;
+  const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
+  const isOutOfStock = reward.quantity <= 0;
+  const canRedeem = !isExpired && !isNotStarted && !isOutOfStock && !redeemed;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Notification
+        isVisible={notification.isVisible}
+        onClose={() => setNotification((prev) => ({ ...prev, isVisible: false }))}
+        isError={notification.isError}
+        message={notification.message}
+      />
+
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-medium">กลับ</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-5">
+
+        <div className="w-full h-64 rounded-3xl overflow-hidden bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center shadow-sm">
+          <RewardImage imagePath={reward.imagePath} rewardName={reward.name} />
+        </div>
+
+        <div>
+          <p className="text-sm text-amber-600 font-semibold mb-1 flex items-center gap-1.5">
+            <Calendar className="w-4 h-4" />
+            {reward.eventName}
+          </p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{reward.name}</h1>
+          <p className="text-gray-500 leading-relaxed text-sm">{reward.description}</p>
+        </div>
+
+        {redeemed ? (
+          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
+            <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-green-800">รับรางวัลแล้ว</p>
+              <p className="text-sm text-green-600">คุณรับรางวัลนี้เรียบร้อยแล้ว</p>
+            </div>
+          </div>
+        ) : isExpired ? (
+          <div className="flex items-center gap-3 bg-gray-100 border border-gray-200 rounded-2xl p-4">
+            <XCircle className="w-6 h-6 text-gray-400 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-gray-600">หมดเวลาแล้ว</p>
+              <p className="text-sm text-gray-400">ของรางวัลนี้ไม่สามารถรับได้อีก</p>
+            </div>
+          </div>
+        ) : isNotStarted ? (
+          <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+            <Clock className="w-6 h-6 text-yellow-500 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-yellow-800">ยังไม่เปิดรับ</p>
+              <p className="text-sm text-yellow-600">เปิดรับวันที่ {FormatDateTime(reward.startRedeemAt)}</p>
+            </div>
+          </div>
+        ) : isOutOfStock ? (
+          <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl p-4">
+            <Package className="w-6 h-6 text-red-400 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-red-700">ของหมดแล้ว</p>
+              <p className="text-sm text-red-500">รางวัลนี้ถูกรับไปครบแล้ว</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
+            <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-green-800">รับได้เลย!</p>
+              <p className="text-sm text-green-600">
+                {daysLeft <= 3
+                  ? `⚠️ เหลือเวลาอีก ${daysLeft} วันเท่านั้น`
+                  : `หมดเขต ${FormatDateTime(reward.endRedeemAt)}`}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className={`border rounded-2xl p-4 ${reqConfig.color}`}>
+          <div className="flex items-center gap-2 mb-2">
+            <Icon className={`w-5 h-5 flex-shrink-0 ${reqConfig.iconColor}`} />
+            <span className="font-semibold text-sm">เงื่อนไข: {reqConfig.label}</span>
+          </div>
+          <p className="text-sm opacity-75 leading-relaxed pl-7">{reqConfig.description}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-1.5 text-gray-400 mb-1.5">
+              <Package className="w-4 h-4" />
+              <span className="text-xs">จำนวนคงเหลือ</span>
+            </div>
+            <p className="text-xl font-bold text-gray-900">
+              {reward.quantity} <span className="text-sm font-normal text-gray-400">ชิ้น</span>
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-1.5 text-gray-400 mb-1.5">
+              <Tag className="w-4 h-4" />
+              <span className="text-xs">เงื่อนไข</span>
+            </div>
+            <p className="text-sm font-bold text-gray-900">{reqConfig.label}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-1.5 text-gray-400 mb-1.5">
+              <Calendar className="w-4 h-4" />
+              <span className="text-xs">เริ่มรับได้</span>
+            </div>
+            <p className="text-sm font-bold text-gray-900">
+              {startDate.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+            <div className="flex items-center gap-1.5 text-gray-400 mb-1.5">
+              <Clock className="w-4 h-4" />
+              <span className="text-xs">หมดเขต</span>
+            </div>
+            <p className="text-sm font-bold text-gray-900">
+              {endDate.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleRedeem}
+          disabled={!canRedeem || redeeming}
+          className={`w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-all duration-200
+            ${redeemed
+              ? "bg-green-100 text-green-700 cursor-default"
+              : canRedeem
+                ? "bg-gray-900 text-white hover:bg-gray-700 active:scale-95 shadow-lg"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
+            }`}
+        >
+          {redeeming ? (
+            <><Loader2 className="w-5 h-5 animate-spin" /> กำลังดำเนินการ...</>
+          ) : redeemed ? (
+            <><CheckCircle2 className="w-5 h-5" /> รับรางวัลแล้ว</>
+          ) : isExpired ? (
+            <><XCircle className="w-5 h-5" /> หมดเวลาแล้ว</>
+          ) : isOutOfStock ? (
+            <><Package className="w-5 h-5" /> ของหมดแล้ว</>
+          ) : isNotStarted ? (
+            <><Clock className="w-5 h-5" /> ยังไม่เปิดรับ</>
+          ) : (
+            <><Gift className="w-5 h-5" /> รับรางวัลนี้</>
+          )}
+        </button>
+
+      </div>
+    </div>
+  );
+}

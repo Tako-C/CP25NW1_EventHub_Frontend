@@ -254,3 +254,9 @@ export const deleteReward = (eventId, rewardId) =>
 
 export const patchRewardStatus = (eventId, rewardId) =>
   apiFetch(`events/${eventId}/rewards/${rewardId}/status`, { method: "PUT" });
+
+export const redeemReward = (eventId, userId, eventRewardId) =>
+  apiFetch(`events/${eventId}/rewards/redeem`, {
+    method: "POST",
+    body: JSON.stringify({ userId, eventRewardId }),
+  });

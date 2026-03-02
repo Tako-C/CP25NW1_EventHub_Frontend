@@ -251,6 +251,7 @@ export default function Navbar({ token }) {
     // { label: 'Dashboard', path: '/organizer/dashboard' },
     { label: "Events Manager", path: "/organizer/event" },
     { label: "Surveys Manager", path: "/organizer/survey" },
+    { label: "Rewards Manager", path: "/organizer/reward" },
   ];
 
   return (
