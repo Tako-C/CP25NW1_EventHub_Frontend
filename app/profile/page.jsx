@@ -28,6 +28,8 @@ export default function Page() {
     address: '',
     job: '',
     totalPoint: '',
+    gender: 'N', 
+    dateOfBirth: '', 
   });
 
   const [events, setEvent] = useState([]);
@@ -51,6 +53,8 @@ export default function Page() {
         address: userData?.address || '',
         job: userData?.job || '',
         totalPoint: userData?.totalPoint || '',
+        gender: userData?.gender || 'N',
+        dateOfBirth: userData?.dateOfBirth ? userData.dateOfBirth.split('T')[0] : '',
       });
     }
   };

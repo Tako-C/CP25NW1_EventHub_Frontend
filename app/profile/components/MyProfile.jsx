@@ -6,6 +6,8 @@ import {
   Phone,
   Flag,
   ChevronDown,
+  Calendar,
+  Users,
 } from "lucide-react";
 import { postUpdateProfile, getData } from "@/libs/fetch";
 import { useState, useEffect } from "react";
@@ -116,6 +118,25 @@ export default function ProfilePage({
     setIsEditing(false);
   };
 
+  const calculateAge = (dob) => {
+    if (!dob) return "-";
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  const genderOptions = [
+    { id: "M", label: "ชาย" },
+    { id: "F", label: "หญิง" },
+    { id: "U", label: "เพศที่สาม" },
+    { id: "N", label: "ไม่ระบุ" },
+  ];
+
   return (
     <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8">
       <Notification
@@ -167,8 +188,8 @@ export default function ProfilePage({
         </div>
 
         <div className="flex-1 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-x-8 md:gap-y-6">
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
               <InputField
                 label="First Name"
                 value={updateProfile.firstName}
@@ -185,10 +206,10 @@ export default function ProfilePage({
                 maxLength={20}
               />
             </div>
+
             <InputField
               label="Email Address"
               value={updateProfile.email}
-              onChange={(v) => handleChange("email", v)}
               isEditing={isEditing}
               type="email"
               icon={<Mail size={18} />}
@@ -204,6 +225,64 @@ export default function ProfilePage({
               maxLength={10}
             />
 
+            <div className="flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
+                Gender
+              </label>
+              {isEditing ? (
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10">
+                    <Users size={18} />
+                  </div>
+                  <select
+                    value={updateProfile.gender}
+                    onChange={(e) => handleChange("gender", e.target.value)}
+                    className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base appearance-none"
+                  >
+                    {genderOptions.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                    <ChevronDown size={18} />
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full pl-10 pr-4 py-2.5 bg-white border-b border-gray-100 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px] relative">
+                  <div className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400">
+                    <Users size={18} />
+                  </div>
+                  {genderOptions.find((g) => g.id === updateProfile.gender)
+                    ?.label || "ไม่ระบุ"}
+                </div>
+              )}
+            </div>
+
+            <InputField
+              label="Date of Birth"
+              value={updateProfile.dateOfBirth}
+              onChange={(v) => handleChange("dateOfBirth", v)}
+              isEditing={isEditing}
+              type="date"
+              icon={<Calendar size={18} />}
+            />
+
+            <div className="flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
+                Age (อายุ)
+              </label>
+              <div className="relative">
+                <div className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400">
+                  <Calendar size={18} />
+                </div>
+                <div className="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border-b border-gray-200 text-gray-800 font-semibold flex items-center text-sm md:text-base min-h-[44px]">
+                  {calculateAge(updateProfile.dateOfBirth)} ปี
+                </div>
+              </div>
+            </div>
+
             <SelectField
               label="Job"
               value={updateProfile?.job?.id}
@@ -215,6 +294,7 @@ export default function ProfilePage({
               isEditing={isEditing}
               icon={<Briefcase size={18} />}
             />
+
             <SelectField
               label="Country"
               value={updateProfile?.country?.id}
@@ -247,11 +327,12 @@ export default function ProfilePage({
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base"
                 />
               ) : (
-                <div className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-700 min-h-[50px] flex items-center border border-transparent text-sm md:text-base break-words">
+                <div className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-700 min-h-[50px] flex items-center border border-transparent text-sm md:text-base break-words shadow-sm">
                   {updateProfile.address || "-"}
                 </div>
               )}
             </div>
+
             <InputField
               label="Post Code"
               value={updateProfile.postCode}

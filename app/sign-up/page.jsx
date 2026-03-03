@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getData, authRegisterRequest } from "@/libs/fetch";
 import Cookie from "js-cookie";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Users, ChevronDown, Calendar } from "lucide-react";
 import Notification from "@/components/Notification/Notification";
 
 export default function Page() {
@@ -13,6 +13,8 @@ export default function Page() {
     firstName: "",
     lastName: "",
     email: "",
+    gender: "N",
+    dateOfBirth: "",
     password: "",
     confirmPassword: "",
   });
@@ -28,6 +30,13 @@ export default function Page() {
     isError: false,
     message: "",
   });
+
+  const genderOptions = [
+    { id: "M", label: "ชาย" },
+    { id: "F", label: "หญิง" },
+    { id: "U", label: "เพศที่สาม" },
+    { id: "N", label: "ไม่ระบุ" },
+  ];
 
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
@@ -70,6 +79,10 @@ export default function Page() {
         if (!value.includes("@") || !value.endsWith(".com"))
           return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
         return "";
+      case "gender":
+        return value ? "" : "* กรุณาเลือกเพศ";
+      case "dateOfBirth":
+        return value ? "" : "* กรุณากรอกวันเกิด";
       case "password":
         return value.trim() ? "" : "* กรุณากรอกรหัสผ่าน";
       case "confirmPassword":
@@ -85,12 +98,26 @@ export default function Page() {
     setFormData({ ...formData, [field]: value });
   };
 
+  // const validateForm = () => {
+  //   const newErrors = {};
+  //   Object.keys(formData).forEach((key) => {
+  //     const err = validateField(key, formData[key]);
+  //     if (err) newErrors[key] = err;
+  //   });
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
+
   const validateForm = () => {
     const newErrors = {};
-    Object.keys(formData).forEach((key) => {
-      const err = validateField(key, formData[key]);
-      if (err) newErrors[key] = err;
-    });
+    if (!formData.firstName) newErrors.firstName = "* กรุณากรอกชื่อจริง";
+    if (!formData.lastName) newErrors.lastName = "* กรุณากรอกนามสกุล";
+    if (!formData.email) newErrors.email = "* กรุณากรอกอีเมล";
+    if (!formData.dateOfBirth) newErrors.dateOfBirth = "* กรุณาเลือกวันเกิด";
+    if (!formData.password) newErrors.password = "* กรุณากรอกรหัสผ่าน";
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "* รหัสผ่านไม่ตรงกัน";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -135,7 +162,9 @@ export default function Page() {
         formData?.firstName,
         formData?.lastName,
         formData?.email,
-        formData?.password
+        formData?.password,
+        formData.gender,
+        formData.dateOfBirth,
       );
 
       const endTime = Date.now() + 60 * 1000;
@@ -244,6 +273,55 @@ export default function Page() {
               />
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2 ml-1 text-sm">
+                Gender
+              </label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Users size={18} />
+                </div>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => handleInputChange("gender", e.target.value)}
+                  className="w-full pl-11 pr-10 py-3 border border-gray-300 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 appearance-none text-gray-700"
+                >
+                  {genderOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                  <ChevronDown size={18} />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2 ml-1 text-sm">
+                Date of Birth
+              </label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                  <Calendar size={18} />
+                </div>
+                <input
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={(e) =>
+                    handleInputChange("dateOfBirth", e.target.value)
+                  }
+                  className={`w-full pl-11 pr-4 py-3 border ${errors.dateOfBirth ? "border-red-500" : "border-gray-300"} rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-gray-700`}
+                />
+              </div>
+              {errors.dateOfBirth && (
+                <p className="text-red-500 text-xs mt-1 ml-3">
+                  {errors.dateOfBirth}
+                </p>
               )}
             </div>
 
