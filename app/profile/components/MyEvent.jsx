@@ -12,7 +12,7 @@ import { EventCardImage, QrCodeImage } from "@/utils/getImage";
 import { useRouter } from "next/navigation";
 
 export default function MyEventPage({ events }) {
-  console.log(events)
+  console.log(events);
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState("ALL");
 
@@ -172,6 +172,26 @@ export default function MyEventPage({ events }) {
                       </div>
                     )}
                   </div>
+
+                  {/* Pre Survey */}
+                  {event.hasPreSurvey && !event.preSurveyCompleted  && (
+                    <button
+                      onClick={() =>
+                        router.push(
+                          `/event/${event?.eventId}/registration?mode=survey-only`,
+                        )
+                      }
+                      className="w-full sm:w-auto justify-center flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95"
+                    >
+                      <MessageSquare size={16} />
+                      Pre Survey
+                    </button>
+                  )}
+                  {event.hasPreSurvey && event.preSurveyCompleted && (
+                    <div className="w-full sm:w-auto justify-center flex items-center gap-2 text-blue-600 bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium border border-blue-100">
+                      <span className="text-lg">✓</span> Pre Survey Done
+                    </div>
+                  )}
                 </div>
 
                 <div className="md:hidden w-full h-px bg-gray-100 my-2"></div>

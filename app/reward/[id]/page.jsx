@@ -71,6 +71,7 @@ export default function RewardDetailPage() {
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [eligible, setEligible] = useState(null) 
 
   const [notification, setNotification] = useState({
     isVisible: false,
@@ -90,7 +91,10 @@ export default function RewardDetailPage() {
         const res = await getDataNoToken("events/rewards");
         const all = res?.data || [];
         const found = all.find((r) => r.id == id);
+        const resData = await getData(`events/${found?.eventId}/rewards/visitor`);
+        const foundEligible = resData?.data.find((r) => r.id == id) || [];
         setReward(found || null);
+        setEligible(foundEligible?.eligible)
 
         const token = Cookies.get("token");
         if (token) {
@@ -102,7 +106,7 @@ export default function RewardDetailPage() {
             const userRewardsRes = await getData(`events/rewards/${uid}`);
             const userRewards = userRewardsRes?.data || [];
             const userReward = userRewards.find((r) => r.id == id);
-            if (userReward !== null || userReward !== undefined) {
+            if (userReward !== null && userReward !== undefined) {
               setRedeemed(true);
             }
           }
@@ -160,7 +164,8 @@ export default function RewardDetailPage() {
   const isNotStarted = startDate > now;
   const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
   const isOutOfStock = reward.quantity <= 0;
-  const canRedeem = !isExpired && !isNotStarted && !isOutOfStock && !redeemed;
+  const isNotEligible = eligible === false; // eligible=null ยังโหลดอยู่ ไม่บล็อก
+  const canRedeem = !isExpired && !isNotStarted && !isOutOfStock && !redeemed && !isNotEligible;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -244,13 +249,7 @@ export default function RewardDetailPage() {
           </div>
         )}
 
-        <div className={`border rounded-2xl p-4 ${reqConfig.color}`}>
-          <div className="flex items-center gap-2 mb-2">
-            <Icon className={`w-5 h-5 flex-shrink-0 ${reqConfig.iconColor}`} />
-            <span className="font-semibold text-sm">เงื่อนไข: {reqConfig.label}</span>
-          </div>
-          <p className="text-sm opacity-75 leading-relaxed pl-7">{reqConfig.description}</p>
-        </div>
+
 
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
@@ -317,6 +316,41 @@ export default function RewardDetailPage() {
             <><Gift className="w-5 h-5" /> รับรางวัลนี้</>
           )}
         </button>
+
+        {eligible === false && reward.requirementType !== "NONE" && !redeemed && !isExpired && (
+          <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-2xl p-4">
+            <AlertCircle className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold text-purple-800 text-sm mb-1">
+                ยังไม่สามารถรับรางวัลได้
+              </p>
+              <p className="text-purple-700 text-sm opacity-80">
+                {reqConfig.description}
+              </p>
+              {reward.requirementType === "PRE_SURVEY_DONE" && (
+                <button
+                  onClick={() => router.push(`/event/${reward.eventId}/survey/pre`)}
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-full transition-colors"
+                >
+                  ไปทำ Pre-Survey →
+                </button>
+              )}
+              {reward.requirementType === "POST_SURVEY_DONE" && (
+                <button
+                  onClick={() => router.push(`/event/${reward.eventId}/survey/post`)}
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-full transition-colors"
+                >
+                  ไปทำ Post-Survey →
+                </button>
+              )}
+              {reward.requirementType === "CHECK_IN" && (
+                <p className="mt-2 text-xs text-purple-500">
+                  กรุณา Check-in ที่หน้างานก่อนรับรางวัล
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
