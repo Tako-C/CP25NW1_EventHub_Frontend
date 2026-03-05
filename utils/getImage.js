@@ -356,7 +356,6 @@ export function EventCardImage({ imageCard, eventName }) {
   return <img src={image} alt={eventName} className="w-full h-full object-cover" />;
 }
 export function RewardImage({ imagePath, rewardName }) {
-  console.log(imagePath)
   const [image, setImage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -370,7 +369,6 @@ export function RewardImage({ imagePath, rewardName }) {
       try {
         const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
         const finalPath = cleanPath.startsWith('upload/events/') ? cleanPath : `upload/events/${cleanPath}`;
-        console.log(finalPath)
         const res = await getImage(finalPath);
         setImage(res);
       } catch (error) {

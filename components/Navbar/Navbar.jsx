@@ -18,6 +18,7 @@ import {
   Bell,
   MessageSquare,
   X,
+  Gift,
 } from "lucide-react";
 import Cookie from "js-cookie";
 import { getData } from "@/libs/fetch";
@@ -31,6 +32,7 @@ export default function Navbar({ token }) {
     Organizer: <Briefcase size={18} />,
     Staff: <Users size={18} />,
     Dashboard: <LayoutDashboard size={18} />,
+    Reward: <Gift size={18} />,
   };
   const router = useRouter();
   const pathName = usePathname();
@@ -39,7 +41,6 @@ export default function Navbar({ token }) {
   const [isStaffOpen, setIsStaffOpen] = useState(false);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
 
-  // เพิ่ม state สำหรับจัดการ dropdown ในมือถือ
   const [mobileActiveDropdown, setMobileActiveDropdown] = useState(null);
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -53,12 +54,37 @@ export default function Navbar({ token }) {
   const organizerDropdownRef = useRef(null);
 
   // Events ที่ยังไม่ได้ทำ post survey
+  // const pendingSurveyEvents = useMemo(() => {
+  //   if (!data?.event || !Array.isArray(data.event)) return [];
+  //   return data.event.filter(
+  //     (event) =>
+  //       event.hasPostSurvey && !event.postSurveyCompleted && event.isEnded,
+  //   );
+  // }, [data]);
   const pendingSurveyEvents = useMemo(() => {
     if (!data?.event || !Array.isArray(data.event)) return [];
-    return data.event.filter(
-      (event) =>
-        event.hasPostSurvey && !event.postSurveyCompleted && event.isEnded,
-    );
+
+    const pendingList = [];
+
+    data.event.forEach((event) => {
+      if (event.hasPreSurvey && !event.preSurveyCompleted && !event.isEnded) {
+        pendingList.push({
+          ...event,
+          surveyType: "pre",
+          surveyLabel: "Pre-event survey awaiting",
+        });
+      }
+
+      if (event.hasPostSurvey && !event.postSurveyCompleted && event.isEnded) {
+        pendingList.push({
+          ...event,
+          surveyType: "post",
+          surveyLabel: "Post-event survey awaiting",
+        });
+      }
+    });
+
+    return pendingList;
   }, [data]);
 
   // const MOCK_TODAY = new Date("2025-12-10T10:00:00");
@@ -120,13 +146,58 @@ export default function Navbar({ token }) {
       const tokenFromCookie = Cookie.get("token");
 
       if (tokenFromCookie) {
+        // try {
+        //   const res = await getData("users/me/profile");
+        //   if (res?.data) {
+        //     setUser(res.data);
+        //     const resEventRegis = await getData("users/me/registered-events");
+        //     console.log(resEventRegis?.data);
+        //     setData({ user: res.data, event: resEventRegis?.data });
+        //   }
+        // } catch (err) {
+        //   Cookie.remove("token");
+        //   setUser(null);
+        //   router.push("/home");
+        // }
         try {
           const res = await getData("users/me/profile");
           if (res?.data) {
             setUser(res.data);
+
             const resEventRegis = await getData("users/me/registered-events");
-            console.log(resEventRegis?.data);
-            setData({ user: res.data, event: resEventRegis?.data });
+            console.log(resEventRegis);
+            let enrichedEvents = [];
+
+            if (resEventRegis?.data && Array.isArray(resEventRegis.data)) {
+              const detailedEventsPromises = resEventRegis.data.map(
+                async (registeredEvent) => {
+                  console.log(registeredEvent);
+                  try {
+                    const eventRes = await getData(
+                      `events/${registeredEvent.eventId}`,
+                    );
+                    console.log(eventRes);
+                    if (eventRes?.statusCode === 200) {
+                      return {
+                        ...registeredEvent,
+                        ...eventRes.data,
+                      };
+                    }
+                  } catch (err) {
+                    console.error(
+                      `Error fetching detail for event ${registeredEvent.eventId}:`,
+                      err,
+                    );
+                  }
+                  return registeredEvent;
+                },
+              );
+
+              enrichedEvents = await Promise.all(detailedEventsPromises);
+              console.log(enrichedEvents);
+            }
+
+            setData({ user: res.data, event: enrichedEvents });
           }
         } catch (err) {
           Cookie.remove("token");
@@ -235,7 +306,7 @@ export default function Navbar({ token }) {
         return [
           { label: "Home", path: "#home" },
           { label: "Events", path: "#events" },
-          // { label: "Reward", path: "/reward" },
+          { label: "Reward", path: "#rewards" },
         ];
     }
   };
@@ -439,9 +510,11 @@ export default function Navbar({ token }) {
                             key={i}
                             onClick={() => {
                               setIsNotifOpen(false);
-                              router.push(
-                                `/event/${event.eventId}/survey/post`,
-                              );
+                              const targetPath =
+                                event.surveyType === "pre"
+                                  ? `/event/${event.eventId}/registration?mode=survey-only`
+                                  : `/event/${event.eventId}/survey/post`;
+                              router.push(targetPath);
                             }}
                             className="w-full flex items-start gap-3 px-4 py-3 hover:bg-purple-50 transition text-left group"
                           >
@@ -456,7 +529,7 @@ export default function Navbar({ token }) {
                                 {event.eventName}
                               </p>
                               <p className="text-xs text-purple-600 mt-0.5 font-medium">
-                                📋 Post-event survey awaiting
+                                📋 {event.surveyLabel}
                               </p>
                             </div>
                             <div className="flex-shrink-0 w-2 h-2 bg-red-400 rounded-full mt-2"></div>
@@ -588,7 +661,11 @@ export default function Navbar({ token }) {
                   key={i}
                   onClick={() => {
                     setIsMenuOpen(false);
-                    router.push(`/event/${event.eventId}/survey/post`);
+                    const targetPath =
+                      event.surveyType === "pre"
+                        ? `/event/${event.eventId}/registration?mode=survey-only`
+                        : `/event/${event.eventId}/survey/post`;
+                    router.push(targetPath);
                   }}
                   className="w-full flex items-center gap-2 py-2 px-3 rounded-lg bg-white border border-purple-100 hover:bg-purple-100 transition text-left mb-1 last:mb-0"
                 >
@@ -598,6 +675,9 @@ export default function Navbar({ token }) {
                   />
                   <span className="text-sm text-gray-700 truncate font-medium">
                     {event.eventName}
+                  </span>
+                  <span className="text-[10px] text-purple-500 font-medium">
+                    {event.surveyLabel}
                   </span>
                 </button>
               ))}

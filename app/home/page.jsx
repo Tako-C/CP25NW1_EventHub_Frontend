@@ -374,7 +374,7 @@ const prevEvent = () => {
       </section>
 
       {/* Rewards Section */}
-      <section className="bg-gradient-to-b from-gray-50 to-white py-8 md:py-16 px-4 md:px-8">
+      <section id="rewards" className="bg-gradient-to-b from-gray-50 to-white py-8 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-full mb-4">
