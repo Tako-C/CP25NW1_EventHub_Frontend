@@ -260,3 +260,46 @@ export const redeemReward = (eventId, userId, eventRewardId) =>
     method: "POST",
     body: JSON.stringify({ userId, eventRewardId }),
   });
+
+export const createAccount = (userData) =>
+  apiFetch(`admin/users`, {
+    method: "POST",
+    body: JSON.stringify({
+      firstName: userData?.firstName,
+      lastName: userData?.lastName,
+      email: userData?.email,
+      password: userData?.password,
+      dateOfBirth: userData?.dateOfBirth || "2000-01-01",
+      gender: userData?.gender || "N",
+    }),
+  });
+
+export const deleteAccount = (userId) =>
+  apiFetch(`admin/users/${userId}`, {
+    method: "DELETE",
+  });
+
+export const updateStatusAccount = (userId, status) =>
+  apiFetch(`admin/users/${userId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      status
+    })
+  });
+
+export const postAddUserToEvent = (eventId, userId) =>
+  apiFetch(`admin/events/${eventId}/users`, {
+    method: "POST",
+    body: JSON.stringify({ userId: String(userId) }), 
+  });
+
+export const updateUserRoleInEvent = (eventId, userId, role) =>
+  apiFetch(`admin/events/${eventId}/users/${userId}/role`, {
+    method: "PUT",
+    body: JSON.stringify({ role }),
+  });
+
+export const removeUserFromEvent = (eventId, userId) =>
+  apiFetch(`admin/events/${eventId}/users/${userId}`, {
+    method: "DELETE",
+  });

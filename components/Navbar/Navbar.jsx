@@ -40,6 +40,7 @@ export default function Navbar({ token }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isStaffOpen, setIsStaffOpen] = useState(false);
   const [isOrganizerOpen, setIsOrganizerOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   const [mobileActiveDropdown, setMobileActiveDropdown] = useState(null);
 
@@ -52,6 +53,7 @@ export default function Navbar({ token }) {
   const profileDropdownRef = useRef(null);
   const staffDropdownRef = useRef(null);
   const organizerDropdownRef = useRef(null);
+  const adminDropdownRef = useRef(null);
 
   // Events ที่ยังไม่ได้ทำ post survey
   // const pendingSurveyEvents = useMemo(() => {
@@ -165,18 +167,15 @@ export default function Navbar({ token }) {
             setUser(res.data);
 
             const resEventRegis = await getData("users/me/registered-events");
-            console.log(resEventRegis);
             let enrichedEvents = [];
 
             if (resEventRegis?.data && Array.isArray(resEventRegis.data)) {
               const detailedEventsPromises = resEventRegis.data.map(
                 async (registeredEvent) => {
-                  console.log(registeredEvent);
                   try {
                     const eventRes = await getData(
                       `events/${registeredEvent.eventId}`,
                     );
-                    console.log(eventRes);
                     if (eventRes?.statusCode === 200) {
                       return {
                         ...registeredEvent,
@@ -192,9 +191,7 @@ export default function Navbar({ token }) {
                   return registeredEvent;
                 },
               );
-
               enrichedEvents = await Promise.all(detailedEventsPromises);
-              console.log(enrichedEvents);
             }
 
             setData({ user: res.data, event: enrichedEvents });
@@ -238,6 +235,13 @@ export default function Navbar({ token }) {
       ) {
         setIsNotifOpen(false);
       }
+
+      if (
+        adminDropdownRef.current &&
+        !adminDropdownRef.current.contains(e.target)
+      ) {
+        setIsAdminOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -259,6 +263,7 @@ export default function Navbar({ token }) {
     setIsMenuOpen(false);
     setIsStaffOpen(false);
     setIsOrganizerOpen(false);
+    setIsAdminOpen(false);
     setMobileActiveDropdown(null);
 
     if (path.startsWith("#")) {
@@ -286,8 +291,8 @@ export default function Navbar({ token }) {
       case "admin":
         return [
           { label: "Home", path: "#home" },
-          { label: "Events", path: "#events" },
-          { label: "Admin", path: "/admin" },
+          { label: "Events", path: "/organizer", hasDropdown: true },
+          { label: "Admin", path: "/admin", hasDropdown: true },
         ];
       case "organizer":
         return [
@@ -323,6 +328,11 @@ export default function Navbar({ token }) {
     { label: "Events Manager", path: "/organizer/event" },
     { label: "Surveys Manager", path: "/organizer/survey" },
     { label: "Rewards Manager", path: "/organizer/reward" },
+  ];
+
+  const adminOptions = [
+    { label: "Account Manager", path: "/admin/account" },
+    { label: "User Event Manager", path: "/admin/event-user" },
   ];
 
   return (
@@ -369,6 +379,7 @@ export default function Navbar({ token }) {
                     onClick={() => {
                       setIsStaffOpen(!isStaffOpen);
                       setIsOrganizerOpen(false);
+                      setIsAdminOpen(false);
                     }}
                     className="flex items-center gap-2 px-2 py-2 rounded-full text-gray-600 font-medium hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 group"
                   >
@@ -408,6 +419,7 @@ export default function Navbar({ token }) {
                     onClick={() => {
                       setIsOrganizerOpen(!isOrganizerOpen);
                       setIsStaffOpen(false);
+                      setIsAdminOpen(false);
                     }}
                     className="flex items-center gap-2 px-2 py-2 rounded-full text-gray-600 font-medium hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 group"
                   >
@@ -420,6 +432,45 @@ export default function Navbar({ token }) {
                   {isOrganizerOpen && (
                     <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-fade-in">
                       {organizerOptions.map((option) => (
+                        <button
+                          key={option.label}
+                          onClick={() => handleNavigation(option.path)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition text-left"
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-purple-300"></div>
+                          <span>{option.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            if (item.label === "Admin" && item.hasDropdown) {
+              return (
+                <div
+                  key={item.label}
+                  className="relative"
+                  ref={adminDropdownRef}
+                >
+                  <button
+                    onClick={() => {
+                      setIsAdminOpen(!isAdminOpen);
+                      setIsOrganizerOpen(false);
+                      setIsStaffOpen(false);
+                    }}
+                    className="flex items-center gap-2 px-2 py-2 rounded-full text-gray-600 font-medium hover:text-purple-600 hover:bg-purple-50 transition-all duration-200 group"
+                  >
+                    <span className="opacity-70 group-hover:opacity-100">
+                      {iconMap[item.label]}
+                    </span>
+                    <span>{item.label}</span>
+                  </button>
+
+                  {isAdminOpen && (
+                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden animate-fade-in">
+                      {adminOptions.map((option) => (
                         <button
                           key={option.label}
                           onClick={() => handleNavigation(option.path)}
@@ -692,7 +743,9 @@ export default function Navbar({ token }) {
                   ? staffOptions
                   : item.label === "Events"
                     ? organizerOptions
-                    : [];
+                    : item.label === "Admin"
+                      ? adminOptions
+                      : [];
 
               return (
                 <div key={item.label} className="flex flex-col">
