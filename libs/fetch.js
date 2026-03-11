@@ -303,3 +303,6 @@ export const removeUserFromEvent = (eventId, userId) =>
   apiFetch(`admin/events/${eventId}/users/${userId}`, {
     method: "DELETE",
   });
+
+export const hardDeleteEvent = (id) =>
+  apiFetch(`admin/events/${id}/hard-delete`, { method: "DELETE" });
