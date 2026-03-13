@@ -16,7 +16,8 @@ export default function SelectEventSurveyPage() {
     const fetchEvents = async () => {
       try {
         const res = await getData("admin/events");
-        setEvents(res?.data || []);
+        const formatData = res?.data.filter((item) => item.eventStatus !== "DELETED")
+        setEvents(formatData || []);
       } catch (err) {
         console.error("Fetch events failed");
       } finally {

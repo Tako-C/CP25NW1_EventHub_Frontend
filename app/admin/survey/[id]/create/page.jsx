@@ -1,36 +1,34 @@
 "use client";
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Save, Eye, Plus, Send, Edit3 } from "lucide-react";
 import { notification, Tabs } from "antd";
+import { createSurvey, getDataNoToken } from "@/libs/fetch";
 
-// นำเข้าคอมโพเนนต์ที่คุณมีอยู่แล้ว
 import QuestionEditor from "../../components/QuestionEditor";
 import SurveyPreview from "../../components/SurveyPreview";
 
 export default function CreateAdminSurveyPage() {
-  const { id } = useParams(); // eventId จาก path
+  const { id } = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  // รับค่าประเภทและกลุ่มเป้าหมายจาก URL
-  const surveyType = searchParams.get("type") || "pre"; 
+
+  const surveyType = searchParams.get("type") || "pre";
   const role = searchParams.get("role") || "visitor";
 
-  // --- MOCK INITIAL STATE สำหรับการสร้างใหม่ ---
   const [surveyData, setSurveyData] = useState({
     name: "",
     description: "",
     points: 0,
     questions: [
-      { question: "", questionType: "text", choices: [], required: true }
-    ]
+      { question: "", questionType: "TEXT", choices: [] },
+    ],
   });
 
   const [activeTab, setActiveTab] = useState("edit");
   const [loading, setLoading] = useState(false);
+  const [eventData, setEventData] = useState(null);
 
-  // ฟังก์ชันจัดการคำถาม (ใช้ใน QuestionEditor)
   const handleUpdateQuestion = (index, field, value) => {
     const newQuestions = [...surveyData.questions];
     newQuestions[index][field] = value;
@@ -41,9 +39,9 @@ export default function CreateAdminSurveyPage() {
     setSurveyData({
       ...surveyData,
       questions: [
-        ...surveyData.questions, 
-        { question: "", questionType: "text", choices: [], required: true }
-      ]
+        ...surveyData.questions,
+        { question: "", questionType: "TEXT", choices: [] },
+      ],
     });
   };
 
@@ -56,54 +54,105 @@ export default function CreateAdminSurveyPage() {
     setSurveyData({ ...surveyData, questions: newQuestions });
   };
 
-  // ฟังก์ชันจำลองการบันทึก (Mock Save)
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!surveyData.name) {
       notification.error({ message: "กรุณาระบุชื่อแบบสำรวจ" });
       return;
     }
-    setLoading(true);
-    
-    // จำลองการส่งข้อมูลไป Backend
+    // setLoading(true);
+
     console.log("Creating Survey for Event:", id);
     console.log("Type:", surveyType, "Role:", role);
     console.log("Data:", surveyData);
 
-    setTimeout(() => {
-      setLoading(false);
-      notification.success({ 
-        message: "สร้างแบบสำรวจสำเร็จ",
-        description: `แบบสำรวจสำหรับ ${role} ถูกเพิ่มเรียบร้อยแล้ว`
-      });
-      router.push(`/admin/survey/${id}`); // กลับไปหน้าตาราง
-    }, 1000);
+    const eventDetail = {
+      name: surveyData?.name || "",
+      description: surveyData?.description || "",
+      points: parseInt(surveyData?.points) || 0,
+      type: surveyTypeFunction() || "",
+    };
+
+    const res = await createSurvey(eventDetail, id, surveyData?.questions);
+    console.log(res?.data)
+
+    // setTimeout(() => {
+    //   setLoading(false);
+    //   notification.success({
+    //     message: "สร้างแบบสำรวจสำเร็จ",
+    //     description: `แบบสำรวจสำหรับ ${role} ถูกเพิ่มเรียบร้อยแล้ว`
+    //   });
+    //   router.push(`/admin/survey/${id}`);
+    // }, 1000);
   };
+
+    const surveyTypeFunction = () => {
+    if (surveyType === "pre" && role === "visitor") return "PRE_VISITOR";
+    if (surveyType === "pre" && role === "exhibitor") return "PRE_EXHIBITOR";
+    if (surveyType === "post" && role === "visitor") return "POST_VISITOR";
+    if (surveyType === "post" && role === "exhibitor") return "POST_EXHIBITOR";
+    return null;
+  };
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        setLoading(true);
+        const res = await getDataNoToken(`/events/${id}`);
+        console.log(res);
+        setEventData(res);
+      } catch (error) {
+        console.error("Failed to fetch event:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchEvent();
+  }, [id]);
 
   return (
     <div className="min-h-screen bg-white pt-24 pb-12 px-4">
       <div className="max-w-5xl mx-auto">
-        {/* Header Section */}
         <div className="flex justify-between items-center mb-10">
           <div>
-            <button onClick={() => router.back()} className="font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-1 mb-2">
+            <button
+              onClick={() => router.back()}
+              className="font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-1 mb-2"
+            >
               <ArrowLeft size={18} /> Cancel & Exit
             </button>
             <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">
               Create New {surveyType}-Survey ({role})
             </h1>
           </div>
-          
+
           <div className="flex gap-4 items-center">
-            <Tabs 
-              activeKey={activeTab} 
-              onChange={setActiveTab} 
+            <Tabs
+              activeKey={activeTab}
+              onChange={setActiveTab}
               items={[
-                { key: "edit", label: <span className="font-bold"><Edit3 size={16} className="inline mr-2"/>Editor</span> },
-                { key: "preview", label: <span className="font-bold"><Eye size={16} className="inline mr-2"/>Preview</span> }
-              ]} 
+                {
+                  key: "edit",
+                  label: (
+                    <span className="font-bold">
+                      <Edit3 size={16} className="inline mr-2" />
+                      Editor
+                    </span>
+                  ),
+                },
+                {
+                  key: "preview",
+                  label: (
+                    <span className="font-bold">
+                      <Eye size={16} className="inline mr-2" />
+                      Preview
+                    </span>
+                  ),
+                },
+              ]}
               className="mb-0"
             />
-            <button 
+            <button
               onClick={handleSave}
               disabled={loading}
               className="bg-indigo-600 text-white px-10 py-3 rounded-2xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2"
@@ -115,66 +164,82 @@ export default function CreateAdminSurveyPage() {
 
         {activeTab === "edit" ? (
           <div className="space-y-10 animate-in fade-in duration-500">
-            {/* General Settings Card */}
             <div className="bg-slate-50 rounded-[2.5rem] p-10 border-2 border-dashed border-slate-200">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-                 <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Survey Name</label>
-                   <input 
-                      className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all" 
-                      placeholder="เช่น แบบสำรวจความพึงพอใจ..."
-                      value={surveyData.name} 
-                      onChange={(e) => setSurveyData({ ...surveyData, name: e.target.value })} // แก้ไขปัญหาพิมพ์ไม่ได้
-                   />
-                 </div>
-                 <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Reward Points</label>
-                   <input 
-                      type="number" 
-                      className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all" 
-                      value={surveyData.points} 
-                      onChange={(e) => setSurveyData({ ...surveyData, points: e.target.value })}
-                   />
-                 </div>
-               </div>
-               <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
-                  <textarea 
-                      className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all min-h-[100px]" 
-                      placeholder="ระบุคำอธิบายสั้นๆ สำหรับผู้ทำแบบสำรวจ..."
-                      value={surveyData.description} 
-                      onChange={(e) => setSurveyData({ ...surveyData, description: e.target.value })}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    Survey Name
+                  </label>
+                  <input
+                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all"
+                    placeholder="เช่น แบบสำรวจความพึงพอใจ..."
+                    value={surveyData.name}
+                    onChange={(e) =>
+                      setSurveyData({ ...surveyData, name: e.target.value })
+                    }
                   />
-               </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                    Reward Points
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all"
+                    value={surveyData.points}
+                    onChange={(e) =>
+                      setSurveyData({ ...surveyData, points: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                  Description
+                </label>
+                <textarea
+                  className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all min-h-[100px]"
+                  placeholder="ระบุคำอธิบายสั้นๆ สำหรับผู้ทำแบบสำรวจ..."
+                  value={surveyData.description}
+                  onChange={(e) =>
+                    setSurveyData({
+                      ...surveyData,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </div>
             </div>
 
-            {/* Question Builder */}
             <div className="space-y-6">
-               <h3 className="text-xl font-black text-slate-800">Survey Questions ({surveyData.questions.length})</h3>
-               {surveyData.questions.map((q, idx) => (
-                 <QuestionEditor 
-                    key={idx} 
-                    index={idx} 
-                    questions={q} 
-                    onUpdate={handleUpdateQuestion} 
-                    onDelete={handleDeleteQuestion} 
-                 />
-               ))}
-               
-               <button 
-                  onClick={handleAddQuestion}
-                  className="w-full py-8 border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-bold hover:bg-slate-50 hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2"
-               >
-                 <Plus size={24} /> ADD NEW QUESTION
-               </button>
+              <h3 className="text-xl font-black text-slate-800">
+                Survey Questions ({surveyData.questions.length})
+              </h3>
+              {surveyData.questions.map((q, idx) => (
+                <QuestionEditor
+                  key={idx}
+                  index={idx}
+                  questions={q}
+                  onUpdate={handleUpdateQuestion}
+                  onDelete={handleDeleteQuestion}
+                />
+              ))}
+
+              <button
+                onClick={handleAddQuestion}
+                className="w-full py-8 border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-bold hover:bg-slate-50 hover:border-indigo-300 hover:text-indigo-500 transition-all flex items-center justify-center gap-2"
+              >
+                <Plus size={24} /> ADD NEW QUESTION
+              </button>
             </div>
           </div>
         ) : (
-          /* Preview Mode ดีไซน์ตามคอมโพเนนต์ SurveyPreview */
           <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-300">
-            <SurveyPreview 
+            <SurveyPreview
               surveyTitle={surveyData.name || "ชื่อแบบสำรวจ"}
-              surveyDescription={surveyData.description || "คำอธิบายจะปรากฏที่นี่..."}
+              surveyDescription={
+                surveyData.description || "คำอธิบายจะปรากฏที่นี่..."
+              }
               questions={surveyData.questions}
               surveyType={surveyType}
             />

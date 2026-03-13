@@ -9,9 +9,9 @@ import { GripVertical, ChevronDown, Trash2, Plus, Type, Circle, ListChecks, Mess
 // ];
 
 const questionTypes = [
-  { value: "text", label: "ข้อความสั้น", icon: Type },
-  { value: "multiple_choice", label: "เลือกตอบ (เลือกได้ 1)", icon: Circle },
-  { value: "checkbox", label: "เลือกตอบ (เลือกได้หลายข้อ)", icon: ListChecks },
+  { value: "TEXT", label: "ข้อความสั้น", icon: Type },
+  { value: "SINGLE", label: "เลือกตอบ (เลือกได้ 1)", icon: Circle },
+  { value: "MULTIPLE", label: "เลือกตอบ (เลือกได้หลายข้อ)", icon: ListChecks },
 ];
 
 
@@ -58,8 +58,8 @@ export default function QuestionEditor({ questions, index, onUpdate, onDelete })
             className="w-full text-lg font-medium mb-3 px-0 border-0 border-b-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors"
           />
 
-          {(questions?.questionType === "multiple_choice" ||
-            questions?.questionType === "checkbox") && (
+          {(questions?.questionType === "SINGLE" ||
+            questions?.questionType === "MULTIPLE") && (
             <div className="space-y-2 mb-3">
               {questions.choices?.map((option, optIndex) => (
                 <div key={optIndex} className="flex items-center gap-2">
