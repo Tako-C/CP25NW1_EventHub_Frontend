@@ -6,13 +6,12 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { notification as antNotification } from "antd";
 
-// เรียกใช้ฟังก์ชันจาก libs/fetch.js
 import {
-  createEvent,
-  getData
+  getData,
+  createEventAdmin
 } from "@/libs/fetch";
 
-import EventForm from "@/app/organizer/components/EventForm";
+import EventForm from "../components/EventForm";
 import Notification from "@/components/Notification/Notification";
 
 dayjs.extend(utc);
@@ -21,6 +20,7 @@ export default function CreateEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState([]);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   const [notification, setNotification] = useState({
     isVisible: false,
@@ -33,7 +33,6 @@ export default function CreateEventPage() {
     setTimeout(() => setNotification((prev) => ({ ...prev, isVisible: false })), 3000);
   };
 
-  // ดึงข้อมูลสถานที่สำหรับ Dropdown ใน Form
   const fetchLocationData = async () => {
     try {
       const res = await getData('users/countrys');
@@ -50,85 +49,105 @@ export default function CreateEventPage() {
     fetchLocationData();
   }, []);
 
-  // --- ฟังก์ชันหลัก: การสร้างอีเว้นท์ (Create Function) ---
-  const handleCreate = async (values) => {
-    setLoading(true);
-    try {
-      const formData = new FormData();
-
-      // 1. จัดการข้อมูล Text และค่าพื้นฐาน
-      formData.append("eventName", values.eventName);
-      formData.append("eventDesc", values.eventDescription || "");
-      formData.append("eventTypeId", values.eventType);
-      formData.append("hostOrganisation", values.hostOrganization || "");
-      formData.append("location", values.location);
-      formData.append("contactEmail", values.contactEmail || "");
-      formData.append("contactPhone", values.contactPhone || "");
-      formData.append("contactLine", values.contactLine || "");
-      formData.append("contactFacebook", values.contactFacebook || "");
-      
-      // กำหนดสถานะเริ่มต้นเป็น UPCOMING หากไม่ได้เลือก
-      formData.append("status", values.eventStatus || "UPCOMING");
-
-      // 2. จัดการข้อมูลวันที่ (แปลงเป็น UTC ก่อนส่ง)
-      if (values.startDate) {
-        formData.append("startDate", values.startDate.utc().format("YYYY-MM-DDTHH:mm:ss"));
-      }
-      if (values.endDate) {
-        formData.append("endDate", values.endDate.utc().format("YYYY-MM-DDTHH:mm:ss"));
-      }
-
-      // 3. จัดการไฟล์รูปภาพหลัก
-      if (values.eventCard?.[0]?.originFileObj) {
-        formData.append("eventCard", values.eventCard[0].originFileObj);
-      }
-      if (values.eventDetail?.[0]?.originFileObj) {
-        formData.append("eventDetail", values.eventDetail[0].originFileObj);
-      }
-      if (values.eventMap?.[0]?.originFileObj) {
-        formData.append("eventMap", values.eventMap[0].originFileObj);
-      }
-
-      // 4. จัดการ Slideshow และระบุลำดับ (Indices)
-      const indices = [];
-      if (values.slideshowSlot1?.[0]?.originFileObj) {
-        formData.append("eventSlideshow", values.slideshowSlot1[0].originFileObj);
-        indices.push(1);
-      }
-      if (values.slideshowSlot2?.[0]?.originFileObj) {
-        formData.append("eventSlideshow", values.slideshowSlot2[0].originFileObj);
-        indices.push(2);
-      }
-      if (values.slideshowSlot3?.[0]?.originFileObj) {
-        formData.append("eventSlideshow", values.slideshowSlot3[0].originFileObj);
-        indices.push(3);
-      }
-
-      // ส่งรายการลำดับของสไลด์ที่อัปโหลด
-      if (indices.length > 0) {
-        indices.forEach((idx) => formData.append("slideshowIndices", idx));
-      }
-
-      // ส่ง Request ไปยัง Backend
-      await createEvent(formData);
-      
-      antNotification.success({
-        message: "สร้างกิจกรรมสำเร็จ",
-        description: `กิจกรรม ${values.eventName} ถูกเพิ่มเข้าสู่ระบบแล้ว`,
-      });
-
-      // นำทางกลับไปยังหน้าจัดการหลัก
-      setTimeout(() => router.push("/admin/event"), 1500);
-    } catch (error) {
-      const errorMsg = error.data?.message || "เกิดข้อผิดพลาดในการสร้างกิจกรรม";
-      showNotification(errorMsg, true);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+  const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
   };
 
+  const parseJwt = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) { return null; }
+  };
+
+  const token = getCookie('token');
+  if (token) {
+    const decoded = parseJwt(token);
+    if (decoded) {
+      setCurrentUserId(decoded.id || decoded.userId); 
+    }
+  } else {
+    router.push('/login');
+  }
+}, [router]);
+
+const handleCreate = async (values) => {
+  if (!currentUserId) {
+    showNotification('User not identified', true);
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const formData = new FormData();
+
+    formData.append('eventName', values.eventName);
+    formData.append('eventDesc', values.eventDescription); 
+    formData.append('eventTypeId', values.eventType);
+    formData.append('location', values.location);
+    
+    formData.append('createdBy', currentUserId); 
+    
+    formData.append('hostOrganisation', values.hostOrganization || '');
+
+    const startDateStr = values.startDate
+      ? dayjs(values.startDate).utc().format('YYYY-MM-DDTHH:mm:ss')
+      : '';
+    const endDateStr = values.endDate
+      ? dayjs(values.endDate).utc().format('YYYY-MM-DDTHH:mm:ss')
+      : '';
+
+    formData.append('startDate', startDateStr);
+    formData.append('endDate', endDateStr);
+    
+    formData.append('contactEmail', values.contactEmail || '');
+    formData.append('contactPhone', values.contactPhone || '');
+    formData.append('contactLine', values.contactLine || '');
+    formData.append('contactFacebook', values.contactFacebook || '');
+
+    if (values.eventCard?.[0]?.originFileObj) {
+      formData.append('eventCard', values.eventCard[0].originFileObj);
+    }
+    if (values.eventDetail?.[0]?.originFileObj) {
+      formData.append('eventDetail', values.eventDetail[0].originFileObj);
+    }
+    if (values.eventMap?.[0]?.originFileObj) {
+      formData.append('eventMap', values.eventMap[0].originFileObj);
+    }
+
+    const slides = [];
+    if (values.slideshowSlot1?.[0]?.originFileObj) slides.push(values.slideshowSlot1[0].originFileObj);
+    if (values.slideshowSlot2?.[0]?.originFileObj) slides.push(values.slideshowSlot2[0].originFileObj);
+    if (values.slideshowSlot3?.[0]?.originFileObj) slides.push(values.slideshowSlot3[0].originFileObj);
+
+    slides.forEach((file) => {
+      formData.append('eventSlideshow', file); 
+    });
+
+    await createEventAdmin(formData);
+
+    showNotification('Event created successfully!', false);
+    setTimeout(() => router.push('/admin/event'), 1500);
+  } catch (error) {
+    console.error('Error:', error);
+    showNotification(error.data?.message || 'Failed to create event', true);
+  } finally {
+    setLoading(false);
+  }
+};
+
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 mt-20">
       <Notification
         isVisible={notification.isVisible}
         onClose={() => setNotification(p => ({...p, isVisible: false}))}
@@ -142,10 +161,10 @@ export default function CreateEventPage() {
       </div>
 
       <EventForm
-        onFinish={handleCreate} // เรียกใช้ฟังก์ชันสร้างเมื่อกด Save
+        onFinish={handleCreate}
         locationOptions={country}
         isLoading={loading}
-        isEditMode={false} // ระบุว่าเป็นโหมดสร้าง (ปุ่ม Delete จะไม่ขึ้น)
+        isEditMode={false} 
       />
     </div>
   );

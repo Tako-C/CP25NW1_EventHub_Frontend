@@ -304,5 +304,20 @@ export const removeUserFromEvent = (eventId, userId) =>
     method: "DELETE",
   });
 
+export const getEventByIdAdmin = (id) => apiFetch(`admin/events/${id}`, { method: "GET" });
+
+export const createEventAdmin = (formData) =>
+  apiFetch("admin/events", {
+    method: "POST",
+    body: formData,
+  });
+
+  // ใน fetch.js (เพิ่มอันนี้)
+export const updateEventAdmin = (id, formData) =>
+  apiFetch(`admin/events/${id}`, {
+    method: "PUT",
+    body: formData,
+  });
+
 export const hardDeleteEvent = (id) =>
   apiFetch(`admin/events/${id}/hard-delete`, { method: "DELETE" });

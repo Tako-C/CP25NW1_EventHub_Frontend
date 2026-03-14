@@ -27,7 +27,6 @@ import {
   hardDeleteEvent,
 } from "@/libs/fetch";
 
-// --- ส่วนที่ 1: Component แสดงรูปภาพในตาราง (แก้ปัญหาภาพหาย) ---
 function TableImage({ imagePath }) {
   const [imgUrl, setImgUrl] = useState(null);
 
@@ -60,7 +59,6 @@ export default function EventsManagement() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // ฟังก์ชันดึงข้อมูลใหม่
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -77,7 +75,6 @@ export default function EventsManagement() {
     fetchData();
   }, []);
 
-  // --- ส่วนที่ 2: ฟังก์ชันเปลี่ยนสถานะแบบ Dropdown ---
   const handleUpdateStatus = async (value, record) => {
     const now = dayjs();
     const endDate = dayjs(record.endDate);
@@ -102,7 +99,6 @@ export default function EventsManagement() {
     }
   };
 
-  // --- ส่วนที่ 3: ฟังก์ชันลบอีเว้นท์ถาวร (Hard Delete) ---
   const confirmHardDelete = (record) => {
     Modal.confirm({
       title: `คุณแน่ใจหรือไม่ที่จะลบอีเว้นท์ "${record.eventName}"?`,
@@ -132,7 +128,6 @@ export default function EventsManagement() {
     });
   };
 
-  // การตั้งค่า Column ตาราง
   const columns = [
     {
       title: "Preview",
@@ -165,7 +160,7 @@ export default function EventsManagement() {
         <Space>
           <Button
             icon={<EditOutlined />}
-            onClick={() => router.push(`/admin/event/${record.id}/edit`)} // ลิงก์ไปหน้า Edit แยก
+            onClick={() => router.push(`/admin/event/${record.id}/edit`)} 
             title="Edit Details"
           />
           <Button

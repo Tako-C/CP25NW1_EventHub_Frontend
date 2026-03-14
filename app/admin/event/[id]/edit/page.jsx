@@ -4,25 +4,20 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { Modal, notification as antNotification } from "antd";
-import { ExclamationCircleFilled } from "@ant-design/icons";
-
-// เรียกใช้ฟังก์ชันจาก libs/fetch.js ที่คุณมีอยู่แล้ว
-import {
-  getEventById,
-  updateEvent,
-  hardDeleteEvent,
-  deleteEventImage,
-  getUpdateImage,
-  getData
+import { notification as antNotification } from "antd";
+import EventForm from "@/app/admin/event/components/EventForm";
+import { 
+  getEventByIdAdmin, 
+  hardDeleteEvent, 
+  deleteEventImage, 
+  getUpdateImage, 
+  getData ,
+  updateEventAdmin
 } from "@/libs/fetch";
-
-import EventForm from "@/app/organizer/components/EventForm";
-import Notification from "@/components/Notification/Notification";
 
 dayjs.extend(utc);
 
-export default function EditEventPage() {
+export default function AdminEditEventPage() {
   const { id } = useParams();
   const router = useRouter();
 
@@ -31,45 +26,25 @@ export default function EditEventPage() {
   const [initialData, setInitialData] = useState(null);
   const [country, setCountry] = useState([]);
 
-  const [notification, setNotification] = useState({
-    isVisible: false,
-    isError: false,
-    message: "",
-  });
-
-  const showNotification = (msg, isError = false) => {
-    setNotification({ isVisible: true, isError, message: msg });
-    setTimeout(() => setNotification((prev) => ({ ...prev, isVisible: false })), 3000);
-  };
-
-  // --- ส่วนที่ 1: ดึงข้อมูลสถานที่ (เดิม) ---
-  const fetchData = async () => {
-    try {
-      const res = await getData('users/countrys');
-      if (res?.data?.length > 0) {
-        const resCity = await getData(`users/country/${res.data[0].id}/citys`);
-        setCountry(resCity?.data || []);
-      }
-    } catch (err) { console.error(err); }
-  };
-
-  // --- ส่วนที่ 2: ดึงข้อมูลอีเว้นท์และจัดรูปแบบรูปภาพ (เดิม + แก้ไขรูป) ---
   useEffect(() => {
-    const fetchEventData = async () => {
+    const fetchAllData = async () => {
       if (!id) return;
       try {
-        const response = await getEventById(id);
+        const resLocation = await getData("users/countrys");
+        if (resLocation?.data?.[0]?.id) {
+          const resCity = await getData(`users/country/${resLocation.data[0].id}/citys`);
+          setCountry(resCity?.data || []);
+        }
+
+        const response = await getEventByIdAdmin(id);
         const eventData = response.data || response;
 
-        // ฟังก์ชันช่วยดึงรูปเดิมมาแสดงใน Form (ใช้ getUpdateImage เดิมของคุณ)
-        const loadAndFormatImage = async (imgFilename, uidSuffix) => {
+        const formatExistingImage = async (imgFilename, uidSuffix) => {
           if (!imgFilename) return [];
           try {
-            let fetchPath = imgFilename;
-            if (!fetchPath.startsWith("upload/events") && !fetchPath.includes("/")) {
-              fetchPath = `upload/events/${fetchPath}`;
-            }
-            if (fetchPath.startsWith("/")) fetchPath = fetchPath.substring(1);
+            let fetchPath = imgFilename.startsWith("upload/events") 
+              ? imgFilename 
+              : `upload/events/${imgFilename}`;
             
             const blobUrl = await getUpdateImage(fetchPath);
             return [{
@@ -79,68 +54,54 @@ export default function EditEventPage() {
               url: blobUrl,
               thumbUrl: blobUrl,
             }];
-          } catch (err) { return []; }
+          } catch (err) {
+            console.error(`Failed to load: ${imgFilename}`, err);
+            return [];
+          }
         };
 
-        const imagesObj = eventData.images || {};
-        const slidesArray = imagesObj.imgSlideShow || [];
-
-        const [fileCard, fileDetail, fileMap, slide1, slide2, slide3] = await Promise.all([
-          loadAndFormatImage(imagesObj.imgCard, "card"),
-          loadAndFormatImage(imagesObj.imgDetail, "detail"),
-          loadAndFormatImage(imagesObj.imgMap, "map"),
-          loadAndFormatImage(slidesArray[0], "slide1"),
-          loadAndFormatImage(slidesArray[1], "slide2"),
-          loadAndFormatImage(slidesArray[2], "slide3"),
+        const images = eventData.images || {};
+        
+        const [fileCard, fileDetail, fileMap, s1, s2, s3] = await Promise.all([
+          formatExistingImage(images.imgCard, "card"),
+          formatExistingImage(images.imgDetail, "detail"),
+          formatExistingImage(images.imgMap || eventData.imgMap, "map"),
+          formatExistingImage(images.imgSlideShow?.[0], "slide1"),
+          formatExistingImage(images.imgSlideShow?.[1], "slide2"),
+          formatExistingImage(images.imgSlideShow?.[2], "slide3"),
         ]);
 
         setInitialData({
           ...eventData,
           eventName: eventData.eventName,
-          hostOrganization: eventData.hostOrganisation,
-          location: eventData.location,
-          eventDescription: eventData.eventDesc,
+          hostOrganization: eventData.hostOrganisation, 
+          eventDescription: eventData.eventDesc,    
           eventType: eventData.eventTypeId?.id,
-          eventStatus: eventData.eventStatus, 
           startDate: eventData.startDate ? dayjs.utc(eventData.startDate).local() : null,
           endDate: eventData.endDate ? dayjs.utc(eventData.endDate).local() : null,
-          contactEmail: eventData.contactEmail || "",
-          contactPhone: eventData.contactPhone || "",
-          contactLine: eventData.contactLine || "",
-          contactFacebook: eventData.contactFacebook || "",
           eventCard: fileCard,
           eventDetail: fileDetail,
           eventMap: fileMap,
-          slideshowSlot1: slide1,
-          slideshowSlot2: slide2,
-          slideshowSlot3: slide3,
+          slideshowSlot1: s1,
+          slideshowSlot2: s2,
+          slideshowSlot3: s3,
         });
       } catch (error) {
-        showNotification("Error fetching event data", true);
+        console.error("Fetch Error:", error);
+        antNotification.error({ message: "ไม่สามารถโหลดข้อมูลกิจกรรมได้" });
       } finally {
         setFetching(false);
       }
     };
-    fetchData();
-    fetchEventData();
+
+    fetchAllData();
   }, [id]);
 
-  // --- ส่วนที่ 3: อัปเดตข้อมูล (Update Function ตามรูป Postman) ---
   const handleUpdate = async (values) => {
-    // Check Status Logic: กิจกรรมจบแล้วต้องเป็น FINISHED/DELETED เท่านั้น
-    const now = dayjs();
-    const eventEndDate = values.endDate || initialData.endDate;
-    if (dayjs(eventEndDate).isBefore(now) && (values.eventStatus === "UPCOMING" || values.eventStatus === "ONGOING")) {
-      antNotification.error({
-        message: 'สถานะไม่ถูกต้อง',
-        description: 'อีเว้นท์จบไปแล้ว ไม่สามารถตั้งเป็น UPCOMING หรือ ONGOING ได้ กรุณาแก้เวลาจบกิจกรรมก่อน',
-      });
-      return;
-    }
-
     setLoading(true);
     try {
       const formData = new FormData();
+      
       formData.append("eventName", values.eventName);
       formData.append("eventDesc", values.eventDescription);
       formData.append("eventTypeId", values.eventType);
@@ -148,17 +109,19 @@ export default function EditEventPage() {
       formData.append("location", values.location);
       formData.append("contactEmail", values.contactEmail || "");
       formData.append("contactPhone", values.contactPhone || "");
-      formData.append("status", values.eventStatus); 
+      formData.append("contactLine", values.contactLine || "");
+      formData.append("contactFacebook", values.contactFacebook || "");
+
+      const creatorId = initialData.createdBy?.id || initialData.createdBy;
+      if (creatorId) formData.append("createdBy", creatorId);
 
       if (values.startDate) formData.append("startDate", values.startDate.utc().format("YYYY-MM-DDTHH:mm:ss"));
       if (values.endDate) formData.append("endDate", values.endDate.utc().format("YYYY-MM-DDTHH:mm:ss"));
 
-      // จัดการไฟล์รูปภาพ (ถ้ามีไฟล์ใหม่จะส่ง originFileObj)
       if (values.eventCard?.[0]?.originFileObj) formData.append("eventCard", values.eventCard[0].originFileObj);
       if (values.eventDetail?.[0]?.originFileObj) formData.append("eventDetail", values.eventDetail[0].originFileObj);
       if (values.eventMap?.[0]?.originFileObj) formData.append("eventMap", values.eventMap[0].originFileObj);
 
-      // Slideshow Indices Logic
       const indices = [];
       if (values.slideshowSlot1?.[0]?.originFileObj) {
         formData.append("eventSlideshow", values.slideshowSlot1[0].originFileObj);
@@ -172,41 +135,31 @@ export default function EditEventPage() {
         formData.append("eventSlideshow", values.slideshowSlot3[0].originFileObj);
         indices.push(3);
       }
-      if (indices.length > 0) indices.forEach((idx) => formData.append("slideshowIndices", idx));
+      indices.forEach(idx => formData.append("slideshowIndices", idx));
 
-      await updateEvent(id, formData);
-      showNotification("Update Success!", false);
-      setTimeout(() => router.push("/home#organizer-section"), 1000);
+      await updateEventAdmin(id, formData);
+      antNotification.success({ message: "อัปเดตกองกิจกรรมสำเร็จ!" });
+      setTimeout(() => router.push("/admin/event"), 1000);
     } catch (error) {
-      showNotification(error.data?.message || "Update failed", true);
+      antNotification.error({ message: "อัปเดตไม่สำเร็จ", description: error.data?.message });
     } finally {
       setLoading(false);
     }
   };
 
-  // --- ส่วนที่ 4: ลบข้อมูลถาวร (Hard Delete ตามรูป Postman) ---
-  const handleDelete = () => {
-    Modal.confirm({
-      title: 'ยืนยันการลบกิจกรรมถาวร?',
-      icon: <ExclamationCircleFilled />,
-      content: 'คำเตือน: ข้อมูลผู้ลงทะเบียน, ผล Survey และของรางวัลจะถูกลบถาวร ไม่สามารถกู้คืนได้',
-      okText: 'ลบถาวร',
-      okType: 'danger',
-      cancelText: 'ยกเลิก',
-      async onOk() {
-        setLoading(true);
-        try {
-          await hardDeleteEvent(id);
-          showNotification("Delete event success!", false);
-          setTimeout(() => router.push("/home#organizer-section"), 1000);
-        } catch (error) {
-          showNotification("Cannot delete event", true);
-        } finally { setLoading(false); }
-      },
-    });
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await hardDeleteEvent(id);
+      antNotification.success({ message: "ลบกิจกรรมถาวรสำเร็จ" });
+      router.push("/admin/event");
+    } catch (error) {
+      antNotification.error({ message: "ลบไม่สำเร็จ", description: error.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // --- ส่วนที่ 5: ลบรูปภาพเดี่ยว (ใช้ฟังก์ชันเดิมของคุณ) ---
   const handleImageRemove = async (file, fieldName) => {
     if (!file.uid.startsWith("-existing-")) return true;
     try {
@@ -215,34 +168,33 @@ export default function EditEventPage() {
       if (fieldName === "eventCard") category = "card";
       else if (fieldName === "eventDetail") category = "detail";
       else if (fieldName === "eventMap") category = "map";
-      else if (fieldName.startsWith("slideshowSlot")) {
+      else if (fieldName.startsWith("slideshow")) {
         category = "slideshow";
         index = fieldName.replace("slideshowSlot", "");
       }
-      if (category) {
-        await deleteEventImage(id, category, index);
-        showNotification("Delete image success", false);
-        return true;
-      }
-    } catch (error) { return false; }
+      
+      await deleteEventImage(id, category, index);
+      antNotification.success({ message: "ลบรูปภาพสำเร็จ" });
+      return true;
+    } catch (error) {
+      antNotification.error({ message: "ลบรูปไม่สำเร็จ" });
+      return false;
+    }
   };
+
+  if (fetching) return <div className="p-10 text-center">กำลังโหลดข้อมูล...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
-      <Notification
-        isVisible={notification.isVisible}
-        onClose={() => setNotification(p => ({...p, isVisible: false}))}
-        isError={notification.isError}
-        message={notification.message}
-      />
       <EventForm
         initialValues={initialData}
-        onFinish={handleUpdate} // ส่งฟังก์ชัน Update ไปใช้
-        onDelete={handleDelete} // ส่งฟังก์ชัน Hard Delete ไปใช้
-        onFileRemove={handleImageRemove} // ส่งฟังก์ชันลบรูปไปใช้
+        onFinish={handleUpdate}
+        onDelete={handleDelete}
+        onFileRemove={handleImageRemove}
         locationOptions={country}
-        isLoading={loading || fetching}
+        isLoading={loading}
         isEditMode={true}
+        onValidationFailed={() => antNotification.warning({ message: "กรุณาตรวจสอบข้อมูล" })}
       />
     </div>
   );

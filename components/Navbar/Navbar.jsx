@@ -333,6 +333,9 @@ export default function Navbar({ token }) {
   const adminOptions = [
     { label: "Account Manager", path: "/admin/account" },
     { label: "User Event Manager", path: "/admin/event-user" },
+    { label: "Event Manager", path: "/admin/event" },
+    { label: "Survey Manager", path: "/admin/survey" },
+    { label: "Reward Manager", path: "/admin/reward" },
   ];
 
   return (
