@@ -1,32 +1,71 @@
-"use client";
+"use client"
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save, Eye, Plus, Edit3 } from "lucide-react";
-import { notification, Tabs } from "antd";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { getDataNoToken, updateSurvey } from "@/libs/fetch";
+import { notification, Tabs, Modal } from "antd"; 
+import { useParams, useRouter } from "next/navigation";
+import { getData, updateSurveyByAdmin } from "@/libs/fetch"; 
 import QuestionEditor from "../../../components/QuestionEditor";
 import SurveyPreview from "../../../components/SurveyPreview";
 
 export default function EditAdminSurveyPage() {
   const { id: eventId, surveyId } = useParams();
-  const searchParams = useSearchParams();
+  const router = useRouter();
   const [surveyData, setSurveyData] = useState(null);
   const [activeTab, setActiveTab] = useState("edit");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchSurveyData = async () => {
-      const type = searchParams.get("type");
-      const role = searchParams.get("role");
-      const res = await getDataNoToken(`/events/${eventId}/surveys/${type}`);
-
-      const data = res.data;
-      const surveyData = data?.[role];
-      const formatData = surveyData.find((item) => item.id == surveyId);
-      console.log(formatData);
+      const resData = await getData(`admin/events/${eventId}/surveys`);
+      const formatData = resData?.data.find((item) => item.id == surveyId);
       setSurveyData(formatData);
     };
     if (eventId) fetchSurveyData();
-  }, []);
+  }, [eventId, surveyId]);
+
+  const handleUpdateQuestion = (index, field, value) => {
+    const updatedQuestions = [...surveyData.questions];
+    updatedQuestions[index] = { ...updatedQuestions[index], [field]: value };
+    setSurveyData({ ...surveyData, questions: updatedQuestions });
+  };
+
+  const handleDeleteQuestion = (index) => {
+    const updatedQuestions = surveyData.questions.filter((_, i) => i !== index);
+    setSurveyData({ ...surveyData, questions: updatedQuestions });
+  };
+
+  const handleAddQuestion = () => {
+    const newQuestion = {
+      question: "คำถามใหม่",
+      questionType: "SINGLE",
+      choices: ["ตัวเลือกที่ 1"],
+    };
+    setSurveyData({
+      ...surveyData,
+      questions: [...surveyData.questions, newQuestion],
+    });
+  };
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      await updateSurveyByAdmin(eventId, surveyId, surveyData);
+      notification.success({
+        message: "บันทึกการเปลี่ยนแปลงสำเร็จ",
+        description: "ข้อมูลแบบสำรวจถูกอัปเดตเรียบร้อยแล้ว",
+      });
+      router.back(); 
+    } catch (error) {
+      notification.error({
+        message: "เกิดข้อผิดพลาดในการบันทึก",
+        description: error.message,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!surveyData) return <div className="p-20 text-center">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-white pt-24 pb-12 px-4">
@@ -39,107 +78,75 @@ export default function EditAdminSurveyPage() {
             <ArrowLeft size={18} /> Cancel Changes
           </button>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
             <Tabs
               activeKey={activeTab}
               onChange={setActiveTab}
               items={[
-                {
-                  key: "edit",
-                  label: (
-                    <span className="font-bold">
-                      <Edit3 size={16} className="inline mr-2" />
-                      Editor
-                    </span>
-                  ),
-                },
-                {
-                  key: "preview",
-                  label: (
-                    <span className="font-bold">
-                      <Eye size={16} className="inline mr-2" />
-                      Preview
-                    </span>
-                  ),
-                },
+                { key: "edit", label: <span className="font-bold"><Edit3 size={16} className="inline mr-2" />Editor</span> },
+                { key: "preview", label: <span className="font-bold"><Eye size={16} className="inline mr-2" />Preview</span> },
               ]}
-              className="mb-0"
+              className="mb-0 custom-tabs"
             />
-            <button className="bg-indigo-600 text-white px-8 py-2.5 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2">
-              <Save size={18} /> SAVE CHANGES
+            <button 
+              onClick={handleSave}
+              disabled={loading}
+              className="bg-indigo-600 text-white px-8 py-2.5 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:bg-slate-300"
+            >
+              <Save size={18} /> {loading ? "SAVING..." : "SAVE CHANGES"}
             </button>
           </div>
         </div>
 
         {activeTab === "edit" ? (
           <div className="space-y-10 animate-in fade-in duration-500">
-            {/* General Info Card */}
             <div className="bg-slate-50 rounded-[2.5rem] p-10 border-2 border-dashed border-slate-200">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">
-                    Survey Name
-                  </label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Survey Name</label>
                   <input
                     className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all"
-                    value={surveyData?.eventName}
-                    onChange={(e) =>
-                      setSurveyData((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
+                    value={surveyData?.name}
+                    onChange={(e) => setSurveyData({ ...surveyData, name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">
-                    Reward Points
-                  </label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Reward Points</label>
                   <input
                     type="number"
                     className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all"
                     value={surveyData?.points}
-                    onChange={(e) =>
-                      setSurveyData((prev) => ({
-                        ...prev,
-                        points: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => setSurveyData({ ...surveyData, points: e.target.value })}
                   />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">
-                  Description
-                </label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Description</label>
                 <textarea
                   className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all min-h-[100px]"
                   value={surveyData?.description}
-                  onChange={(e) =>
-                    setSurveyData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
+                  onChange={(e) => setSurveyData({ ...surveyData, description: e.target.value })}
                 />
               </div>
             </div>
 
-            {/* Questions List */}
             <div className="space-y-6">
               <h3 className="text-xl font-black text-slate-800">
-                Questions ({surveyData?.questions.length})
+                Questions ({surveyData?.questions?.length || 0})
               </h3>
-              {surveyData?.questions.map((q, idx) => (
+              {surveyData?.questions?.map((q, idx) => (
                 <QuestionEditor
                   key={idx}
                   index={idx}
                   questions={q}
-                  onUpdate={(i, f, v) => {}}
-                  onDelete={(i) => {}}
+                  onUpdate={handleUpdateQuestion} 
+                  onDelete={handleDeleteQuestion} 
                 />
               ))}
-              <button className="w-full py-6 border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-bold hover:bg-slate-50 hover:border-indigo-300 transition-all flex items-center justify-center gap-2">
+              <button 
+                onClick={handleAddQuestion}
+                className="w-full py-6 border-2 border-dashed border-slate-200 rounded-[2rem] text-slate-400 font-bold hover:bg-slate-50 hover:border-indigo-300 transition-all flex items-center justify-center gap-2"
+              >
                 <Plus size={20} /> Add New Question
               </button>
             </div>
@@ -147,10 +154,10 @@ export default function EditAdminSurveyPage() {
         ) : (
           <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100">
             <SurveyPreview
-              surveyTitle={surveyData?.eventName}
+              surveyTitle={surveyData?.name}
               surveyDescription={surveyData?.description}
               questions={surveyData?.questions}
-              surveyType="pre"
+              surveyType={surveyData?.type?.startsWith("PRE") ? "pre" : "post"}
             />
           </div>
         )}

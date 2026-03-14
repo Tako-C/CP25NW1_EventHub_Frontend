@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Save, Eye, Plus, Send, Edit3 } from "lucide-react";
 import { notification, Tabs } from "antd";
-import { createSurvey, getDataNoToken } from "@/libs/fetch";
+import { createSurvey, getDataNoToken, createSurveyByAdmin } from "@/libs/fetch";
 
 import QuestionEditor from "../../components/QuestionEditor";
 import SurveyPreview from "../../components/SurveyPreview";
@@ -54,16 +54,14 @@ export default function CreateAdminSurveyPage() {
     setSurveyData({ ...surveyData, questions: newQuestions });
   };
 
-  const handleSave = async () => {
-    if (!surveyData.name) {
-      notification.error({ message: "กรุณาระบุชื่อแบบสำรวจ" });
-      return;
-    }
-    // setLoading(true);
+const handleSave = async () => {
+  if (!surveyData.name) {
+    notification.error({ message: "กรุณาระบุชื่อแบบสำรวจ" });
+    return;
+  }
 
-    console.log("Creating Survey for Event:", id);
-    console.log("Type:", surveyType, "Role:", role);
-    console.log("Data:", surveyData);
+  try {
+    setLoading(true);
 
     const eventDetail = {
       name: surveyData?.name || "",
@@ -72,18 +70,25 @@ export default function CreateAdminSurveyPage() {
       type: surveyTypeFunction() || "",
     };
 
-    const res = await createSurvey(eventDetail, id, surveyData?.questions);
-    console.log(res?.data)
-
-    // setTimeout(() => {
-    //   setLoading(false);
-    //   notification.success({
-    //     message: "สร้างแบบสำรวจสำเร็จ",
-    //     description: `แบบสำรวจสำหรับ ${role} ถูกเพิ่มเรียบร้อยแล้ว`
-    //   });
-    //   router.push(`/admin/survey/${id}`);
-    // }, 1000);
-  };
+    const res = await createSurveyByAdmin(eventDetail, id, surveyData?.questions);
+    
+    if (res) {
+      notification.success({
+        message: "สร้างแบบสำรวจสำเร็จ",
+        description: `แบบสำรวจสำหรับ ${role} ถูกเพิ่มเรียบร้อยแล้ว`
+      });
+      router.push(`/admin/survey/${id}`); 
+    }
+  } catch (error) {
+    console.error("Create survey error:", error);
+    notification.error({
+      message: "เกิดข้อผิดพลาด",
+      description: error.message || "ไม่สามารถสร้างแบบสำรวจได้"
+    });
+  } finally {
+    setLoading(false); 
+  }
+};
 
     const surveyTypeFunction = () => {
     if (surveyType === "pre" && role === "visitor") return "PRE_VISITOR";

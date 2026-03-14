@@ -312,7 +312,6 @@ export const createEventAdmin = (formData) =>
     body: formData,
   });
 
-  // ใน fetch.js (เพิ่มอันนี้)
 export const updateEventAdmin = (id, formData) =>
   apiFetch(`admin/events/${id}`, {
     method: "PUT",
@@ -321,3 +320,32 @@ export const updateEventAdmin = (id, formData) =>
 
 export const hardDeleteEvent = (id) =>
   apiFetch(`admin/events/${id}/hard-delete`, { method: "DELETE" });
+
+export const createSurveyByAdmin = (events, id, questions) =>
+  apiFetch(`admin/events/${id}/surveys`, {
+    method: "POST",
+    body: JSON.stringify({
+      name: events.name,
+      description: events.description,
+      points: events.points,
+      surveyType: events.type,
+      questions,
+    }),
+  });
+
+export const hardDeleteSurveyByAdmin = (eventId, surveyId) =>
+  apiFetch(`admin/events/${eventId}/surveys/${surveyId}/hard-delete`, {
+    method: "DELETE",
+  });
+
+  export const updateSurveyByAdmin = (eventId, surveyId, surveyData) =>
+  apiFetch(`admin/events/${eventId}/surveys/${surveyId}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      name: surveyData.name,
+      description: surveyData.description,
+      points: parseInt(surveyData.points), 
+      surveyType: surveyData.type,
+      questions: surveyData.questions,
+    }),
+  });

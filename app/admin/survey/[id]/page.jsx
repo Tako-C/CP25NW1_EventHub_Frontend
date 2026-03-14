@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { Table, Tag, Select, Button, Space, Modal, notification } from "antd";
 import dayjs from "dayjs";
-import { getDataNoToken, deleteSurvey, patchSurvey } from "@/libs/fetch";
+import { getDataNoToken, deleteSurvey, patchSurvey, getData, hardDeleteSurveyByAdmin} from "@/libs/fetch";
 
 const STATUS_CONFIG = {
   ACTIVE:   { color: "#10b981", bg: "#ecfdf5", label: "Active" },
@@ -222,20 +222,33 @@ export default function EventSurveyManager() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [preRes, postRes] = await Promise.all([
-        getDataNoToken(`/events/${id}/surveys/pre`),
-        getDataNoToken(`/events/${id}/surveys/post`),
-      ]);
-      setSurveys({
-        pre: {
-          visitor:  preRes?.data?.visitor  ?? [],
-          exhibitor: preRes?.data?.exhibitor ?? [],
-        },
-        post: {
-          visitor:  postRes?.data?.visitor  ?? [],
-          exhibitor: postRes?.data?.exhibitor ?? [],
-        },
+      const res = await getData(`admin/events/${id}/surveys`)
+      const allSurveys = res?.data || [];
+
+      const mappedSurveys = {
+        pre:  { visitor: [], exhibitor: [] },
+        post: { visitor: [], exhibitor: [] },
+      };
+
+      allSurveys.forEach((survey) => {
+        switch (survey.type) {
+          case "PRE_VISITOR":
+            mappedSurveys.pre.visitor.push(survey);
+            break;
+          case "PRE_EXHIBITOR":
+            mappedSurveys.pre.exhibitor.push(survey);
+            break;
+          case "POST_VISITOR":
+            mappedSurveys.post.visitor.push(survey);
+            break;
+          case "POST_EXHIBITOR":
+            mappedSurveys.post.exhibitor.push(survey);
+            break;
+          default:
+            break;
+        }
       });
+      setSurveys(mappedSurveys);
     } catch (e) {
       notification.error({ message: `โหลดข้อมูลล้มเหลว: ${e}` });
     } finally {
@@ -259,34 +272,44 @@ export default function EventSurveyManager() {
     }
   };
 
-  const handleDelete = (surveyId) => {
-    Modal.confirm({
-      title: "ยืนยันการลบ?",
-      content: "ข้อมูลนี้จะหายไปถาวร",
-      okText: "ลบ", okType: "danger",
-      onOk: async () => {
-        try {
-          await deleteSurvey(surveyId);
-          setSurveys(prev => {
-            const next = { ...prev };
-            ["pre", "post"].forEach(t =>
-              ["visitor", "exhibitor"].forEach(r => {
-                next[t][r] = next[t][r].filter(s => s.id !== surveyId);
-              })
-            );
-            return next;
-          });
-          notification.success({ message: "ลบแบบสำรวจสำเร็จ" });
-        } catch (e) {
-          notification.error({ message: `${e}` });
-        }
-      },
-    });
-  };
+const handleDelete = (surveyId) => {
+  Modal.confirm({
+    title: "ยืนยันการลบถาวร?",
+    content: "ข้อมูลแบบสำรวจนี้จะถูกลบออกจากระบบทันทีและไม่สามารถกู้คืนได้",
+    okText: "ลบถาวร", 
+    okType: "danger",
+    cancelText: "ยกเลิก",
+    onOk: async () => {
+      try {
+        await hardDeleteSurveyByAdmin(id, surveyId); 
+        
+        setSurveys(prev => {
+          const next = { ...prev };
+          ["pre", "post"].forEach(t =>
+            ["visitor", "exhibitor"].forEach(r => {
+              next[t][r] = next[t][r].filter(s => s.id !== surveyId);
+            })
+          );
+          return next;
+        });
+
+        notification.success({ 
+          message: "ลบแบบสำรวจสำเร็จ",
+          description: "แบบสำรวจถูกลบออกจากระบบถาวรเรียบร้อยแล้ว" 
+        });
+      } catch (e) {
+        notification.error({ 
+          message: "ไม่สามารถลบข้อมูลได้",
+          description: e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์"
+        });
+      }
+    },
+  });
+};
 
   const handleEdit = (record, type, role) => {
     // router.push(`/admin/survey/${id}/edit?type=${type}&role=${role}`);
-     router.push(`/admin/survey/${id}/edit/${record.id}?type=${type}&role=${role}`);
+     router.push(`/admin/survey/${id}/edit/${record.id}`);
   };
 
   const tabs = [
