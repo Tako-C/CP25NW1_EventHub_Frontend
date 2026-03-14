@@ -25,7 +25,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { RewardImage } from "@/utils/getImage";
-import { getDataNoToken, getData } from "@/libs/fetch";
+import { getDataNoToken, getData, hardDeleteRewardByAdmin } from "@/libs/fetch";
 
 // --- MOCK DATA สำหรับรายการรางวัล ---
 const mockRewards = [
@@ -68,6 +68,7 @@ export default function EventRewardTablePage() {
   const { id } = useParams();
   const router = useRouter();
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
@@ -88,6 +89,32 @@ export default function EventRewardTablePage() {
   const filteredData = data?.filter((item) =>
     item.name.toLowerCase().includes(searchText.toLowerCase()),
   );
+
+  const handleDelete = (rewardId) => {
+    Modal.confirm({
+      title: "ยืนยันการลบของรางวัล?",
+      content: "นี่คือการลบแบบ Hard Delete ข้อมูลจะถูกลบออกจากระบบถาวรและไม่สามารถกู้คืนได้",
+      okText: "ลบถาวร",
+      okType: "danger",
+      cancelText: "ยกเลิก",
+      centered: true,
+      onOk: async () => {
+        try {
+          await hardDeleteRewardByAdmin(id, rewardId);
+          notification.success({ 
+            message: "ลบสำเร็จ", 
+            description: "ข้อมูลรางวัลถูกลบออกจากระบบแล้ว" 
+          });
+          fetchData(); // โหลดข้อมูลใหม่หลังจากลบสำเร็จ
+        } catch (error) {
+          notification.error({ 
+            message: "ลบไม่สำเร็จ", 
+            description: error.message || "เกิดข้อผิดพลาดในการลบ" 
+          });
+        }
+      },
+    });
+  };
 
   const columns = [
     {
@@ -178,7 +205,7 @@ export default function EventRewardTablePage() {
           <Button
             danger
             icon={<Trash2 size={16} />}
-            onClick={() => setData(data.filter((s) => s.id !== record.id))}
+            onClick={() => handleDelete(record.id)}
             className="rounded-xl"
           />
         </Space>

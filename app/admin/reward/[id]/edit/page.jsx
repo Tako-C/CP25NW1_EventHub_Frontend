@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, Save, Upload, X, ImageIcon } from "lucide-react";
 import { notification, Select, Spin } from "antd";
-import { getData, updateReward } from "@/libs/fetch";
+import { getData, updateRewardByAdmin } from "@/libs/fetch";
 import { RewardImage } from "@/utils/getImage";
 
 function toDatetimeLocal(dateStr) {
@@ -32,7 +32,6 @@ export default function EditAdminRewardPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [currentImagePath, setCurrentImagePath] = useState(null);
 
-  // ดึงข้อมูลเดิมมาใส่ใน Form
   useEffect(() => {
     const fetchReward = async () => {
       if (!id || !rewardId) return;
@@ -57,7 +56,6 @@ export default function EditAdminRewardPage() {
     fetchReward();
   }, [id, rewardId]);
 
-  // จัดการการเลือกรูปภาพ
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -74,7 +72,6 @@ export default function EditAdminRewardPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // ส่งข้อมูลไปยัง Server
   const handleUpdate = async () => {
     setLoading(true);
     try {
@@ -90,7 +87,7 @@ export default function EditAdminRewardPage() {
         data.append("image", imageFile);
       }
 
-      await updateReward(id, rewardId, data);
+      await updateRewardByAdmin(id, rewardId, data);
       
       notification.success({ message: "อัปเดตข้อมูลรางวัลสำเร็จ" });
       router.back();
@@ -104,7 +101,6 @@ export default function EditAdminRewardPage() {
   return (
     <div className="min-h-screen bg-white pt-24 pb-12 px-4">
       <div className="max-w-4xl mx-auto">
-        {/* Header Section */}
         <div className="flex justify-between items-center mb-10">
           <button 
             onClick={() => router.back()} 
@@ -125,7 +121,6 @@ export default function EditAdminRewardPage() {
         <div className="bg-slate-50 rounded-[2.5rem] p-10 border-2 border-dashed border-slate-200">
           <div className="flex flex-col md:flex-row gap-10">
             
-            {/* Image Upload Section */}
             <div 
               onClick={() => fileInputRef.current?.click()}
               className="w-full md:w-64 h-64 bg-white border-2 border-dashed border-indigo-200 rounded-[2rem] flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer hover:border-indigo-400 transition-colors"
@@ -163,7 +158,6 @@ export default function EditAdminRewardPage() {
               )}
             </div>
 
-            {/* Form Fields Section */}
             <div className="flex-1 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

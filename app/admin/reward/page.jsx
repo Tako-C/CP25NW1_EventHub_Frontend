@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Gift, Calendar, MapPin } from "lucide-react";
 import { Table, Button, Input, Card, Tag, Spin } from "antd";
-import { getDataNoToken } from "@/libs/fetch"; //
+import { getDataNoToken } from "@/libs/fetch"; 
 import dayjs from "dayjs";
 
 export default function SelectEventRewardPage() {
@@ -15,7 +15,7 @@ export default function SelectEventRewardPage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await getDataNoToken("events"); //
+        const res = await getDataNoToken("events"); 
         setEvents(res?.data || []);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }

@@ -283,14 +283,14 @@ export const updateStatusAccount = (userId, status) =>
   apiFetch(`admin/users/${userId}`, {
     method: "PUT",
     body: JSON.stringify({
-      status
-    })
+      status,
+    }),
   });
 
 export const postAddUserToEvent = (eventId, userId) =>
   apiFetch(`admin/events/${eventId}/users`, {
     method: "POST",
-    body: JSON.stringify({ userId: String(userId) }), 
+    body: JSON.stringify({ userId: String(userId) }),
   });
 
 export const updateUserRoleInEvent = (eventId, userId, role) =>
@@ -304,7 +304,8 @@ export const removeUserFromEvent = (eventId, userId) =>
     method: "DELETE",
   });
 
-export const getEventByIdAdmin = (id) => apiFetch(`admin/events/${id}`, { method: "GET" });
+export const getEventByIdAdmin = (id) =>
+  apiFetch(`admin/events/${id}`, { method: "GET" });
 
 export const createEventAdmin = (formData) =>
   apiFetch("admin/events", {
@@ -338,14 +339,31 @@ export const hardDeleteSurveyByAdmin = (eventId, surveyId) =>
     method: "DELETE",
   });
 
-  export const updateSurveyByAdmin = (eventId, surveyId, surveyData) =>
+export const updateSurveyByAdmin = (eventId, surveyId, surveyData) =>
   apiFetch(`admin/events/${eventId}/surveys/${surveyId}`, {
     method: "PUT",
     body: JSON.stringify({
       name: surveyData.name,
       description: surveyData.description,
-      points: parseInt(surveyData.points), 
+      points: parseInt(surveyData.points),
       surveyType: surveyData.type,
       questions: surveyData.questions,
     }),
+  });
+
+export const createRewardByAdmin = (eventId, formData) =>
+  apiFetch(`admin/events/${eventId}/rewards`, {
+    method: "POST",
+    body: formData,
+  });
+
+export const updateRewardByAdmin = (eventId, rewardId, formData) =>
+  apiFetch(`admin/events/${eventId}/rewards/${rewardId}`, {
+    method: "PUT",
+    body: formData,
+  });
+
+export const hardDeleteRewardByAdmin = (eventId, rewardId) =>
+  apiFetch(`admin/events/${eventId}/rewards/${rewardId}/hard-delete`, {
+    method: "DELETE",
   });
