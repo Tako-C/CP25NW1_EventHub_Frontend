@@ -351,6 +351,12 @@ export const updateSurveyByAdmin = (eventId, surveyId, surveyData) =>
     }),
   });
 
+export const updateSurveyStatusByAdmin = (eventId, surveyId, status) =>
+  apiFetch(`admin/events/${eventId}/surveys/${surveyId}`, {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  });
+
 export const createRewardByAdmin = (eventId, formData) =>
   apiFetch(`admin/events/${eventId}/rewards`, {
     method: "POST",
@@ -362,7 +368,7 @@ export const updateRewardByAdmin = (eventId, rewardId, formData) =>
     method: "PUT",
     body: formData,
   });
-
+  
 export const hardDeleteRewardByAdmin = (eventId, rewardId) =>
   apiFetch(`admin/events/${eventId}/rewards/${rewardId}/hard-delete`, {
     method: "DELETE",

@@ -25,6 +25,7 @@ import {
   getImage,
   updateEvent,
   hardDeleteEvent,
+  updateEventAdmin,
 } from "@/libs/fetch";
 
 function TableImage({ imagePath }) {
@@ -34,8 +35,12 @@ function TableImage({ imagePath }) {
     if (!imagePath) return;
     const fetchImg = async () => {
       try {
-        let cleanPath = imagePath.startsWith("/") ? imagePath.substring(1) : imagePath;
-        const finalPath = cleanPath.startsWith("upload/events/") ? cleanPath : `upload/events/${cleanPath}`;
+        let cleanPath = imagePath.startsWith("/")
+          ? imagePath.substring(1)
+          : imagePath;
+        const finalPath = cleanPath.startsWith("upload/events/")
+          ? cleanPath
+          : `upload/events/${cleanPath}`;
         const res = await getImage(finalPath);
         setImgUrl(res);
       } catch (err) {
@@ -46,7 +51,12 @@ function TableImage({ imagePath }) {
   }, [imagePath]);
 
   return imgUrl ? (
-    <Image width={60} src={imgUrl} className="rounded shadow-sm" preview={false} />
+    <Image
+      width={60}
+      src={imgUrl}
+      className="rounded shadow-sm"
+      preview={false}
+    />
   ) : (
     <div className="w-[60px] h-[40px] bg-gray-200 rounded flex items-center justify-center text-[10px] text-gray-400">
       No Pic
@@ -78,6 +88,7 @@ export default function EventsManagement() {
   const handleUpdateStatus = async (value, record) => {
     const now = dayjs();
     const endDate = dayjs(record.endDate);
+    console.log(value)
 
     if (now.isAfter(endDate) && (value === "UPCOMING" || value === "ONGOING")) {
       notification.warning({
@@ -88,14 +99,21 @@ export default function EventsManagement() {
     }
 
     try {
+      setLoading(true);
+
       const formData = new FormData();
       formData.append("status", value);
-      formData.append("eventName", record.eventName);
-      await updateEvent(record.id, formData);
+
+      console.log(record.id)
+      await updateEventAdmin(record.id, formData);
+
       message.success(`อัปเดตสถานะเป็น ${value} สำเร็จ`);
       fetchData();
     } catch (error) {
+      console.error("Update status error:", error);
       message.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,7 +123,9 @@ export default function EventsManagement() {
       icon: <ExclamationCircleFilled style={{ color: "#ff4d4f" }} />,
       content: (
         <div className="mt-2">
-          <p className="text-red-500 font-bold">คำเตือน: การลบนี้เป็นแบบถาวร (Hard Delete)</p>
+          <p className="text-red-500 font-bold">
+            คำเตือน: การลบนี้เป็นแบบถาวร (Hard Delete)
+          </p>
           <ul className="list-disc ml-4 text-gray-600 text-xs">
             <li>ข้อมูลผู้ลงทะเบียนจะถูกลบทั้งหมด</li>
             <li>ผลการตอบ Survey จะถูกลบทั้งหมด</li>
@@ -160,7 +180,7 @@ export default function EventsManagement() {
         <Space>
           <Button
             icon={<EditOutlined />}
-            onClick={() => router.push(`/admin/event/${record.id}/edit`)} 
+            onClick={() => router.push(`/admin/event/${record.id}/edit`)}
             title="Edit Details"
           />
           <Button
@@ -179,17 +199,22 @@ export default function EventsManagement() {
       <Card
         title={<span className="text-xl font-bold">Event Management</span>}
         extra={
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={() => router.push('/admin/event/create')}
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push("/admin/event/create")}
             className="bg-blue-600"
           >
             Create Event
           </Button>
         }
       >
-        <Table columns={columns} dataSource={data} rowKey="id" loading={loading} />
+        <Table
+          columns={columns}
+          dataSource={data}
+          rowKey="id"
+          loading={loading}
+        />
       </Card>
     </div>
   );

@@ -25,44 +25,12 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { RewardImage } from "@/utils/getImage";
-import { getDataNoToken, getData, hardDeleteRewardByAdmin } from "@/libs/fetch";
-
-// --- MOCK DATA สำหรับรายการรางวัล ---
-const mockRewards = [
-  {
-    id: 501,
-    name: "เสื้อยืด Loomera Limited",
-    description: "เสื้อยืดผ้าพรีเมียมลายพิเศษสำหรับผู้ร่วมงาน",
-    requirementType: "PRE_SURVEY_DONE",
-    quantity: 50,
-    startRedeemAt: "2026-03-10T09:00:00",
-    endRedeemAt: "2026-03-15T18:00:00",
-    status: "ACTIVE",
-    imagePath: "",
-  },
-  {
-    id: 502,
-    name: "บัตรกำนัล Starbucks 200.-",
-    description: "ใช้แทนเงินสดได้ทุกสาขา",
-    requirementType: "CHECK_IN",
-    quantity: 20,
-    startRedeemAt: "2026-03-10T09:00:00",
-    endRedeemAt: "2026-03-12T12:00:00",
-    status: "INACTIVE",
-    imagePath: "",
-  },
-  {
-    id: 503,
-    name: "Loomera Tote Bag",
-    description: "กระเป๋าผ้าลดโลกร้อน",
-    requirementType: "POST_SURVEY_DONE",
-    quantity: 100,
-    startRedeemAt: "2026-03-11T10:00:00",
-    endRedeemAt: "2026-03-20T20:00:00",
-    status: "ACTIVE",
-    imagePath: "",
-  },
-];
+import {
+  getDataNoToken,
+  getData,
+  hardDeleteRewardByAdmin,
+  updateRewardByAdmin,
+} from "@/libs/fetch";
 
 export default function EventRewardTablePage() {
   const { id } = useParams();
@@ -93,7 +61,8 @@ export default function EventRewardTablePage() {
   const handleDelete = (rewardId) => {
     Modal.confirm({
       title: "ยืนยันการลบของรางวัล?",
-      content: "นี่คือการลบแบบ Hard Delete ข้อมูลจะถูกลบออกจากระบบถาวรและไม่สามารถกู้คืนได้",
+      content:
+        "นี่คือการลบแบบ Hard Delete ข้อมูลจะถูกลบออกจากระบบถาวรและไม่สามารถกู้คืนได้",
       okText: "ลบถาวร",
       okType: "danger",
       cancelText: "ยกเลิก",
@@ -101,15 +70,15 @@ export default function EventRewardTablePage() {
       onOk: async () => {
         try {
           await hardDeleteRewardByAdmin(id, rewardId);
-          notification.success({ 
-            message: "ลบสำเร็จ", 
-            description: "ข้อมูลรางวัลถูกลบออกจากระบบแล้ว" 
+          notification.success({
+            message: "ลบสำเร็จ",
+            description: "ข้อมูลรางวัลถูกลบออกจากระบบแล้ว",
           });
           fetchData(); // โหลดข้อมูลใหม่หลังจากลบสำเร็จ
         } catch (error) {
-          notification.error({ 
-            message: "ลบไม่สำเร็จ", 
-            description: error.message || "เกิดข้อผิดพลาดในการลบ" 
+          notification.error({
+            message: "ลบไม่สำเร็จ",
+            description: error.message || "เกิดข้อผิดพลาดในการลบ",
           });
         }
       },
@@ -166,13 +135,30 @@ export default function EventRewardTablePage() {
       render: (status, record) => (
         <Select
           value={status}
-          onChange={(val) => {
-            setData(
-              data.map((s) => (s.id === record.id ? { ...s, status: val } : s)),
-            );
-            notification.success({ message: "อัปเดตสถานะสำเร็จ" });
+          loading={loading}
+          onChange={async (val) => {
+            try {
+              setLoading(true);
+              const formData = new FormData();
+              formData.append("status", val);
+              await updateRewardByAdmin(id, record.id, formData);
+
+              setData(
+                data.map((s) =>
+                  s.id === record.id ? { ...s, status: val } : s,
+                ),
+              );
+              notification.success({ message: "อัปเดตสถานะของรางวัลสำเร็จ" });
+            } catch (error) {
+              notification.error({
+                message: "อัปเดตไม่สำเร็จ",
+                description: error.message,
+              });
+            } finally {
+              setLoading(false);
+            }
           }}
-          className="w-32 font-black"
+          className="w-40 font-black"
         >
           <Select.Option value="ACTIVE">
             <Tag color="green" className="m-0 border-none font-black uppercase">
@@ -185,6 +171,14 @@ export default function EventRewardTablePage() {
               className="m-0 border-none font-black uppercase"
             >
               INACTIVE
+            </Tag>
+          </Select.Option>
+          <Select.Option value="OUT_OF_STOCK">
+            <Tag
+              color="orange"
+              className="m-0 border-none font-black uppercase"
+            >
+              OUT OF STOCK
             </Tag>
           </Select.Option>
         </Select>
