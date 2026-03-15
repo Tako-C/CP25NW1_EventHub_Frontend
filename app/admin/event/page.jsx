@@ -88,7 +88,6 @@ export default function EventsManagement() {
   const handleUpdateStatus = async (value, record) => {
     const now = dayjs();
     const endDate = dayjs(record.endDate);
-    console.log(value)
 
     if (now.isAfter(endDate) && (value === "UPCOMING" || value === "ONGOING")) {
       notification.warning({

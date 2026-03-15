@@ -74,7 +74,7 @@ export default function EventRewardTablePage() {
             message: "ลบสำเร็จ",
             description: "ข้อมูลรางวัลถูกลบออกจากระบบแล้ว",
           });
-          fetchData(); // โหลดข้อมูลใหม่หลังจากลบสำเร็จ
+          fetchData(); 
         } catch (error) {
           notification.error({
             message: "ลบไม่สำเร็จ",
