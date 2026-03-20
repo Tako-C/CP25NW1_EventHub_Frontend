@@ -12,6 +12,7 @@ const questionTypes = [
   { value: "text", label: "ข้อความสั้น", icon: Type },
   { value: "multiple_choice", label: "เลือกตอบ (เลือกได้ 1)", icon: Circle },
   { value: "checkbox", label: "เลือกตอบ (เลือกได้หลายข้อ)", icon: ListChecks },
+  { value: 'rating', label: 'ให้คะแนน', icon: Star },
 ];
 
 
@@ -105,22 +106,12 @@ export default function QuestionEditor({ questions, index, onUpdate, onDelete })
           )}
 
           {questions?.questionType === "rating" && (
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm text-gray-600">ระดับคะแนน:</span>
-              <select
-                value={questions.maxRating || 5}
-                onChange={(e) =>
-                  onUpdate(index, "maxRating", parseInt(e.target.value))
-                }
-                className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
-              >
-                <option value="5">1-5</option>
-                <option value="10">1-10</option>
-              </select>
+            <div className="mb-3">
+              <span className="text-sm text-gray-500">ให้คะแนน 1-5</span>
             </div>
           )}
 
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <input
               type="checkbox"
               id={`required-${index}`}
@@ -134,7 +125,7 @@ export default function QuestionEditor({ questions, index, onUpdate, onDelete })
             >
               คำถามบังคับ
             </label>
-          </div>
+          </div> */}
         </div>
 
         <button

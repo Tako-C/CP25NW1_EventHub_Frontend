@@ -156,6 +156,26 @@ export default function SurveyPreview({ surveyTitle, surveyDescription, question
                   />
                 )}
 
+                {(q.questionType === 'rating') && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-2">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <button
+                          key={i}
+                          disabled
+                          className="flex-1 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-400 font-bold text-lg cursor-not-allowed"
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 px-1">
+                      <span>😞 น้อยที่สุด</span>
+                      <span>มากที่สุด 😄</span>
+                    </div>
+                  </div>
+                )}
+
                 {(q.questionType === 'multiple_choice' || q.questionType === 'checkbox' || q.questionType === 'SINGLE' || q.questionType === 'MULTIPLE') && (
                   q.choices?.map((choice, cIdx) => (
                     <label key={cIdx} className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl bg-gray-50 opacity-80 cursor-not-allowed">

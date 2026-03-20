@@ -118,8 +118,9 @@ export default function Page() {
 
   const fetchData = async () => {
     const res = await getData("admin/users");
-    console.log(res);
-    setDataSource(res?.data);
+    const data = res?.data
+    const sortedUser = [...data].sort((a, b) => a.id - b.id);
+    setDataSource(sortedUser);
   };
 
   return (

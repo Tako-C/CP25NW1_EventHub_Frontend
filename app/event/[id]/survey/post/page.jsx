@@ -20,14 +20,6 @@ import Cookie from "js-cookie";
 import Notification from "@/components/Notification/Notification";
 import SuccessPage from "@/components/Notification/SuccessSurvey";
 
-const RATING_OPTIONS = [
-  { value: 1, label: "ควรปรับปรุง", emoji: "😞" },
-  { value: 2, label: "พอใช้", emoji: "😐" },
-  { value: 3, label: "ปานกลาง", emoji: "😊" },
-  { value: 4, label: "ดี", emoji: "😃" },
-  { value: 5, label: "ดีเยี่ยม", emoji: "🤩" },
-];
-
 export default function PostSurveyForm() {
   const token = Cookie.get("token");
   const { id } = useParams();
@@ -354,33 +346,33 @@ export default function PostSurveyForm() {
 
                 <div className="mt-4">
                   {q.questionType === "RATING" && (
-                    <div className="grid grid-cols-5 gap-2 md:gap-4">
-                      {RATING_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={() =>
-                            handleSurveyChange(
-                              q.id,
-                              opt.value.toString(),
-                              "rating",
-                            )
-                          }
-                          className={`flex flex-col items-center p-3 rounded-2xl border-2 transition-all ${
-                            formData.surveyAnswers.find(
-                              (a) => a.questionId === q.id,
-                            )?.answers[0] === opt.value.toString()
-                              ? "border-purple-500 bg-purple-50"
-                              : "border-gray-100 bg-gray-50 hover:border-purple-200"
-                          }`}
-                        >
-                          <span className="text-2xl md:text-3xl mb-1">
-                            {opt.emoji}
-                          </span>
-                          <span className="text-[10px] md:text-xs text-center font-medium text-gray-600">
-                            {opt.label}
-                          </span>
-                        </button>
-                      ))}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between gap-2">
+                        {[1, 2, 3, 4, 5].map((val) => {
+                          const selected = formData.surveyAnswers.find(
+                            (a) => a.questionId === q.id,
+                          )?.answers[0] === val.toString();
+                          return (
+                            <button
+                              key={val}
+                              onClick={() =>
+                                handleSurveyChange(q.id, val.toString(), "rating")
+                              }
+                              className={`flex-1 py-3 rounded-xl border-2 font-bold text-lg transition-all active:scale-95 ${
+                                selected
+                                  ? "border-purple-500 bg-purple-500 text-white shadow-md"
+                                  : "border-gray-200 bg-gray-50 text-gray-400 hover:border-purple-300 hover:text-purple-500"
+                              }`}
+                            >
+                              {val}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-400 px-1">
+                        <span>😞 น้อยที่สุด</span>
+                        <span>มากที่สุด 😄</span>
+                      </div>
                     </div>
                   )}
 
