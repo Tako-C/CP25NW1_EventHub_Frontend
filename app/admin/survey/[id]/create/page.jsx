@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Save, Eye, Plus, Send, Edit3 } from "lucide-react";
-import { notification, Tabs } from "antd";
+import { Tabs } from "antd"; 
 import { createSurvey, getDataNoToken, createSurveyByAdmin } from "@/libs/fetch";
 
 import QuestionEditor from "../../components/QuestionEditor";
 import SurveyPreview from "../../components/SurveyPreview";
+
+import Notification from "@/components/Notification/Notification";
 
 export default function CreateAdminSurveyPage() {
   const { id } = useParams();
@@ -29,6 +31,27 @@ export default function CreateAdminSurveyPage() {
   const [loading, setLoading] = useState(false);
   const [eventData, setEventData] = useState(null);
 
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
   const handleUpdateQuestion = (index, field, value) => {
     const newQuestions = [...surveyData.questions];
     newQuestions[index][field] = value;
@@ -47,50 +70,47 @@ export default function CreateAdminSurveyPage() {
 
   const handleDeleteQuestion = (index) => {
     if (surveyData.questions.length <= 1) {
-      notification.warning({ message: "ต้องมีอย่างน้อย 1 คำถาม" });
+      showNotification("ต้องมีอย่างน้อย 1 คำถาม", true);
       return;
     }
     const newQuestions = surveyData.questions.filter((_, i) => i !== index);
     setSurveyData({ ...surveyData, questions: newQuestions });
   };
 
-const handleSave = async () => {
-  if (!surveyData.name) {
-    notification.error({ message: "กรุณาระบุชื่อแบบสำรวจ" });
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const eventDetail = {
-      name: surveyData?.name || "",
-      description: surveyData?.description || "",
-      points: parseInt(surveyData?.points) || 0,
-      type: surveyTypeFunction() || "",
-    };
-
-    const res = await createSurveyByAdmin(eventDetail, id, surveyData?.questions);
-    
-    if (res) {
-      notification.success({
-        message: "สร้างแบบสำรวจสำเร็จ",
-        description: `แบบสำรวจสำหรับ ${role} ถูกเพิ่มเรียบร้อยแล้ว`
-      });
-      router.push(`/admin/survey/${id}`); 
+  const handleSave = async () => {
+    if (!surveyData.name) {
+      showNotification("กรุณาระบุชื่อแบบสำรวจ", true);
+      return;
     }
-  } catch (error) {
-    console.error("Create survey error:", error);
-    notification.error({
-      message: "เกิดข้อผิดพลาด",
-      description: error.message || "ไม่สามารถสร้างแบบสำรวจได้"
-    });
-  } finally {
-    setLoading(false); 
-  }
-};
 
-    const surveyTypeFunction = () => {
+    try {
+      setLoading(true);
+
+      const eventDetail = {
+        name: surveyData?.name || "",
+        description: surveyData?.description || "",
+        points: parseInt(surveyData?.points) || 0,
+        type: surveyTypeFunction() || "",
+      };
+
+      const res = await createSurveyByAdmin(eventDetail, id, surveyData?.questions);
+      
+      if (res) {
+        showNotification(`สร้างแบบสำรวจสำหรับ ${role} สำเร็จแล้ว!`);
+        
+        setTimeout(() => {
+          router.push(`/admin/survey/${id}`); 
+        }, 2000);
+      }
+    } catch (error) {
+      console.error("Create survey error:", error);
+      showNotification(error.message || "ไม่สามารถสร้างแบบสำรวจได้", true);
+    } finally {
+      setLoading(false); 
+    }
+  };
+
+  const surveyTypeFunction = () => {
     if (surveyType === "pre" && role === "visitor") return "PRE_VISITOR";
     if (surveyType === "pre" && role === "exhibitor") return "PRE_EXHIBITOR";
     if (surveyType === "post" && role === "visitor") return "POST_VISITOR";
@@ -103,10 +123,10 @@ const handleSave = async () => {
       try {
         setLoading(true);
         const res = await getDataNoToken(`/events/${id}`);
-        console.log(res);
         setEventData(res);
       } catch (error) {
         console.error("Failed to fetch event:", error);
+        showNotification("ไม่สามารถโหลดข้อมูลกิจกรรมได้", true);
       } finally {
         setLoading(false);
       }
@@ -117,6 +137,13 @@ const handleSave = async () => {
 
   return (
     <div className="min-h-screen bg-white pt-24 pb-12 px-4">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-10">
           <div>

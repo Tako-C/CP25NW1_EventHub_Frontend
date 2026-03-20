@@ -23,6 +23,17 @@ export default function CheckInStaff() {
     message: "",
   });
 
+  const showNotification = (msg, isError = false) => {
+    setNotification({
+      isVisible: true,
+      isError: isError,
+      message: msg,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
@@ -34,11 +45,7 @@ export default function CheckInStaff() {
     if (visitorData.status === "check_in") return;
 
     if (!selectedEventId) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: "กรุณาเลือก Event ก่อนทำการ Check-in",
-      });
+      showNotification("กรุณาเลือกกิจกรรมก่อนทำการ Check-in", true);
       return;
     }
 
@@ -59,20 +66,14 @@ export default function CheckInStaff() {
             return v;
           })
         );
+        showNotification("Check-in สำเร็จเรียบร้อยแล้ว", false);
       } else {
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: result?.message || "Check-in failed",
-        });
+        // showNotification(result?.message || "Check-in ไม่สำเร็จ", true);
+        showNotification("Check-in ไม่สำเร็จ", true);
       }
     } catch (error) {
       console.error("Check-in failed:", error);
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: "เกิดข้อผิดพลาดในการ Check-in",
-      });
+      showNotification("เกิดข้อผิดพลาดในการ Check-in กรุณาลองใหมีกครั้ง", true);
     } finally {
       setIsUpdating(false);
     }
@@ -80,20 +81,12 @@ export default function CheckInStaff() {
 
   const handleSearch = async () => {
     if (!selectedEventId) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: "กรุณาเลือก Event ที่ต้องการค้นหา",
-      });
+      showNotification("กรุณาเลือกกิจกรรมที่ต้องการค้นหา", true);
       return;
     }
 
     if (!searchQuery.trim()) {
-       setNotification({
-        isVisible: true,
-        isError: true,
-        message: "กรุณากรอกข้อมูลเพื่อค้นหา (ชื่อ, เบอร์โทร, หรืออีเมล)",
-      });
+      showNotification("กรุณากรอกข้อมูลเพื่อค้นหา (ชื่อ, เบอร์โทร, หรืออีเมล)", true);
       return;
     }
 
@@ -110,22 +103,18 @@ export default function CheckInStaff() {
       if (result) {
         if (Array.isArray(result)) {
           setVisitors(result);
+          if (result.length === 0) {
+          }
         } else if (result.userId) {
           setVisitors([result]);
           setUserId(result.userId);
-        } else {
-             if(Array.isArray(result) && result.length === 0) {
-             }
         }
       } else {
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: result?.message || "ไม่พบข้อมูล",
-        });
+        showNotification("ไม่พบข้อมูลผู้เข้าร่วมงาน", true);
       }
     } catch (error) {
       console.error("Error fetching user:", error);
+      showNotification("เกิดข้อผิดพลาดในการค้นหาข้อมูล", true);
       setVisitors([]);
     } finally {
       setIsLoading(false);
@@ -147,7 +136,6 @@ export default function CheckInStaff() {
   const fetchData = async () => {
     try {
       const res = await getData("users/me/registered-events");
-      console.log("Events loaded:", res?.data);
       if (res?.data && Array.isArray(res.data)) {
         setEvents(res.data);
       }
@@ -190,26 +178,25 @@ export default function CheckInStaff() {
         message={notification.message}
         onClose={closeNotification}
       />
-      <div className="py-3 px-4"></div>
 
       <div className="max-w-4xl mx-auto mt-4 md:mt-8 px-6 md:px-4">
         <div className="bg-white rounded-lg shadow-md p-4 md:p-8">
           <h3 className="text-xl md:text-2xl font-semibold text-center mb-2">
-            Check-in
+            บันทึกการเข้างาน (Check-in)
           </h3>
 
           <p className="text-center text-gray-600 mb-6 md:mb-8 text-sm md:text-base">
-            Event :{" "}
+            อีเว้นท์ :{" "}
             <span className="font-medium text-purple-600 block md:inline mt-1 md:mt-0">
               {selectedEventObj
                 ? selectedEventObj.eventName
-                : "Please select an event"}
+                : "กรุณาเลือกอีเว้นท์"}
             </span>
           </p>
 
           <div className="mb-6">
             <label className="flex text-gray-700 font-medium mb-2 items-center gap-2">
-              <Calendar className="w-4 h-4" /> Select Event
+              <Calendar className="w-4 h-4" /> เลือกอีเว้นท์
             </label>
             <select
               value={selectedEventId}
@@ -230,13 +217,13 @@ export default function CheckInStaff() {
 
           <div className="mb-6">
             <label className="block text-gray-700 font-medium mb-2">
-              Visitors Search
+              ค้นหาผู้เข้าร่วมงาน
             </label>
             <div className="flex flex-col md:flex-row gap-3">
               <div className="relative flex-1 w-full">
                 <input
                   type="text"
-                  placeholder="Search by Name, Email, or Phone"
+                  placeholder="ค้นหาด้วย ชื่อ, อีเมล หรือ เบอร์โทรศัพท์"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -255,7 +242,7 @@ export default function CheckInStaff() {
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    "Search"
+                    "ค้นหา"
                   )}
                 </button>
                 <button
@@ -264,13 +251,13 @@ export default function CheckInStaff() {
                   className="flex-1 md:flex-none justify-center flex items-center gap-2 px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition-colors whitespace-nowrap"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  Reset
+                  ล้างค่า
                 </button>
               </div>
             </div>
             {!selectedEventId && (
               <p className="text-red-500 text-sm mt-2">
-                * กรุณาเลือก Event ด้านบนก่อนเริ่มค้นหา
+                * กรุณาเลือกกิจกรรมด้านบนก่อนเริ่มค้นหา
               </p>
             )}
           </div>
@@ -294,7 +281,7 @@ export default function CheckInStaff() {
                           <div className="space-y-2 w-full text-sm md:text-base">
                             <div className="flex flex-col sm:flex-row sm:items-baseline">
                               <span className="text-gray-600 w-24 md:w-32 font-semibold sm:font-normal">
-                                Visitor ID:
+                                รหัสผู้ใช้:
                               </span>
                               <span className="text-gray-900 break-all">
                                 {visitor.userId}
@@ -302,7 +289,7 @@ export default function CheckInStaff() {
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-baseline">
                               <span className="text-gray-600 w-24 md:w-32 font-semibold sm:font-normal">
-                                Full name :
+                                ชื่อ-นามสกุล :
                               </span>
                               <span className="text-gray-900 break-words">
                                 {visitor.name}
@@ -310,7 +297,7 @@ export default function CheckInStaff() {
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-baseline">
                               <span className="text-gray-600 w-24 md:w-32 font-semibold sm:font-normal">
-                                Email :
+                                อีเมล :
                               </span>
                               <span className="text-gray-900 break-all">
                                 {visitor.email}
@@ -318,7 +305,7 @@ export default function CheckInStaff() {
                             </div>
                             <div className="flex flex-col sm:flex-row sm:items-baseline">
                               <span className="text-gray-600 w-24 md:w-32 font-semibold sm:font-normal">
-                                Phone :
+                                เบอร์โทร :
                               </span>
                               <span className="text-gray-900">
                                 {visitor.phone || "-"}
@@ -333,7 +320,7 @@ export default function CheckInStaff() {
                                 disabled={isUpdating}
                                 className="w-full md:w-auto bg-green-400 hover:bg-green-500 disabled:bg-green-200 text-white font-medium px-8 py-3 rounded-md transition-colors"
                               >
-                                {isUpdating ? "Saving..." : "Check-in"}
+                                {isUpdating ? "กำลังบันทึก..." : "Check-in"}
                               </button>
                             ) : (
                               <div className="text-center w-full md:w-auto">
@@ -356,7 +343,7 @@ export default function CheckInStaff() {
                 ) : (
                   <div className="text-center text-gray-500 py-8">
                     {hasSearched
-                      ? "ไม่พบข้อมูลผู้เข้าร่วมงาน (User Not Found)"
+                      ? "ไม่พบข้อมูลผู้เข้าร่วมงาน"
                       : "กรุณากรอกข้อมูลเพื่อค้นหา"}
                   </div>
                 )}

@@ -13,7 +13,6 @@ export default function ResetPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // State สำหรับนับเวลาถอยหลัง
   const [timeLeft, setTimeLeft] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
 
@@ -26,14 +25,25 @@ export default function ResetPasswordPage() {
     message: "",
   });
 
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isVisible: false }));
+  };
+
   useEffect(() => {
     const savedEmail = Cookie.get('resetPasswordEmail');
     if (!savedEmail) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: "Email information not found. Please try again.",
-      });
+      showNotification("ไม่พบข้อมูลอีเมล กรุณาลองใหม่อีกครั้ง", true);
       setTimeout(() => router.push('/login'), 3000);
     } else {
       setEmail(savedEmail);
@@ -64,8 +74,6 @@ export default function ResetPasswordPage() {
     }
   }, [router]);
 
-  const closeNotification = () => setNotification(prev => ({ ...prev, isVisible: false }));
-
   const handleOtpChange = (index, value) => {
     if (isNaN(value)) return;
     const newOtp = [...otp];
@@ -82,22 +90,22 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async () => {
     if (isExpired) {
-       setNotification({ isVisible: true, isError: true, message: "OTP has expired. Please request a new one." });
+       showNotification("รหัส OTP หมดอายุแล้ว กรุณาขอรหัสใหม่อีกครั้ง", true);
        return;
     }
 
     const otpCode = otp.join("");
     
     if (otpCode.length !== 6) {
-      setNotification({ isVisible: true, isError: true, message: "Please enter the complete 6-digit OTP." });
+      showNotification("กรุณากรอกรหัส OTP ให้ครบ 6 หลัก", true);
       return;
     }
     if (newPassword.length < 8) {
-      setNotification({ isVisible: true, isError: true, message: "Password must be at least 8 characters long." });
+      showNotification("รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร", true);
       return;
     }
     if (newPassword !== confirmPassword) {
-      setNotification({ isVisible: true, isError: true, message: "Confirm password does not match the new password." });
+      showNotification("รหัสผ่านยืนยันไม่ตรงกับรหัสผ่านใหม่", true);
       return;
     }
 
@@ -105,11 +113,7 @@ export default function ResetPasswordPage() {
       const res = await authPasswordReset(email, otpCode, newPassword, confirmPassword);
       
       if (res.statusCode === 200) {
-        setNotification({ 
-            isVisible: true, 
-            isError: false, 
-            message: "Password reset successful! Redirecting to login..." 
-        });
+        showNotification("รีเซ็ตรหัสผ่านสำเร็จ! กำลังนำท่านไปยังหน้าเข้าสู่ระบบ...");
         Cookie.remove('resetPasswordEmail');
         if (email) localStorage.removeItem(`otp_forgot_${email}`);
         
@@ -118,11 +122,8 @@ export default function ResetPasswordPage() {
         }, 2000);
       }
     } catch (error) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: error.data?.message || "An error occurred while resetting password.",
-      });
+      // showNotification(error.data?.message || "เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน กรุณาลองใหม่อีกครั้ง", true);
+      showNotification("เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน กรุณาลองใหม่อีกครั้ง", true);
     }
   };
 
@@ -137,30 +138,29 @@ export default function ResetPasswordPage() {
         onClose={closeNotification}
       />
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] py-10">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-          <h1 className="text-3xl font-semibold text-center mb-2">
-            Reset Password
+        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-gray-100">
+          <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
+            รีเซ็ตรหัสผ่าน
           </h1>
           
-          <div className="text-center mb-6">
-             <p className="text-sm text-gray-500 mb-2">
-               Enter the OTP sent to {email}
+          <div className="text-center mb-8">
+             <p className="text-sm text-gray-500 mb-3">
+               ระบุรหัส OTP ที่ส่งไปยัง <span className="font-semibold text-gray-700">{email}</span>
              </p>
              
-             <div className={`flex items-center justify-center gap-2 text-sm font-medium ${isExpired ? 'text-red-500' : 'text-blue-600'}`}>
+             <div className={`flex items-center justify-center gap-2 text-sm font-bold py-2 px-4 rounded-full inline-flex ${isExpired ? 'text-red-500 bg-red-50' : 'text-blue-600 bg-blue-50'}`}>
                 <Clock size={16} />
                 {isExpired ? (
-                  <span>OTP Expired</span>
+                  <span>หมดเวลาส่งรหัส</span>
                 ) : (
-                  <span>Time remaining: {timeLeft}s</span>
+                  <span>เวลาที่เหลือ: {timeLeft} วินาที</span>
                 )}
              </div>
           </div>
 
-          {/* OTP Section */}
-          <div className="mb-6">
-            <label className="block text-gray-700 font-medium mb-2 text-center">OTP Code</label>
-            <div className="flex gap-2 justify-center mb-4">
+          <div className="mb-8">
+            <label className="block text-gray-700 font-bold mb-3 text-center uppercase tracking-wide text-xs">รหัส OTP 6 หลัก</label>
+            <div className="flex gap-2 justify-center">
               {otp.map((digit, index) => (
                 <input
                   key={index}
@@ -171,45 +171,44 @@ export default function ResetPasswordPage() {
                   disabled={isExpired}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className={`w-10 h-12 text-center text-xl border-2 rounded-lg focus:outline-none ${
+                  className={`w-12 h-14 text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-all ${
                     isExpired 
-                      ? 'bg-gray-100 border-gray-300 text-gray-400' 
-                      : 'border-gray-300 focus:border-purple-500'
+                      ? 'bg-gray-100 border-gray-200 text-gray-400' 
+                      : 'border-gray-200 focus:border-purple-500 focus:ring-4 focus:ring-purple-50'
                   }`}
                 />
               ))}
             </div>
           </div>
 
-          {/* New Password Section */}
-          <div className="space-y-4 mb-8">
+          <div className="space-y-5 mb-8">
             <div>
-              <label className="block text-gray-700 font-medium mb-2">New Password</label>
+              <label className="block text-gray-700 font-bold mb-2 ml-1 text-sm">รหัสผ่านใหม่</label>
               <div className="relative">
                 <input
                   type="password"
-                  placeholder="Enter new password"
+                  placeholder="กรอกรหัสผ่านใหม่"
                   value={newPassword}
                   disabled={isExpired}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                  className="w-full px-5 py-3.5 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-purple-500 transition-all disabled:bg-gray-50"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-gray-700 font-medium mb-2">Confirm Password</label>
+              <label className="block text-gray-700 font-bold mb-2 ml-1 text-sm">ยืนยันรหัสผ่านใหม่</label>
               <div className="relative">
                 <input
                   type="password"
-                  placeholder="Confirm new password"
+                  placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
                   value={confirmPassword}
                   disabled={isExpired}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-full focus:outline-none focus:ring-2 disabled:bg-gray-100 ${
+                  className={`w-full px-5 py-3.5 border-2 rounded-2xl focus:outline-none transition-all disabled:bg-gray-50 ${
                      !isExpired && confirmPassword && newPassword !== confirmPassword 
-                     ? 'border-red-500 focus:ring-red-500' 
-                     : 'border-gray-300 focus:ring-purple-500'
+                     ? 'border-red-400 focus:border-red-500' 
+                     : 'border-gray-200 focus:border-purple-500'
                   }`}
                 />
               </div>
@@ -219,16 +218,16 @@ export default function ResetPasswordPage() {
           {isExpired ? (
             <button
                 onClick={() => router.push('/login')}
-                className="w-full bg-gray-500 text-white py-3 rounded-full font-semibold hover:bg-gray-600 transition"
+                className="w-full bg-gray-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-lg active:scale-95"
             >
-                Back to Request OTP
+                กลับไปขอรหัส OTP ใหม่
             </button>
           ) : (
             <button
                 onClick={handleSubmit}
-                className="w-full bg-blue-900 text-white py-3 rounded-full font-semibold hover:bg-blue-800 transition"
+                className="w-full bg-blue-900 text-white py-4 rounded-2xl font-bold hover:bg-blue-800 transition-all shadow-lg shadow-blue-100 active:scale-95"
             >
-                Confirm Reset Password
+                ยืนยันการเปลี่ยนรหัสผ่าน
             </button>
           )}
         </div>

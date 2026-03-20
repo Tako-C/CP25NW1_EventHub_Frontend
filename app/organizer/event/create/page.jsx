@@ -70,7 +70,7 @@ export default function CreateEventPage() {
         setCurrentUserId(decoded.id || decoded.userId);
       }
     } else {
-      showNotification('Session expired. Please login again.', true);
+      showNotification('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง', true);
       router.push('/login');
     }
   }, [router]);
@@ -80,20 +80,25 @@ export default function CreateEventPage() {
   }, [])
 
   const fetchData = async () => {
-    const res = await getData('users/countrys');
-    const resCity = await getData(`users/country/${res?.data[0].id}/citys`)
-    console.log(resCity)
-    setCountry(resCity?.data || [])
+    try {
+      const res = await getData('users/countrys');
+      if (res?.data?.length > 0) {
+        const resCity = await getData(`users/country/${res?.data[0].id}/citys`)
+        setCountry(resCity?.data || [])
+      }
+    } catch (error) {
+      console.error("Fetch location failed", error);
+    }
   }
 
   const handleCreate = async (values) => {
     if (!currentUserId) {
-      showNotification('User not identified', true);
+      showNotification('ไม่พบข้อมูลผู้ใช้งาน', true);
       return;
     }
 
     if (values.eventSlideShow && values.eventSlideShow.length > 3) {
-      showNotification('Slideshow image cannot exceed 3 files.', true);
+      showNotification('รูปภาพสไลด์โชว์ห้ามเกิน 3 ไฟล์', true);
       return;
     }
 
@@ -104,16 +109,9 @@ export default function CreateEventPage() {
       formData.append('eventName', values.eventName);
       formData.append('eventDesc', values.eventDescription);
       formData.append('eventTypeId', values.eventType);
-      // formData.append('organizer', values.hostOrganization);
       formData.append('location', values.location);
       formData.append('createdBy', currentUserId);
 
-      // const startDateStr = values.startDate
-      //   ? dayjs(values.startDate).format('YYYY-MM-DDTHH:mm:ss')
-      //   : '';
-      // const endDateStr = values.endDate
-      //   ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ss')
-      //   : '';
       const startDateStr = values.startDate
         ? dayjs(values.startDate).utc().format('YYYY-MM-DDTHH:mm:ss')
         : '';
@@ -128,7 +126,6 @@ export default function CreateEventPage() {
       formData.append('contactLine', values.contactLine || '');
       formData.append('contactFacebook', values.contactFacebook || '');
 
-      // จัดการ Files (Single File)
       if (values.eventCard?.[0]?.originFileObj) {
         formData.append('eventCard', values.eventCard[0].originFileObj);
       }
@@ -139,18 +136,6 @@ export default function CreateEventPage() {
         formData.append('eventMap', values.eventMap[0].originFileObj);
       }
 
-      // จัดการ Files (Multiple Files - Slideshow)
-      if (values.eventSlideShow && values.eventSlideShow.length > 0) {
-        // ใช้ slice(0, 3) เพื่อความชัวร์ว่าจะไม่ส่งเกิน 3 แม้ Logic อื่นจะหลุดมา
-        values.eventSlideShow.slice(0, 3).forEach((fileItem) => {
-          if (fileItem.originFileObj) {
-            formData.append('eventSlideshow', fileItem.originFileObj);
-          }
-        });
-      }
-
-      // === Slideshow Logic (Create) ===
-      // รวมไฟล์จาก 3 Slot เข้าไปใน eventSlideshow ตัวแปรเดียว
       const slides = [];
       if (values.slideshowSlot1?.[0]?.originFileObj)
         slides.push(values.slideshowSlot1[0].originFileObj);
@@ -159,28 +144,26 @@ export default function CreateEventPage() {
       if (values.slideshowSlot3?.[0]?.originFileObj)
         slides.push(values.slideshowSlot3[0].originFileObj);
 
-      // วนลูปส่งไป
       slides.forEach((file) => {
         formData.append('eventSlideshow', file);
       });
 
-      // เรียก API
       await createEvent(formData);
 
-      showNotification('Event created successfully!', false);
+      showNotification('สร้างกิจกรรมสำเร็จ!', false);
       setTimeout(() => {
         router.push('/home#organizer-section');
       }, 1500);
     } catch (error) {
       console.error('Error creating event:', error);
-      showNotification(error.message || 'Failed to create event', true);
+      // showNotification(error.message || 'สร้างกิจกรรมไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', true);
+      showNotification('สร้างกิจกรรมไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', true);
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
-      {/* ใส่ Component Notification ไว้ตรงนี้ */}
+    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 mt-20">
       <Notification
         isVisible={notification.isVisible}
         onClose={closeNotification}
@@ -188,13 +171,18 @@ export default function CreateEventPage() {
         message={notification.message}
       />
 
+      <div className="max-w-4xl mx-auto mb-6">
+        <Title level={2}>สร้างกิจกรรมใหม่</Title>
+        <Text type="secondary">กรุณากรอกข้อมูลด้านล่างให้ครบถ้วนเพื่อเปิดกิจกรรมใหม่</Text>
+      </div>
+
       <EventForm
         onFinish={handleCreate}
         isLoading={loading}
         isEditMode={false}
         locationOptions={country}
         onValidationFailed={() =>
-          showNotification('Please fill all required fields.', true)
+          showNotification('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน', true)
         }
       />
     </div>

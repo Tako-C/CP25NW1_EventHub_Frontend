@@ -11,7 +11,6 @@ import {
   Input,
   Select,
   Popconfirm,
-  message,
   Typography,
   DatePicker,
 } from "antd";
@@ -23,29 +22,75 @@ import {
   updateStatusAccount,
 } from "@/libs/fetch";
 
+import Notification from "@/components/Notification/Notification";
+
 const { Title } = Typography;
 
 export default function Page() {
   const [dataSource, setDataSource] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (msg, isErr = false) => {
+    setNotification({
+      isVisible: true,
+      message: msg,
+      isError: isErr,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const res = await getData("admin/users");
+      const data = res?.data || [];
+      const sortedUser = [...data].sort((a, b) => a.id - b.id);
+      setDataSource(sortedUser);
+    } catch (error) {
+      showNotification("ไม่สามารถดึงข้อมูลผู้ใช้ได้", true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const toggleStatus = async (item) => {
     try {
       const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
       await updateStatusAccount(item.id, newStatus);
+      showNotification(`เปลี่ยนสถานะเป็น ${newStatus} สำเร็จ`);
       await fetchData();
     } catch (error) {
-      message.error(error.message || "Failed to update status");
+      // showNotification(error.message || "ไม่สามารถเปลี่ยนสถานะได้", true);
+      showNotification("ไม่สามารถเปลี่ยนสถานะได้", true);
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await deleteAccount(id);
+      showNotification("ลบผู้ใช้งานสำเร็จ");
       await fetchData();
     } catch (error) {
-      message.error(error.message || "Failed to delete user");
+      // showNotification(error.message || "ไม่สามารถลบผู้ใช้งานได้", true);
+      showNotification("ไม่สามารถลบผู้ใช้งานได้", true);
     }
   };
 
@@ -55,10 +100,12 @@ export default function Page() {
       if (res?.statusCode === 201) {
         setIsModalOpen(false);
         form.resetFields();
+        showNotification("สร้างบัญชีผู้ใช้ใหม่สำเร็จ");
         await fetchData();
       }
     } catch (error) {
-      message.error(error.message || "Failed to add user");
+      // showNotification(error.message || "ไม่สามารถสร้างบัญชีผู้ใช้ได้", true);
+      showNotification("ไม่สามารถสร้างบัญชีผู้ใช้ได้", true);
     }
   };
 
@@ -79,7 +126,7 @@ export default function Page() {
       key: "status",
       render: (status) => (
         <Tag color={status === "ACTIVE" ? "green" : "grey"}>
-          {status.toUpperCase()}
+          {status?.toUpperCase()}
         </Tag>
       ),
     },
@@ -112,19 +159,15 @@ export default function Page() {
     },
   ];
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    const res = await getData("admin/users");
-    const data = res?.data
-    const sortedUser = [...data].sort((a, b) => a.id - b.id);
-    setDataSource(sortedUser);
-  };
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen mt-20">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm">
         <Title level={3} className="!m-0">
           User Management
@@ -145,6 +188,7 @@ export default function Page() {
           columns={columns}
           rowKey="id"
           bordered
+          loading={loading}
           className="admin-table"
         />
       </div>

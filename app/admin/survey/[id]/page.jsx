@@ -13,7 +13,7 @@ import {
   Plus,
   Loader2,
 } from "lucide-react";
-import { Table, Tag, Select, Button, Space, Modal, notification } from "antd";
+import { Table, Tag, Select, Button, Space, Modal } from "antd"; 
 import dayjs from "dayjs";
 import {
   getDataNoToken,
@@ -23,6 +23,8 @@ import {
   hardDeleteSurveyByAdmin,
   updateSurveyStatusByAdmin,
 } from "@/libs/fetch";
+
+import Notification from "@/components/Notification/Notification";
 
 const STATUS_CONFIG = {
   ACTIVE: { color: "#10b981", bg: "#ecfdf5", label: "Active" },
@@ -339,6 +341,27 @@ export default function EventSurveyManager() {
     post: { visitor: [], exhibitor: [] },
   });
 
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
   useEffect(() => {
     if (id) fetchData();
   }, [id]);
@@ -374,7 +397,7 @@ export default function EventSurveyManager() {
       });
       setSurveys(mappedSurveys);
     } catch (e) {
-      notification.error({ message: `โหลดข้อมูลล้มเหลว: ${e}` });
+      showNotification(`โหลดข้อมูลล้มเหลว: ${e.message}`, true);
     } finally {
       setLoading(false);
     }
@@ -403,15 +426,11 @@ export default function EventSurveyManager() {
         };
       });
 
-      notification.success({
-        message: "อัปเดตสถานะสำเร็จ",
-        description: newStatus === "DELETED" ? "ลบแบบสำรวจเรียบร้อยแล้ว" : "",
-      });
+      showNotification(
+        newStatus === "DELETED" ? "ลบแบบสำรวจเรียบร้อยแล้ว" : "อัปเดตสถานะสำเร็จ"
+      );
     } catch (e) {
-      notification.error({
-        message: "อัปเดตสถานะล้มเหลว",
-        description: e.message,
-      });
+      showNotification(`อัปเดตสถานะล้มเหลว: ${e.message}`, true);
     }
   };
 
@@ -436,22 +455,16 @@ export default function EventSurveyManager() {
             return next;
           });
 
-          notification.success({
-            message: "ลบแบบสำรวจสำเร็จ",
-            description: "แบบสำรวจถูกลบออกจากระบบถาวรเรียบร้อยแล้ว",
-          });
+          showNotification("ลบแบบสำรวจสำเร็จ: ข้อมูลถูกลบออกจากระบบถาวรเรียบร้อยแล้ว");
         } catch (e) {
-          notification.error({
-            message: "ไม่สามารถลบข้อมูลได้",
-            description: e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์",
-          });
+          // showNotification(e.message || "ไม่สามารถลบข้อมูลได้", true);
+          showNotification("ไม่สามารถลบข้อมูลได้", true);
         }
       },
     });
   };
 
   const handleEdit = (record, type, role) => {
-    // router.push(`/admin/survey/${id}/edit?type=${type}&role=${role}`);
     router.push(`/admin/survey/${id}/edit/${record.id}`);
   };
 
@@ -474,8 +487,6 @@ export default function EventSurveyManager() {
     },
   ];
 
-  const activeTabConfig = tabs.find((t) => t.key === activeTab);
-
   return (
     <div
       style={{
@@ -484,6 +495,13 @@ export default function EventSurveyManager() {
         padding: "40px 32px",
       }}
     >
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <button
           onClick={() => router.push("/admin/survey")}

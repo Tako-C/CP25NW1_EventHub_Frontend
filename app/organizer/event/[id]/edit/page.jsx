@@ -47,12 +47,15 @@ export default function EditEventPage() {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
 
-    const fetchData = async () => {
+  const fetchData = async () => {
+    try {
       const res = await getData('users/countrys');
       const resCity = await getData(`users/country/${res?.data[0].id}/citys`)
-      console.log(resCity)
       setCountry(resCity?.data || [])
+    } catch (error) {
+      console.error("Fetch location error:", error);
     }
+  }
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -73,12 +76,10 @@ export default function EditEventPage() {
               fetchPath = `upload/events/${fetchPath}`;
             }
 
-            // ลบ / ตัวแรกออก ถ้ามี
             if (fetchPath.startsWith("/")) {
               fetchPath = fetchPath.substring(1);
             }
 
-            // ดึง Blob URL
             const blobUrl = await getUpdateImage(fetchPath);
 
             if (!blobUrl || typeof blobUrl !== "string") {
@@ -87,7 +88,7 @@ export default function EditEventPage() {
 
             return [
               {
-                uid: `-existing-${uidSuffix}`, // สำคัญ: ใช้ prefix นี้เพื่อเช็คตอนลบ
+                uid: `-existing-${uidSuffix}`,
                 name: imgFilename,
                 status: "done",
                 url: blobUrl,
@@ -101,63 +102,48 @@ export default function EditEventPage() {
         };
 
         const imagesObj = eventData.images || {};
-        const pathCard = imagesObj.imgCard; // "1_card.jpg"
-        const pathDetail = imagesObj.imgDetail; // "1_detail.jpg"
-        // เช็คเผื่อว่ามี imgMap ในอนาคต (ใน JSON ตัวอย่างไม่มี)
+        const pathCard = imagesObj.imgCard;
+        const pathDetail = imagesObj.imgDetail;
         const pathMap = imagesObj.imgMap || eventData.imgMap;
-        const slidesArray = imagesObj.imgSlideShow || []; // ["1_slideshow.jpg"]
+        const slidesArray = imagesObj.imgSlideShow || [];
 
-        // Parallel Fetching: ดึงทุกรูปพร้อมกัน
         const [fileCard, fileDetail, fileMap, slide1, slide2, slide3] =
           await Promise.all([
             loadAndFormatImage(pathCard, "card"),
             loadAndFormatImage(pathDetail, "detail"),
             loadAndFormatImage(pathMap, "map"),
-            // Slideshow: ดึงตาม Index
             loadAndFormatImage(slidesArray[0], "slide1"),
             loadAndFormatImage(slidesArray[1], "slide2"),
             loadAndFormatImage(slidesArray[2], "slide3"),
           ]);
 
         setInitialData({
-          ...eventData, // ระวังการ spread ข้อมูลที่ไม่ได้ใช้
-
-          // --- Text Data Mapping ---
+          ...eventData,
           eventName: eventData.eventName,
-          hostOrganization: eventData.hostOrganisation, // Map Organisation -> Organization
+          hostOrganization: eventData.hostOrganisation,
           location: eventData.location,
-          eventDescription: eventData.eventDesc, // Map eventDesc -> eventDescription
-
-          // Event Type (เข้าถึง nested object)
+          eventDescription: eventData.eventDesc,
           eventType: eventData.eventTypeId?.id,
-
-          // Date
           startDate: eventData.startDate
             ? dayjs.utc(eventData.startDate).local()
             : null,
           endDate: eventData.endDate
             ? dayjs.utc(eventData.endDate).local()
             : null,
-
-          // Contacts
           contactEmail: eventData.contactEmail || "",
           contactPhone: eventData.contactPhone || "",
           contactLine: eventData.contactLine || "",
           contactFacebook: eventData.contactFacebook || "",
-
-          // --- Image Data (FileList) ---
           eventCard: fileCard,
           eventDetail: fileDetail,
           eventMap: fileMap,
-
-          // --- Slideshow Slots ---
           slideshowSlot1: slide1,
           slideshowSlot2: slide2,
           slideshowSlot3: slide3,
         });
       } catch (error) {
         console.error("Error fetching event:", error);
-        showNotification("Error fetching event data", true);
+        showNotification("ไม่สามารถโหลดข้อมูลกิจกรรมได้", true);
       } finally {
         setFetching(false);
       }
@@ -166,13 +152,11 @@ export default function EditEventPage() {
     fetchEventData();
   }, [id]);
 
-  // --- 2. Handle Update ---
   const handleUpdate = async (values) => {
     setLoading(true);
     try {
       const formData = new FormData();
 
-      // Text Data
       formData.append("eventName", values.eventName);
       formData.append("eventDesc", values.eventDescription);
       formData.append("eventTypeId", values.eventType);
@@ -182,10 +166,12 @@ export default function EditEventPage() {
       formData.append("contactPhone", values.contactPhone || "");
       formData.append("contactLine", values.contactLine || "");
       formData.append("contactFacebook", values.contactFacebook || "");
+      
       const creatorId = initialData.createdBy?.id || initialData.createdBy;
       if (creatorId) {
         formData.append("createdBy", creatorId);
       }
+      
       if (values.startDate)
         formData.append(
           "startDate",
@@ -197,7 +183,6 @@ export default function EditEventPage() {
           values.endDate.utc().format("YYYY-MM-DDTHH:mm:ss"),
         );
 
-      // Single Files
       if (values.eventCard?.[0]?.originFileObj)
         formData.append("eventCard", values.eventCard[0].originFileObj);
       if (values.eventDetail?.[0]?.originFileObj)
@@ -205,65 +190,51 @@ export default function EditEventPage() {
       if (values.eventMap?.[0]?.originFileObj)
         formData.append("eventMap", values.eventMap[0].originFileObj);
 
-      // Slideshow Files
       const indices = [];
 
       if (values.slideshowSlot1?.[0]?.originFileObj) {
-        formData.append(
-          "eventSlideshow",
-          values.slideshowSlot1[0].originFileObj,
-        );
+        formData.append("eventSlideshow", values.slideshowSlot1[0].originFileObj);
         indices.push(1);
       }
       if (values.slideshowSlot2?.[0]?.originFileObj) {
-        formData.append(
-          "eventSlideshow",
-          values.slideshowSlot2[0].originFileObj,
-        );
+        formData.append("eventSlideshow", values.slideshowSlot2[0].originFileObj);
         indices.push(2);
       }
       if (values.slideshowSlot3?.[0]?.originFileObj) {
-        formData.append(
-          "eventSlideshow",
-          values.slideshowSlot3[0].originFileObj,
-        );
+        formData.append("eventSlideshow", values.slideshowSlot3[0].originFileObj);
         indices.push(3);
       }
 
-      // ส่ง Indices ถ้ามีรูป Slideshow ใหม่
       if (indices.length > 0) {
         indices.forEach((idx) => formData.append("slideshowIndices", idx));
       } else {
-        // กรณีไม่มีการแก้ไข Slideshow เลย ให้ส่งค่า null
         formData.append("slideshowIndices", "");
       }
 
       await updateEvent(id, formData);
 
-      showNotification("Update Success!", false);
-      setTimeout(() => router.push("/home#organizer-section"), 1000);
+      showNotification("อัปเดตข้อมูลสำเร็จ!", false);
+      setTimeout(() => router.push("/home#organizer-section"), 1500);
     } catch (error) {
       console.error(error);
-      showNotification("Update failed", true);
+      showNotification("ไม่สามารถอัปเดตข้อมูลได้ กรุณาลองใหม่อีกครั้ง", true);
     } finally {
       setLoading(false);
     }
   };
 
-  // --- 3. Handle Delete ---
   const handleDelete = async () => {
     setLoading(true);
     try {
       await deleteEvent(id);
-
-      showNotification("Delete event success!", false);
-
+      showNotification("ลบกิจกรรมสำเร็จ!", false);
       setTimeout(() => {
         router.push("/home#organizer-section");
-      }, 1000);
+      }, 1500);
     } catch (error) {
       console.error("Delete error:", error);
-      showNotification(error.message || "Cannot delete event", true);
+      // showNotification(error.message || "ไม่สามารถลบกิจกรรมได้", true);
+      showNotification("ไม่สามารถลบกิจกรรมได้", true);
     } finally {
       setLoading(false);
     }
@@ -292,18 +263,20 @@ export default function EditEventPage() {
 
       if (category) {
         await deleteEventImage(id, category, index);
-        showNotification("Delete image success", false);
+        showNotification("ลบรูปภาพสำเร็จ", false);
         return true;
       }
     } catch (error) {
       console.error(error);
-      showNotification("Delete image failed", true);
+      showNotification("ลบรูปภาพไม่สำเร็จ", true);
       return false;
     }
   };
 
+  if (fetching) return <div className="p-10 text-center">กำลังโหลดข้อมูล...</div>;
+
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 mt-20">
       <Notification
         isVisible={notification.isVisible}
         onClose={closeNotification}
@@ -320,7 +293,7 @@ export default function EditEventPage() {
         isLoading={loading}
         isEditMode={true}
         onValidationFailed={() =>
-          showNotification("Please fill all required fields.", true)
+          showNotification("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน", true)
         }
       />
     </div>

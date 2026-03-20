@@ -18,12 +18,23 @@ export default function Page() {
   const [cooldown, setCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isDisabled, setIsDisabled] = useState(true);
-  // const [errors, setErrors] = useState("");
+
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
     message: "",
   });
+
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
 
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
@@ -70,19 +81,25 @@ export default function Page() {
   const handleResend = async () => {
     if (cooldown > 0 || !data?.email) return;
 
-    setLoading(true);
-    setCooldown(60);
-    const newEnd = Date.now() + 60 * 1000;
-    localStorage.setItem(`otp_end_time_${data.email}`, newEnd);
+    try {
+      setLoading(true);
+      setCooldown(60);
+      const newEnd = Date.now() + 60 * 1000;
+      localStorage.setItem(`otp_end_time_${data.email}`, newEnd);
 
-    const res = await authRegisterRequest(
-      data?.firstName,
-      data?.lastName,
-      data?.email,
-      data?.password
-    );
-
-    setTimeout(() => setLoading(false), 500);
+      await authRegisterRequest(
+        data?.firstName,
+        data?.lastName,
+        data?.email,
+        data?.password
+      );
+      
+      showNotification("ส่งรหัส OTP ใหม่ไปยังอีเมลของท่านแล้ว");
+    } catch (error) {
+      showNotification("ไม่สามารถส่งรหัสใหม่ได้ กรุณาลองใหม่อีกครั้ง", true);
+    } finally {
+      setTimeout(() => setLoading(false), 500);
+    }
   };
 
   const handleOtpChange = (index, value) => {
@@ -93,7 +110,6 @@ export default function Page() {
     setOtp(newOtp);
 
     setIsDisabled(newOtp.join("").length !== 6);
-    // setErrors("");
 
     if (value !== "" && index < 5) {
       inputRefs.current[index + 1]?.focus();
@@ -106,69 +122,34 @@ export default function Page() {
     }
   };
 
-  // const handleContinue = async () => {
-  //   const otpCode = otp.join("");
-
-  //   if (otpCode.length === 6) {
-  //     try {
-  //       const res = await authRegisterVerify(
-  //         data?.email,
-  //         otpCode,
-  //         data?.password
-  //       );
-  //       if (res.statusCode === 200) {
-  //         const resLogin = await authLoginPassword(data?.email, data?.password);
-  //         if (resLogin?.statusCode === 200 || resLogin?.data?.token) {
-  //           Cookie.set("token", resLogin?.data.token);
-  //           Cookie.remove("signupData");
-  //           // window.location.href = '/home';
-  //           router.push("/home");
-  //           setTimeout(() => {
-  //             window.location.reload();
-  //           }, 100);
-  //         }
-  //       } else {
-  //         setErrors("รหัส OTP ไม่ถูกต้อง");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error confirming OTP:", error);
-  //       setErrors("เกิดข้อผิดพลาด กรุณาลองใหม่");
-  //     }
-  //   }
-  // };
-
   const handleContinue = async () => {
     try {
       const otpCode = otp.join("");
       if (otpCode.length === 6) {
-        // 1. ยืนยัน OTP (ถ้า Backend error จะ throw ไป catch เอง)
         await authRegisterVerify(
           data?.email,
           otpCode,
           data?.password
         );
 
-        // 2. Login เพื่อรับ Token
         const loginRes = await authLoginPassword(data?.email, data?.password);
 
-        // 3. ลบ Cooldown (ต้องใช้ data.email ให้ตรงกับตอน set)
         localStorage.removeItem(`otp_end_time_${data?.email}`);
         
-        // 4. บันทึก Token (แก้ไขจาก res เป็น loginRes)
         Cookie.set("token", loginRes?.data?.token, { path: "/" });
         
-        // 5. ลบข้อมูลชั่วคราวและ Redirect
         Cookie.remove("signupData");
-
         window.dispatchEvent(new Event("user-logged-in"));
-        router.push("/home");
+        
+        showNotification("ยืนยันตัวตนสำเร็จ กำลังเข้าสู่ระบบ...");
+
+        setTimeout(() => {
+          router.push("/home");
+        }, 1500);
       }
     } catch (error) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: error.data?.message,
-      });
+      // showNotification(error.data?.message || "รหัส OTP ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง", true);
+      showNotification("รหัส OTP ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง", true);
     }
   };
 
@@ -181,18 +162,19 @@ export default function Page() {
         onClose={closeNotification}
       />
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-          <h1 className="text-3xl font-semibold text-center mb-8">
-            Verify OTP
+        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md border border-gray-100">
+          <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">
+            ยืนยันรหัส OTP
           </h1>
 
-          <div className="mb-6">
-            <h2 className="text-lg font-medium mb-2">Enter Your OTP</h2>
-            <p className="text-sm text-gray-500 mb-6">
-              ส่งรหัส 6 หลักไปยัง {data?.email}
+          <div className="mb-6 text-center">
+            <h2 className="text-lg font-medium mb-2 text-gray-800">กรอกรหัสยืนยัน</h2>
+            <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+              เราได้ส่งรหัสยืนยัน 6 หลักไปยังอีเมล <br/>
+              <span className="font-bold text-gray-700">{data?.email}</span>
             </p>
 
-            <div className="flex gap-2 justify-center mb-4">
+            <div className="flex gap-2 justify-center mb-8">
               {otp.map((digit, index) => (
                 <input
                   key={index}
@@ -202,35 +184,31 @@ export default function Page() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-14 text-center text-xl border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                  className="w-12 h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all"
                 />
               ))}
             </div>
 
-            {/* {errors && (
-              <p className="text-red-500 text-sm text-center mb-4">{errors}</p>
-            )} */}
-
-            <div className="text-center mb-6">
+            <div className="text-center mb-8">
               <button
                 onClick={handleResend}
                 disabled={cooldown > 0 || loading}
-                className="text-sm text-gray-600 underline hover:text-purple-600 disabled:text-gray-400"
+                className="text-sm font-semibold text-purple-600 underline hover:text-purple-800 disabled:text-gray-400 disabled:no-underline transition-colors"
               >
-                {cooldown > 0 ? `รอ ${cooldown} วินาที` : "Resend code"}
+                {cooldown > 0 ? `ขอรหัสใหม่ได้ในอีก ${cooldown} วินาที` : "ส่งรหัสใหม่อีกครั้ง"}
               </button>
             </div>
 
             <button
               onClick={handleContinue}
               disabled={isDisabled}
-              className={`w-full py-3 rounded-lg font-medium transition-colors ${
+              className={`w-full py-3.5 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95 ${
                 isDisabled
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-900 text-white hover:bg-blue-800"
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                  : "bg-blue-900 text-white hover:bg-blue-800 shadow-blue-100"
               }`}
             >
-              Continue
+              ดำเนินการต่อ
             </button>
           </div>
         </div>

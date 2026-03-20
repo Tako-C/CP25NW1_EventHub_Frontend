@@ -25,11 +25,27 @@ export default function Page() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
     message: "",
   });
+
+  const showNotification = (msg, isError = false) => {
+    setNotification({
+      isVisible: true,
+      isError: isError,
+      message: msg,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   const genderOptions = [
     { id: "M", label: "ชาย" },
@@ -37,10 +53,6 @@ export default function Page() {
     { id: "U", label: "เพศที่สาม" },
     { id: "N", label: "ไม่ระบุ" },
   ];
-
-  const closeNotification = () => {
-    setNotification((prev) => ({ ...prev, isVisible: false }));
-  };
 
   useEffect(() => {
     if (!formData.email) return;
@@ -68,72 +80,45 @@ export default function Page() {
     return () => clearInterval(timer);
   }, [cooldown, formData.email]);
 
-  const validateField = (field, value) => {
-    switch (field) {
-      case "firstName":
-        return value.trim() ? "" : "* กรุณากรอกชื่อจริง";
-      case "lastName":
-        return value.trim() ? "" : "* กรุณากรอกนามสกุล";
-      case "email":
-        if (!value.trim()) return "* กรุณากรอกอีเมล";
-        if (!value.includes("@") || !value.endsWith(".com"))
-          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
-        return "";
-      case "gender":
-        return value ? "" : "* กรุณาเลือกเพศ";
-      case "dateOfBirth":
-        return value ? "" : "* กรุณากรอกวันเกิด";
-      case "password":
-        return value.trim() ? "" : "* กรุณากรอกรหัสผ่าน";
-      case "confirmPassword":
-        if (!value.trim()) return "* กรุณายืนยันรหัสผ่าน";
-        if (value !== formData.password) return "* รหัสผ่านไม่ตรงกัน";
-        return "";
-      default:
-        return "";
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.firstName.trim()) newErrors.firstName = "* กรุณากรอกชื่อจริง";
+    if (!formData.lastName.trim()) newErrors.lastName = "* กรุณากรอกนามสกุล";
+    
+    if (!formData.email.trim()) {
+      newErrors.email = "* กรุณากรอกอีเมล";
+    } else if (!formData.email.includes("@") || !formData.email.endsWith(".com")) {
+      newErrors.email = "* รูปแบบอีเมลไม่ถูกต้อง (ต้องมี @ และลงท้ายด้วย .com)";
     }
+
+    if (!formData.dateOfBirth) newErrors.dateOfBirth = "* กรุณาเลือกวันเกิด";
+    
+    if (!formData.password.trim()) {
+      newErrors.password = "* กรุณากรอกรหัสผ่าน";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "* รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "* รหัสผ่านยืนยันไม่ตรงกัน";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  // const validateForm = () => {
-  //   const newErrors = {};
-  //   Object.keys(formData).forEach((key) => {
-  //     const err = validateField(key, formData[key]);
-  //     if (err) newErrors[key] = err;
-  //   });
-  //   setErrors(newErrors);
-  //   return Object.keys(newErrors).length === 0;
-  // };
-
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.firstName) newErrors.firstName = "* กรุณากรอกชื่อจริง";
-    if (!formData.lastName) newErrors.lastName = "* กรุณากรอกนามสกุล";
-    if (!formData.email) newErrors.email = "* กรุณากรอกอีเมล";
-    if (!formData.dateOfBirth) newErrors.dateOfBirth = "* กรุณาเลือกวันเกิด";
-    if (!formData.password) newErrors.password = "* กรุณากรอกรหัสผ่าน";
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "* รหัสผ่านไม่ตรงกัน";
-    }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const email = formData?.email;
 
-    if (!validateForm() || !agreeTerms) {
-      if (!agreeTerms) {
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: "Please agree to the Terms & Conditions.",
-        });
-      }
+    if (!validateForm()) return;
+
+    if (!agreeTerms) {
+      showNotification("กรุณากดยอมรับเงื่อนไขและข้อกำหนดการใช้งาน", true);
       return;
     }
 
@@ -148,9 +133,7 @@ export default function Page() {
       });
 
       const savedEnd = localStorage.getItem(key);
-      const remaining = savedEnd
-        ? Math.floor((savedEnd - Date.now()) / 1000)
-        : 0;
+      const remaining = savedEnd ? Math.floor((savedEnd - Date.now()) / 1000) : 0;
 
       if (remaining > 0) {
         setCooldown(remaining);
@@ -167,27 +150,26 @@ export default function Page() {
         formData.dateOfBirth,
       );
 
-      const endTime = Date.now() + 60 * 1000;
-      localStorage.setItem(key, endTime);
-      setCooldown(60);
-      router.push("/sign-up/verify-otp");
+      if (res.statusCode === 200 || res.statusCode === 201) {
+        const endTime = Date.now() + 60 * 1000;
+        localStorage.setItem(key, endTime);
+        setCooldown(60);
+        showNotification("ส่งรหัส OTP ไปยังอีเมลของท่านแล้ว");
+        setTimeout(() => {
+          router.push("/sign-up/verify-otp");
+        }, 1500);
+      }
     } catch (error) {
-      console.error("Error during registration:", error);
-
+      console.error("Registration error:", error);
       localStorage.removeItem(key);
       setCooldown(0);
-
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message:
-          error.data?.message ||
-          "An unexpected error occurred. Please try again.",
-      });
+      // showNotification(error.data?.message || "เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง", true);
+      showNotification("เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง", true);
     } finally {
       setLoading(false);
     }
   };
+
   const handleSignIn = () => {
     router.push("/login");
   };
@@ -203,21 +185,18 @@ export default function Page() {
       <div className="flex items-center justify-center py-20 px-4 mt-18">
         <div className="w-full max-w-md">
           <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
-            Create Account
+            สร้างบัญชีใหม่
           </h1>
 
           <div className="bg-white rounded-3xl shadow-lg p-8">
             <div className="mb-4">
-              <label
-                htmlFor="firstName"
-                className="block text-gray-700 font-medium mb-2"
-              >
-                First Name
+              <label htmlFor="firstName" className="block text-gray-700 font-medium mb-2">
+                ชื่อจริง
               </label>
               <input
                 id="firstName"
                 type="text"
-                placeholder="Enter your first name"
+                placeholder="กรอกชื่อจริงของคุณ"
                 value={formData.firstName}
                 onChange={(e) => handleInputChange("firstName", e.target.value)}
                 maxLength={20}
@@ -226,21 +205,18 @@ export default function Page() {
                 } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
               />
               {errors.firstName && (
-                <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
+                <p className="text-red-500 text-sm mt-1 ml-2">{errors.firstName}</p>
               )}
             </div>
 
             <div className="mb-4">
-              <label
-                htmlFor="lastName"
-                className="block text-gray-700 font-medium mb-2"
-              >
-                Last Name
+              <label htmlFor="lastName" className="block text-gray-700 font-medium mb-2">
+                นามสกุล
               </label>
               <input
                 id="lastName"
                 type="text"
-                placeholder="Enter your last name"
+                placeholder="กรอกนามสกุลของคุณ"
                 value={formData.lastName}
                 onChange={(e) => handleInputChange("lastName", e.target.value)}
                 maxLength={20}
@@ -249,21 +225,18 @@ export default function Page() {
                 } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
               />
               {errors.lastName && (
-                <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
+                <p className="text-red-500 text-sm mt-1 ml-2">{errors.lastName}</p>
               )}
             </div>
 
             <div className="mb-4">
-              <label
-                htmlFor="email"
-                className="block text-gray-700 font-medium mb-2"
-              >
-                Email
+              <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
+                อีเมล
               </label>
               <input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="example@email.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 maxLength={50}
@@ -272,13 +245,13 @@ export default function Page() {
                 } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
               />
               {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                <p className="text-red-500 text-sm mt-1 ml-2">{errors.email}</p>
               )}
             </div>
 
             <div className="mb-4">
               <label className="block text-gray-700 font-medium mb-2 ml-1 text-sm">
-                Gender
+                เพศ
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -303,7 +276,7 @@ export default function Page() {
 
             <div className="mb-6">
               <label className="block text-gray-700 font-medium mb-2 ml-1 text-sm">
-                Date of Birth
+                วันเดือนปีเกิด
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
@@ -326,17 +299,14 @@ export default function Page() {
             </div>
 
             <div className="mb-4">
-              <label
-                htmlFor="password"
-                className="block text-gray-700 font-medium mb-2"
-              >
-                Password
+              <label htmlFor="password" class="block text-gray-700 font-medium mb-2">
+                รหัสผ่าน
               </label>
               <div className="relative">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
+                  placeholder="ตั้งรหัสผ่านของคุณ"
                   value={formData.password}
                   onChange={(e) =>
                     handleInputChange("password", e.target.value)
@@ -349,30 +319,25 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-
               {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                <p className="text-red-500 text-sm mt-1 ml-2">{errors.password}</p>
               )}
             </div>
 
             <div className="mb-6">
-              <label
-                htmlFor="confirmPassword"
-                className="block text-gray-700 font-medium mb-2"
-              >
-                Confirm Password
+              <label htmlFor="confirmPassword" class="block text-gray-700 font-medium mb-2">
+                ยืนยันรหัสผ่าน
               </label>
               <div className="relative">
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your password"
+                  placeholder="ยืนยันรหัสผ่านอีกครั้ง"
                   value={formData.confirmPassword}
                   onChange={(e) =>
                     handleInputChange("confirmPassword", e.target.value)
@@ -387,21 +352,13 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 focus:outline-none"
-                  aria-label={
-                    showConfirmPassword ? "Hide password" : "Show password"
-                  }
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700"
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-
               {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-red-500 text-sm mt-1 ml-2">
                   {errors.confirmPassword}
                 </p>
               )}
@@ -416,13 +373,13 @@ export default function Page() {
                   className="w-4 h-4 mt-1 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                 />
                 <span className="text-sm text-gray-600">
-                  I agree to the{" "}
-                  <Link href="#" className="text-blue-500 hover:text-blue-600">
-                    Terms & Conditions
+                  ฉันยอมรับ{" "}
+                  <Link href="#" className="text-blue-500 hover:text-blue-600 font-semibold">
+                    เงื่อนไขและข้อกำหนด
                   </Link>{" "}
-                  and{" "}
-                  <Link href="#" className="text-blue-500 hover:text-blue-600">
-                    Privacy Policy
+                  และ{" "}
+                  <Link href="#" className="text-blue-500 hover:text-blue-600 font-semibold">
+                    นโยบายความเป็นส่วนตัว
                   </Link>
                 </span>
               </label>
@@ -430,20 +387,20 @@ export default function Page() {
 
             <button
               onClick={handleSubmit}
-              disabled={!agreeTerms}
-              className="w-full bg-blue-900 text-white py-3 rounded-full font-semibold hover:bg-blue-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={loading}
+              className="w-full bg-blue-900 text-white py-3.5 rounded-full font-bold hover:bg-blue-800 transition shadow-lg active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              Create Account
+              {loading ? "กำลังดำเนินการ..." : "สร้างบัญชีผู้ใช้"}
             </button>
           </div>
 
           <p className="text-center mt-6 text-gray-700">
-            Already have an account?{" "}
+            มีบัญชีผู้ใช้อยู่แล้ว?{" "}
             <button
               onClick={handleSignIn}
-              className="text-blue-500 hover:text-blue-600 font-medium"
+              className="text-blue-500 hover:text-blue-600 font-bold"
             >
-              Sign In
+              เข้าสู่ระบบที่นี่
             </button>
           </p>
         </div>

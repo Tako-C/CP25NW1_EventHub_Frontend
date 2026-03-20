@@ -31,110 +31,30 @@ export default function PostSurveyForm() {
   });
   const [eventDetail, setEventDetail] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
     message: "",
   });
+
   const [surveyData, setSurveyData] = useState(null);
   const router = useRouter();
+
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
 
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
-
-  // const fetchPostSurvey = async () => {
-  //   let currentEvent;
-
-  //   if (token) {
-  //     console.log("Searching for eventId:", id);
-  //     const res = await getData("users/me/registered-events");
-
-  //     if (res?.statusCode === 403) {
-  //       return router.push("/error");
-  //     }
-
-  //     if (res?.statusCode && res.statusCode !== 200) {
-  //       setNotification({
-  //         isVisible: true,
-  //         isError: true,
-  //         message: res?.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์",
-  //       });
-
-  //       setTimeout(() => {
-  //         router.push("/home");
-  //       }, 3000);
-  //       return;
-  //     }
-
-  //     console.log("res?.data:", res?.data);
-  //     currentEvent = res?.data?.find(
-  //       (item) => String(item.eventId) === String(id),
-  //     );
-
-  //     console.log("Found currentEvent:", currentEvent);
-  //   } else {
-  //     if (u) {
-  //       Cookie.set("accessToken", u);
-  //       const res = await surveyPostValidate();
-
-  //       if (res?.statusCode === 403) {
-  //         return router.push("/error");
-  //       }
-
-  //       if (res?.statusCode && res.statusCode !== 200) {
-  //         setNotification({
-  //           isVisible: true,
-  //           isError: true,
-  //           message: res?.message || "เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์",
-  //         });
-
-  //         setTimeout(() => {
-  //           router.push("/home");
-  //         }, 3000);
-  //         return;
-  //       }
-
-  //       currentEvent = res?.data;
-  //     }
-  //   }
-
-  //   const eventRes = await getDataNoToken(`events/${id}`);
-  //   if (eventRes?.statusCode !== 200) {
-  //     setNotification({
-  //       isVisible: true,
-  //       isError: true,
-  //       message: "ไม่พบข้อมูลกิจกรรม",
-  //     });
-  //     return;
-  //   }
-
-  //   setEventDetail(eventRes?.data);
-  //   const hasPostSurvey = eventRes.data?.hasPostSurvey;
-
-  //   if (!currentEvent || !hasPostSurvey) {
-  //     setNotification({
-  //       isVisible: true,
-  //       isError: true,
-  //       message: "ไม่พบ survey",
-  //     });
-
-  //     setTimeout(() => {
-  //       router.push("/home");
-  //     }, 3000);
-  //     return;
-  //   }
-
-  //   const surveyRes = await getDataNoToken(`events/${id}/surveys/post`);
-  //   if (surveyRes?.statusCode !== 200) return;
-
-  //   const roleDataMap = {
-  //     VISITOR: surveyRes.data?.visitor[0],
-  //     EXHIBITOR: surveyRes.data?.exhibitor[0],
-  //   };
-
-  //   setSurveyData(roleDataMap[currentEvent.eventRole] || null);
-  // };
 
   const fetchPostSurvey = async () => {
     let currentEvent = null;
@@ -148,21 +68,15 @@ export default function PostSurveyForm() {
         Cookie.set("accessToken", u);
         try {
           const res = await surveyPostValidate();
-
           currentEvent = res?.data;
           if (res?.data?.accessToken) {
             Cookie.set("accessToken", res.data.accessToken);
           }
         } catch (error) {
           cleanupToken();
-
           if (error.status === 403) return router.push("/error");
 
-          setNotification({
-            isVisible: true,
-            isError: true,
-            message: error.message || "ลิงก์ไม่ถูกต้องหรือหมดอายุ",
-          });
+          showNotification("ลิงก์เข้าสู่แบบประเมินไม่ถูกต้องหรือหมดอายุ", true);
           setTimeout(() => {
             router.push("/home");
           }, 3000);
@@ -179,11 +93,7 @@ export default function PostSurveyForm() {
       setEventDetail(eventRes?.data);
 
       if (!currentEvent || !eventRes.data?.hasPostSurvey) {
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: "คุณไม่มีสิทธิ์เข้าถึงแบบประเมินนี้ หรือไม่มีแบบประเมิน",
-        });
+        showNotification("คุณไม่มีสิทธิ์เข้าถึงแบบประเมินนี้ หรือแบบประเมินยังไม่เปิดให้ใช้งาน", true);
         setTimeout(() => {
           router.push("/home");
         }, 3000);
@@ -199,15 +109,12 @@ export default function PostSurveyForm() {
       setSurveyData(roleDataMap[currentEvent.eventRole] || null);
     } catch (globalError) {
       console.error("Fetch Survey Error:", globalError);
+      showNotification("เกิดข้อผิดพลาดในการโหลดข้อมูลแบบประเมิน", true);
       cleanupToken();
     }
   };
 
   useEffect(() => {
-    // if (!token) {
-    //   Cookie.set("surveyPost", `/event/${id}/survey/post`);
-    //   return router.push("/login");
-    // }
     fetchPostSurvey();
   }, [id]);
 
@@ -245,32 +152,20 @@ export default function PostSurveyForm() {
 
   const handleSubmit = async () => {
     if (formData.surveyAnswers.length === 0) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: "กรุณาตอบแบบสำรวจก่อนส่ง",
-      });
+      showNotification("กรุณาตอบแบบสำรวจก่อนส่งข้อมูล", true);
       return;
     }
 
     try {
       const resSurvey = await sendSurveyAnswer(formData?.surveyAnswers, id);
       if (resSurvey.statusCode === 200) {
-        setNotification({
-          isVisible: true,
-          isError: false,
-          message: resSurvey?.message,
-        });
+        showNotification("ส่งแบบประเมินความพึงพอใจสำเร็จ ขอบคุณสำหรับความคิดเห็นของคุณ");
         setIsSuccess(true);
         if (u) Cookie.remove("accessToken");
-        // router.push("/home");
       }
     } catch (error) {
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: error?.message || "เกิดข้อผิดพลาดในการส่งข้อมูล",
-      });
+      // showNotification(error?.message || "เกิดข้อผิดพลาดในการส่งข้อมูลแบบประเมิน", true);
+      showNotification("เกิดข้อผิดพลาดในการส่งข้อมูลแบบประเมิน", true);
       if (u) Cookie.remove("accessToken");
     }
   };
@@ -294,14 +189,14 @@ export default function PostSurveyForm() {
                 <div className="flex items-center gap-2 mb-3">
                   <FileText className="w-6 h-6" />
                   <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
-                    Post-Event Survey
+                    แบบประเมินหลังจบกิจกรรม
                   </span>
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-3">
                   {surveyData?.name || "แบบประเมินความพึงพอใจ"}
                 </h1>
                 <p className="text-purple-100 text-lg">
-                  Event name: {eventDetail?.eventName || "Loading..."}
+                  ชื่อกิจกรรม: {eventDetail?.eventName || "กำลังโหลด..."}
                 </p>
               </div>
             </div>
@@ -311,7 +206,7 @@ export default function PostSurveyForm() {
                 <Calendar className="w-5 h-5 text-purple-500 mt-1" />
                 <div>
                   <p className="text-sm font-semibold text-gray-500 uppercase">
-                    Event Date
+                    วันที่จัดงาน
                   </p>
                   <p className="text-lg font-medium text-gray-800">
                     {FormatDate(eventDetail?.startDate)} -{" "}

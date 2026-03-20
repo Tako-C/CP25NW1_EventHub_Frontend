@@ -60,6 +60,7 @@ export default function ProfilePage({
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      showNotification("ไม่สามารถโหลดข้อมูลพื้นฐานได้ กรุณาลองใหม่อีกครั้ง", true);
     }
   };
 
@@ -86,20 +87,25 @@ export default function ProfilePage({
     });
   };
 
-  const handleSave = () => {
-    editData(updateProfile);
+  const handleSave = async () => {
+    await editData(updateProfile);
     setIsEditing(false);
-    window.location.reload();
+    setTimeout(() => {
+        window.location.reload();
+    }, 1000);
   };
 
   const editData = async (data) => {
     try {
       const res = await postUpdateProfile(data);
       if (res.statusCode === 200 || res.statusCode === 201) {
-        showNotification(`${res?.message}`, false);
+        showNotification("บันทึกการเปลี่ยนแปลงข้อมูลส่วนตัวสำเร็จ", false);
+      } else {
+        // showNotification(res?.message || "ไม่สามารถบันทึกข้อมูลได้", true);
+        showNotification("ไม่สามารถบันทึกข้อมูลได้", true);
       }
     } catch (error) {
-      showNotification(`${error}`, true);
+      showNotification("เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง", true);
     }
   };
 
@@ -107,10 +113,13 @@ export default function ProfilePage({
     const selectedCountry = countries.find((c) => c.id == countryId);
     handleChange("country", selectedCountry);
 
-    const resCity = await getData(`users/country/${countryId}/citys`);
-    setCities(resCity?.data || []);
-
-    handleChange("city", null);
+    try {
+        const resCity = await getData(`users/country/${countryId}/citys`);
+        setCities(resCity?.data || []);
+        handleChange("city", null);
+    } catch (error) {
+        showNotification("ไม่สามารถโหลดข้อมูลจังหวัดได้", true);
+    }
   };
 
   const handleCancel = () => {
@@ -145,22 +154,22 @@ export default function ProfilePage({
         isError={notification.isError}
         message={notification.message}
       />
+      
       <div className="mb-6 md:mb-8 border-b border-gray-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-            My Account
+            ข้อมูลบัญชีของฉัน
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            Manage your personal information
+            จัดการและแก้ไขข้อมูลส่วนตัวของคุณ
           </p>
         </div>
         {!isEditing && (
           <button
-            // disabled
             onClick={() => setIsEditing(true)}
             className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-sm md:text-base"
           >
-            Edit Profile
+            แก้ไขโปรไฟล์
           </button>
         )}
       </div>
@@ -173,7 +182,7 @@ export default function ProfilePage({
             </div>
             {isEditing && (
               <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white text-xs font-medium">Change</span>
+                <span className="text-white text-xs font-medium">เปลี่ยนรูป</span>
               </div>
             )}
           </div>
@@ -182,7 +191,7 @@ export default function ProfilePage({
               {profile.firstName} {profile.lastName}
             </h3>
             <span className="inline-block mt-2 px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full uppercase tracking-wide">
-              {profile.role || "User"}
+              {profile.role || "สมาชิกทั่วไป"}
             </span>
           </div>
         </div>
@@ -191,7 +200,7 @@ export default function ProfilePage({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-x-8 md:gap-y-6">
             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
               <InputField
-                label="First Name"
+                label="ชื่อ"
                 value={updateProfile.firstName}
                 onChange={(v) => handleChange("firstName", v)}
                 isEditing={isEditing}
@@ -199,7 +208,7 @@ export default function ProfilePage({
                 maxLength={20}
               />
               <InputField
-                label="Last Name"
+                label="นามสกุล"
                 value={updateProfile.lastName}
                 onChange={(v) => handleChange("lastName", v)}
                 isEditing={isEditing}
@@ -208,7 +217,7 @@ export default function ProfilePage({
             </div>
 
             <InputField
-              label="Email Address"
+              label="ที่อยู่อีเมล"
               value={updateProfile.email}
               isEditing={isEditing}
               type="email"
@@ -216,7 +225,7 @@ export default function ProfilePage({
               disabled={true}
             />
             <InputField
-              label="Phone Number"
+              label="เบอร์โทรศัพท์"
               value={updateProfile.phone}
               onChange={(v) => handleChange("phone", v)}
               isEditing={isEditing}
@@ -227,7 +236,7 @@ export default function ProfilePage({
 
             <div className="flex flex-col">
               <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
-                Gender
+                เพศ
               </label>
               {isEditing ? (
                 <div className="relative">
@@ -261,7 +270,7 @@ export default function ProfilePage({
             </div>
 
             <InputField
-              label="Date of Birth"
+              label="วันเดือนปีเกิด"
               value={updateProfile.dateOfBirth}
               onChange={(v) => handleChange("dateOfBirth", v)}
               isEditing={isEditing}
@@ -271,7 +280,7 @@ export default function ProfilePage({
 
             <div className="flex flex-col">
               <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
-                Age (อายุ)
+                อายุ
               </label>
               <div className="relative">
                 <div className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -284,7 +293,7 @@ export default function ProfilePage({
             </div>
 
             <SelectField
-              label="Job"
+              label="อาชีพ"
               value={updateProfile?.job?.id}
               options={jobs}
               onChange={(id) => {
@@ -293,18 +302,20 @@ export default function ProfilePage({
               }}
               isEditing={isEditing}
               icon={<Briefcase size={18} />}
+              placeholder="เลือกอาชีพ"
             />
 
             <SelectField
-              label="Country"
+              label="ประเทศ"
               value={updateProfile?.country?.id}
               options={countries}
               onChange={handleCountryChange}
               isEditing={isEditing}
               icon={<Flag size={18} />}
+              placeholder="เลือกประเทศ"
             />
             <SelectField
-              label="City / Province"
+              label="จังหวัด / เมือง"
               value={updateProfile?.city?.id}
               options={cities}
               onChange={(id) => {
@@ -313,17 +324,19 @@ export default function ProfilePage({
               }}
               isEditing={isEditing}
               icon={<MapPin size={18} />}
+              placeholder="เลือกจังหวัด / เมือง"
             />
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
-                Address
+                ที่อยู่
               </label>
               {isEditing ? (
                 <textarea
                   value={updateProfile.address}
                   onChange={(e) => handleChange("address", e.target.value)}
                   rows="3"
+                  placeholder="ระบุที่อยู่ของคุณ..."
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base"
                 />
               ) : (
@@ -334,11 +347,12 @@ export default function ProfilePage({
             </div>
 
             <InputField
-              label="Post Code"
+              label="รหัสไปรษณีย์"
               value={updateProfile.postCode}
               onChange={(v) => handleChange("postCode", v)}
               isEditing={isEditing}
               maxLength={5}
+              placeholder="ระบุรหัสไปรษณีย์"
             />
           </div>
 
@@ -350,13 +364,13 @@ export default function ProfilePage({
                 }}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors text-sm font-medium"
               >
-                Cancel
+                ยกเลิก
               </button>
               <button
                 onClick={handleSave}
                 className="w-full sm:w-auto px-8 py-2.5 rounded-full font-medium bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg transition-all"
               >
-                Save Changes
+                บันทึกการเปลี่ยนแปลง
               </button>
             </div>
           )}
@@ -374,6 +388,7 @@ function InputField({
   type = "text",
   icon,
   disabled = false,
+  placeholder = "",
 }) {
   return (
     <div className="flex flex-col">
@@ -390,9 +405,10 @@ function InputField({
             )}
             <input
               type={type}
-              value={value}
+              value={value || ""}
               onChange={(e) => onChange(e.target.value)}
               disabled={disabled}
+              placeholder={placeholder}
               className={`w-full ${
                 icon ? "pl-10" : "pl-4"
               } pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base ${
@@ -404,7 +420,7 @@ function InputField({
           <div
             className={`w-full ${
               icon ? "pl-10" : "pl-4"
-            } pr-4 py-2.5 bg-white border-b border-gray-200 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px]`}
+            } pr-4 py-2.5 bg-white border-b border-gray-100 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px]`}
           >
             {icon && (
               <div className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -426,7 +442,7 @@ function SelectField({
   onChange,
   isEditing,
   icon,
-  placeholder = "Select option",
+  placeholder = "เลือกรายการ",
 }) {
   const getDisplayName = (val) => {
     if (!val) return "-";

@@ -3,14 +3,11 @@ import { useState, useEffect } from "react";
 import {
   Table,
   Button,
-  Tag,
   Space,
   Card,
   Modal,
   Image,
   Select,
-  notification,
-  message,
 } from "antd";
 import {
   PlusOutlined,
@@ -23,10 +20,11 @@ import dayjs from "dayjs";
 import {
   getData,
   getImage,
-  updateEvent,
   hardDeleteEvent,
   updateEventAdmin,
 } from "@/libs/fetch";
+
+import Notification from "@/components/Notification/Notification";
 
 function TableImage({ imagePath }) {
   const [imgUrl, setImgUrl] = useState(null);
@@ -69,13 +67,34 @@ export default function EventsManagement() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
+  const showNotification = (msg, isErr = false) => {
+    setNotification({
+      isVisible: true,
+      message: msg,
+      isError: isErr,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
       const res = await getData("admin/events");
       setData(res?.data);
     } catch (error) {
-      message.error("ไม่สามารถดึงข้อมูลได้");
+      showNotification("ไม่สามารถดึงข้อมูลได้", true);
     } finally {
       setLoading(false);
     }
@@ -90,27 +109,20 @@ export default function EventsManagement() {
     const endDate = dayjs(record.endDate);
 
     if (now.isAfter(endDate) && (value === "UPCOMING" || value === "ONGOING")) {
-      notification.warning({
-        message: "ไม่สามารถเปลี่ยนสถานะได้",
-        description: "กิจกรรมสิ้นสุดแล้ว กรุณาแก้ไขวันสิ้นสุดก่อนเปลี่ยนสถานะ",
-      });
+      showNotification("ไม่สามารถเปลี่ยนสถานะได้: กิจกรรมสิ้นสุดแล้ว กรุณาแก้ไขวันสิ้นสุดก่อน", true);
       return;
     }
 
     try {
       setLoading(true);
-
       const formData = new FormData();
       formData.append("status", value);
 
-      console.log(record.id)
       await updateEventAdmin(record.id, formData);
-
-      message.success(`อัปเดตสถานะเป็น ${value} สำเร็จ`);
+      showNotification(`อัปเดตสถานะเป็น ${value} สำเร็จ`, false);
       fetchData();
     } catch (error) {
-      console.error("Update status error:", error);
-      message.error("เกิดข้อผิดพลาดในการอัปเดตสถานะ");
+      showNotification("เกิดข้อผิดพลาดในการอัปเดตสถานะ", true);
     } finally {
       setLoading(false);
     }
@@ -138,10 +150,10 @@ export default function EventsManagement() {
       async onOk() {
         try {
           await hardDeleteEvent(record.id);
-          notification.success({ message: "ลบข้อมูลสำเร็จ" });
+          showNotification("ลบข้อมูลสำเร็จถาวร", false);
           fetchData();
         } catch (error) {
-          message.error("ไม่สามารถลบข้อมูลได้");
+          showNotification("ไม่สามารถลบข้อมูลได้", true);
         }
       },
     });
@@ -195,6 +207,13 @@ export default function EventsManagement() {
 
   return (
     <div className="p-6 bg-slate-50 min-h-screen mt-20">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <Card
         title={<span className="text-xl font-bold">Event Management</span>}
         extra={

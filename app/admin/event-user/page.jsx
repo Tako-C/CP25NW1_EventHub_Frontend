@@ -10,7 +10,6 @@ import {
   Form,
   Select,
   Popconfirm,
-  message,
   Typography,
   Breadcrumb,
 } from "antd";
@@ -27,17 +26,39 @@ import {
   removeUserFromEvent,
 } from "@/libs/fetch";
 
+import Notification from "@/components/Notification/Notification";
+
 const { Title } = Typography;
 
 export default function UserEventPage() {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventUsers, setEventUsers] = useState([]);
-
   const [allUsers, setAllUsers] = useState([]);
-
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
+
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (msg, isErr = false) => {
+    setNotification({
+      isVisible: true,
+      message: msg,
+      isError: isErr,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   useEffect(() => {
     fetchData();
@@ -45,22 +66,29 @@ export default function UserEventPage() {
   }, []);
 
   const fetchData = async () => {
-    const res = await getData("events");
-    const resEvent = await getData("admin/events/users");
-    if (res?.data && resEvent?.data) {
-      const processedEvents = res.data.map((event) => {
-        const participantCount = resEvent.data.filter(
-          (u) => u.eventId === event.id,
-        ).length;
-        return {
-          ...event,
-          key: event.id,
-          name: event.eventName,
-          date: event.startDate.split("T")[0],
-          participantCount: participantCount,
-        };
-      });
-      setEvents(processedEvents);
+    setLoading(true);
+    try {
+      const res = await getData("events");
+      const resEvent = await getData("admin/events/users");
+      if (res?.data && resEvent?.data) {
+        const processedEvents = res.data.map((event) => {
+          const participantCount = resEvent.data.filter(
+            (u) => u.eventId === event.id,
+          ).length;
+          return {
+            ...event,
+            key: event.id,
+            name: event.eventName,
+            date: event.startDate ? event.startDate.split("T")[0] : "-",
+            participantCount: participantCount,
+          };
+        });
+        setEvents(processedEvents);
+      }
+    } catch (error) {
+      showNotification("ดึงข้อมูลอีเว้นท์ไม่สำเร็จ", true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,46 +105,53 @@ export default function UserEventPage() {
 
   const handleManageUsers = async (eventRecord) => {
     setSelectedEvent(eventRecord);
+    setLoading(true);
     try {
       const res = await getData(`admin/events/${eventRecord.id}/users`);
       if (res?.data) {
         setEventUsers(res?.data);
       }
     } catch (error) {
-      message.error("ไม่สามารถดึงข้อมูลผู้ใช้งานในอีเว้นท์นี้ได้");
-      console.error(error);
+      showNotification("ไม่สามารถดึงข้อมูลผู้ใช้งานในอีเว้นท์นี้ได้", true);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAddUser = async (values) => {
     try {
       await postAddUserToEvent(selectedEvent.id, values.userId);
-
-      message.success("เพิ่มผู้ใช้งานเข้าอีเว้นท์สำเร็จ");
+      showNotification("เพิ่มผู้ใช้งานเข้าอีเว้นท์สำเร็จ");
       setIsAddUserModalOpen(false);
       form.resetFields();
-
       handleManageUsers(selectedEvent);
+      fetchData();
     } catch (error) {
-      message.error(error.message || "เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน");
+      // showNotification(error.message || "เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน", true);
+      showNotification("เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน", true);
     }
   };
 
-const handleRemoveUser = async (userId) => {
+  const handleRemoveUser = async (userId) => {
     try {
       await removeUserFromEvent(selectedEvent.id, userId);
+      showNotification("เอาผู้ใช้งานออกจากอีเว้นท์แล้ว");
       handleManageUsers(selectedEvent);
+      fetchData();
     } catch (error) {
-      message.error(error.message || "เกิดข้อผิดพลาดในการเอาผู้ใช้งานออก");
+      // showNotification(error.message || "เกิดข้อผิดพลาดในการเอาผู้ใช้งานออก", true);
+      showNotification("เกิดข้อผิดพลาดในการเอาผู้ใช้งานออก", true);
     }
   };
 
   const handleChangeRole = async (userId, newRole) => {
     try {
       await updateUserRoleInEvent(selectedEvent.id, userId, newRole);
+      showNotification("อัปเดตบทบาทสำเร็จ");
       handleManageUsers(selectedEvent);
     } catch (error) {
-      message.error(error.message || "เกิดข้อผิดพลาดในการอัปเดตบทบาท");
+      // showNotification(error.message || "เกิดข้อผิดพลาดในการอัปเดตบทบาท", true);
+      showNotification("เกิดข้อผิดพลาดในการอัปเดตบทบาท", true);
     }
   };
 
@@ -135,7 +170,7 @@ const handleRemoveUser = async (userId) => {
       render: (role, record) => (
         <Select
           defaultValue={role}
-          style={{ width: 120 }}
+          style={{ width: 140 }}
           onChange={(value) => handleChangeRole(record.userId, value)}
         >
           <Select.Option value="EXHIBITOR">Exhibitor</Select.Option>
@@ -149,8 +184,11 @@ const handleRemoveUser = async (userId) => {
       key: "action",
       render: (_, record) => (
         <Popconfirm
-          title="เอาออกจากอีเว้นท์?"
+          title="ยืนยันการนำออก"
+          description="คุณแน่ใจหรือไม่ที่จะเอาผู้ใช้งานคนนี้ออกจากอีเว้นท์?"
           onConfirm={() => handleRemoveUser(record.userId)}
+          okText="ยืนยัน"
+          cancelText="ยกเลิก"
         >
           <Button type="text" danger icon={<DeleteOutlined />}>
             Remove
@@ -172,7 +210,7 @@ const handleRemoveUser = async (userId) => {
       title: "ผู้เข้าร่วม",
       dataIndex: "participantCount",
       key: "participantCount",
-      render: (count) => <Tag color="blue">{count} คน</Tag>,
+      render: (count) => <Tag color="blue" className="px-3 rounded-full">{count} คน</Tag>,
     },
     {
       title: "จัดการ",
@@ -182,6 +220,7 @@ const handleRemoveUser = async (userId) => {
           type="primary"
           icon={<TeamOutlined />}
           onClick={() => handleManageUsers(record)}
+          className="rounded-lg shadow-sm"
         >
           Manage Users
         </Button>
@@ -191,17 +230,24 @@ const handleRemoveUser = async (userId) => {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen mt-20">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <div className="mb-6">
         <Breadcrumb
-          className="mb-2"
+          className="mb-4"
           items={[
             { title: "Admin" },
             { title: "User Events" },
             ...(selectedEvent ? [{ title: selectedEvent.name }] : []),
           ]}
-        ></Breadcrumb>
+        />
 
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <Title level={2} className="!m-0 text-gray-800">
             {selectedEvent
               ? `จัดการผู้ใช้งาน: ${selectedEvent.name}`
@@ -213,6 +259,7 @@ const handleRemoveUser = async (userId) => {
               <Button
                 icon={<ArrowLeftOutlined />}
                 onClick={() => setSelectedEvent(null)}
+                className="hover:border-blue-500 hover:text-blue-500"
               >
                 กลับหน้าหลัก
               </Button>
@@ -220,7 +267,7 @@ const handleRemoveUser = async (userId) => {
                 type="primary"
                 icon={<UserAddOutlined />}
                 onClick={() => setIsAddUserModalOpen(true)}
-                className="bg-green-600 hover:!bg-green-500"
+                className="bg-green-600 hover:!bg-green-500 border-none shadow-md"
               >
                 เพิ่มคนเข้าอีเว้นท์
               </Button>
@@ -229,20 +276,33 @@ const handleRemoveUser = async (userId) => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {!selectedEvent ? (
-          <Table dataSource={events} columns={eventColumns} rowKey="id" />
+          <Table 
+            dataSource={events} 
+            columns={eventColumns} 
+            rowKey="id" 
+            loading={loading}
+            pagination={{ pageSize: 8 }}
+          />
         ) : (
           <Table
             dataSource={eventUsers}
             columns={userColumns}
             rowKey={(record) => record.userId || record.id}
+            loading={loading}
+            pagination={{ pageSize: 10 }}
           />
         )}
       </div>
 
       <Modal
-        title="เพิ่มผู้ใช้งานเข้าอีเว้นท์"
+        title={
+          <div className="flex items-center gap-2">
+            <UserAddOutlined className="text-green-600" />
+            <span>เพิ่มผู้ใช้งานเข้าอีเว้นท์</span>
+          </div>
+        }
         open={isAddUserModalOpen}
         onOk={() => form.submit()}
         onCancel={() => {
@@ -250,10 +310,12 @@ const handleRemoveUser = async (userId) => {
           form.resetFields();
         }}
         okText="Add Member"
+        okButtonProps={{ className: "bg-green-600 hover:!bg-green-500" }}
+        centered
       >
-        <Form form={form} layout="vertical" onFinish={handleAddUser}>
+        <Form form={form} layout="vertical" onFinish={handleAddUser} className="mt-4">
           <Form.Item
-            label="เลือกผู้ใช้งาน"
+            label={<span className="font-semibold text-gray-700">เลือกผู้ใช้งาน</span>}
             name="userId"
             rules={[{ required: true, message: "กรุณาเลือกผู้ใช้งาน" }]}
           >
@@ -261,6 +323,7 @@ const handleRemoveUser = async (userId) => {
               showSearch
               placeholder="ค้นหาชื่อ, นามสกุล หรืออีเมล"
               optionFilterProp="label"
+              className="w-full"
               options={allUsers.map((user) => ({
                 value: user.id || user.userId,
                 label: `${user.firstName || ""} ${user.lastName || ""} (${user.email})`,

@@ -16,8 +16,7 @@ const REQUIREMENT_TYPES = [
 export default function CreateRewardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // const eventId = searchParams.get("id") || "";
-  const {id} = useParams();
+  const { id } = useParams();
 
   const [form, setForm] = useState({
     name: "",
@@ -39,7 +38,13 @@ export default function CreateRewardPage() {
 
   const showNotification = (msg, isError = false) => {
     setNotification({ isVisible: true, isError, message: msg });
-    setTimeout(() => setNotification((prev) => ({ ...prev, isVisible: false })), 3000);
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
   };
 
   const handleChange = (e) => {
@@ -55,8 +60,9 @@ export default function CreateRewardPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!form.name || !form.startRedeemAt || !form.endRedeemAt || !form.quantity) {
-      showNotification("กรุณากรอกข้อมูลให้ครบถ้วน", true);
+      showNotification("กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน", true);
       return;
     }
 
@@ -73,11 +79,12 @@ export default function CreateRewardPage() {
 
       const res = await createReward(id, formData);
       if (res?.statusCode === 201 || res?.data) {
-        showNotification("สร้างรางวัลสำเร็จ", false);
-        setTimeout(() => router.back(), 1000);
+        showNotification("สร้างของรางวัลสำเร็จเรียบร้อยแล้ว", false);
+        setTimeout(() => router.back(), 1500);
       }
     } catch (error) {
-      showNotification(`${error}`, true);
+      // showNotification(error?.message || "เกิดข้อผิดพลาดในการสร้างของรางวัล", true);
+      showNotification("เกิดข้อผิดพลาดในการสร้างของรางวัล", true);
     } finally {
       setLoading(false);
     }
@@ -87,30 +94,29 @@ export default function CreateRewardPage() {
     <div className="min-h-screen bg-gray-50">
       <Notification
         isVisible={notification.isVisible}
-        onClose={() => setNotification((prev) => ({ ...prev, isVisible: false }))}
+        onClose={closeNotification}
         isError={notification.isError}
         message={notification.message}
       />
 
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto px-4 py-8 mt-20">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors font-bold"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span className="font-medium">กลับ</span>
+          <span>กลับ</span>
         </button>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">เพิ่มรางวัลใหม่</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-8 uppercase italic tracking-tight">เพิ่มรางวัลใหม่</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Image Upload */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               รูปภาพรางวัล
             </label>
             <div
-              className="border-2 border-dashed border-gray-200 rounded-2xl overflow-hidden cursor-pointer hover:border-gray-400 transition-colors"
+              className="border-2 border-dashed border-gray-200 rounded-2xl overflow-hidden cursor-pointer hover:border-gray-400 transition-colors bg-white shadow-sm"
               onClick={() => document.getElementById("reward-image").click()}
             >
               {imagePreview ? (
@@ -127,15 +133,15 @@ export default function CreateRewardPage() {
                       setImageFile(null);
                       setImagePreview(null);
                     }}
-                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow"
+                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-red-50 transition-colors"
                   >
-                    <X className="w-4 h-4 text-gray-600" />
+                    <X className="w-4 h-4 text-red-500" />
                   </button>
                 </div>
               ) : (
                 <div className="h-48 flex flex-col items-center justify-center gap-2 text-gray-400">
                   <Upload className="w-8 h-8" />
-                  <span className="text-sm">คลิกเพื่ออัพโหลดรูปภาพ</span>
+                  <span className="text-sm font-medium">คลิกเพื่ออัปโหลดรูปภาพ</span>
                 </div>
               )}
             </div>
@@ -148,7 +154,6 @@ export default function CreateRewardPage() {
             />
           </div>
 
-          {/* Name */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               ชื่อรางวัล <span className="text-red-500">*</span>
@@ -158,11 +163,10 @@ export default function CreateRewardPage() {
               value={form.name}
               onChange={handleChange}
               placeholder="เช่น เสื้อยืดระลึกงาน Tech Conference 2026"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 shadow-sm"
             />
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               คำอธิบาย
@@ -173,11 +177,10 @@ export default function CreateRewardPage() {
               onChange={handleChange}
               rows={3}
               placeholder="อธิบายรายละเอียดของรางวัล"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 resize-none shadow-sm"
             />
           </div>
 
-          {/* Requirement Type */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               เงื่อนไขการรับรางวัล <span className="text-red-500">*</span>
@@ -186,7 +189,7 @@ export default function CreateRewardPage() {
               name="requirementType"
               value={form.requirementType}
               onChange={handleChange}
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 bg-white shadow-sm"
             >
               {REQUIREMENT_TYPES.map((r) => (
                 <option key={r.value} value={r.value}>
@@ -196,7 +199,6 @@ export default function CreateRewardPage() {
             </select>
           </div>
 
-          {/* Quantity */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               จำนวน <span className="text-red-500">*</span>
@@ -208,11 +210,10 @@ export default function CreateRewardPage() {
               value={form.quantity}
               onChange={handleChange}
               placeholder="100"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 shadow-sm"
             />
           </div>
 
-          {/* Date Range */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -223,7 +224,7 @@ export default function CreateRewardPage() {
                 type="datetime-local"
                 value={form.startRedeemAt}
                 onChange={handleChange}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 shadow-sm"
               />
             </div>
             <div>
@@ -235,18 +236,17 @@ export default function CreateRewardPage() {
                 type="datetime-local"
                 value={form.endRedeemAt}
                 onChange={handleChange}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900 shadow-sm"
               />
             </div>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gray-900 text-white py-3 rounded-xl font-semibold hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-slate-900 text-white py-4 rounded-xl font-black hover:bg-slate-700 transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "กำลังบันทึก..." : "สร้างรางวัล"}
+            {loading ? "กำลังบันทึก..." : "สร้างของรางวัล"}
           </button>
         </form>
       </div>

@@ -5,28 +5,40 @@ import { Scanner } from '@yudiel/react-qr-scanner';
 import {
   X,
   ScanLine,
-  Link,
   ClipboardList,
   User,
-  AlertCircle,
   Calendar,
-  CheckCircle,
+  Loader2,
 } from 'lucide-react';
+import Link from 'next/link';
 import { postQRCheckIn, postQRUserInfo, getImage } from '@/libs/fetch';
 import Notification from '@/components/Notification/Notification';
 
 export default function QRScannerCheckin() {
   const [isScanning, setIsScanning] = useState(true);
-  const [scanResult, setScanResult] = useState();
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationState, setNotificationState] = useState({
-    error: false,
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
     message: '',
   });
-  const [error, setError] = useState(false);
   const [confirmData, setConfirmData] = useState(null);
   const [userImage, setUserImage] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const showNotification = (msg, isError = false) => {
+    setNotification({
+      isVisible: true,
+      isError: isError,
+      message: msg,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
 
   const handleScanSuccess = async (results) => {
     if (!results || results.length === 0) return;
@@ -51,20 +63,21 @@ export default function QRScannerCheckin() {
           lastName: user.lastName,
           email: user.email,
           imgPath: user.imgPath,
-          eventName: event.eventName || 'Unknown Event',
+          eventName: event.eventName || 'ไม่ระบุชื่อกิจกรรม',
         });
 
         if (user.imgPath) {
           fetchUserImage(user.imgPath);
         } else {
-          fetchUserImage(null);
+          setUserImage(null);
         }
       } else {
-        throw new Error(res?.message || 'User not found');
+        throw new Error(res?.message || 'ไม่พบข้อมูลผู้ใช้งาน');
       }
     } catch (error) {
       console.error('Scan Error:', error);
-      showError(error.message);
+      showNotification(error.message, true);
+      setIsScanning(true);
     }
   };
 
@@ -74,7 +87,7 @@ export default function QRScannerCheckin() {
       const imgUrl = await getImage(`upload/users/${cleanPath}`);
       setUserImage(imgUrl);
     } catch (err) {
-      // console.error('Error loading user image', err);
+      setUserImage(null);
     }
   };
 
@@ -86,35 +99,21 @@ export default function QRScannerCheckin() {
       const res = await postQRCheckIn(confirmData.qrContent);
 
       if (res?.statusCode === 200 || res?.message === 'Check-in successful') {
-        setNotificationState({
-          error: false,
-          message: `Checked-in: ${confirmData.firstName}`,
-        });
-        setShowNotification(true);
+        showNotification(`Check-in สำเร็จ: ${confirmData.firstName}`, false);
         setConfirmData(null);
+        setIsScanning(true);
       } else {
-        throw new Error(res?.message || 'Check-in failed');
+        throw new Error(res?.message || 'Check-in ไม่สำเร็จ');
       }
     } catch (error) {
-      showError(error.message);
+      showNotification(error.message, true);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const showError = (msg) => {
-    setNotificationState({ error: true, message: msg });
-    setShowNotification(true);
-    setConfirmData(null);
-  };
-
-  const closeNotification = () => {
-    setShowNotification(false);
-  };
-
   const resetScanner = () => {
-    setScanResult(null);
-    setShowNotification(false);
+    setConfirmData(null);
     setIsScanning(true);
   };
 
@@ -125,20 +124,18 @@ export default function QRScannerCheckin() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      {/* Notification */}
       <Notification
-        isVisible={showNotification}
+        isVisible={notification.isVisible}
         onClose={closeNotification}
-        isError={notificationState.error}
-        message={notificationState.message}
+        isError={notification.isError}
+        message={notification.message}
       />
 
-      {/* Confirmation Modal */}
       {confirmData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-up">
             <div className="bg-purple-50 p-6 flex flex-col items-center border-b border-purple-100">
-              <div className="mb-5 px-4 py-1.5 bg-white/80 backdrop-blur-sm border border-purple-100 rounded-full shadow-sm flex items-center gap-2">
+              <div className="mb-5 px-4 py-1.5 bg-white border border-purple-100 rounded-full shadow-sm flex items-center gap-2">
                 <Calendar size={14} className="text-purple-600" />
                 <span className="text-xs font-bold text-purple-800 uppercase tracking-wide">
                   {confirmData.eventName}
@@ -164,21 +161,24 @@ export default function QRScannerCheckin() {
               <p className="text-sm text-gray-500">{confirmData.email}</p>
             </div>
 
-            {/* Actions */}
             <div className="p-6">
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleCancel}
-                  className="py-3 rounded-xl font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  className="py-3 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
                 >
-                  Cancel
+                  ยกเลิก
                 </button>
                 <button
                   onClick={handleConfirmCheckIn}
                   disabled={isProcessing}
-                  className="py-3 rounded-xl font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 disabled:bg-purple-300"
+                  className="py-3 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors shadow-lg shadow-purple-200 disabled:bg-purple-300 flex items-center justify-center gap-2"
                 >
-                  {isProcessing ? 'Processing...' : 'Confirm'}
+                  {isProcessing ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    'ยืนยัน'
+                  )}
                 </button>
               </div>
             </div>
@@ -186,24 +186,23 @@ export default function QRScannerCheckin() {
         </div>
       )}
 
-      {/* Scanner Card */}
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-sm border border-gray-200 p-6">
         <div className="text-center mb-6">
           <h1 className="text-xl font-bold text-gray-800 flex items-center justify-center gap-2">
             <ScanLine size={22} className="text-purple-600" />
             QR Scanner
           </h1>
-          <p className="text-gray-400 text-xs mt-1">Scan visitor ticket</p>
+          <p className="text-gray-400 text-xs mt-1 font-medium">สแกนตั๋วผู้เข้าร่วมงาน</p>
         </div>
 
-        <div className="relative aspect-square bg-black rounded-2xl overflow-hidden mb-6 border border-gray-100 shadow-inner ring-1 ring-black/5">
+        <div className="relative aspect-square bg-black rounded-2xl overflow-hidden mb-6 border border-gray-100">
           {isScanning ? (
             <div className="w-full h-full relative">
               <Scanner
                 onScan={handleScanSuccess}
                 onError={(error) => console.log(error)}
-                scanDelay={100}
-                allowMultiple={true}
+                scanDelay={200}
+                allowMultiple={false}
                 components={{ audio: false, finder: true }}
                 styles={{
                   container: { width: '100%', height: '100%' },
@@ -213,25 +212,19 @@ export default function QRScannerCheckin() {
             </div>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-white bg-gray-900 p-6 text-center">
-              <div
-                className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 ${
-                  error
-                    ? 'bg-red-500/20 text-red-400'
-                    : 'bg-green-500/20 text-green-400'
-                }`}
-              >
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mb-3 bg-green-500/20 text-green-400">
                 <ScanLine size={28} />
               </div>
-              <p className="font-semibold text-base mb-1">'Scan Complete'</p>
-              <p className="text-gray-400 text-xs mb-5 px-4">
-                'Check-in process finished.'
+              <p className="font-bold text-base mb-1">สแกนเรียบร้อย</p>
+              <p className="text-gray-400 text-xs mb-5 px-4 font-medium">
+                กระบวนการตรวจสอบข้อมูลเสร็จสิ้น
               </p>
 
               <button
                 onClick={resetScanner}
                 className="px-6 py-2.5 bg-white text-gray-900 rounded-full text-xs font-bold hover:bg-gray-100 transition shadow-lg active:scale-95"
               >
-                Scan Next
+                สแกนใบถัดไป
               </button>
             </div>
           )}
@@ -240,7 +233,7 @@ export default function QRScannerCheckin() {
         <div className="text-center pt-2">
           <Link
             href="/staff/event/check-in"
-            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-purple-600 transition-colors py-2 px-4 rounded-lg hover:bg-purple-50"
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-purple-600 transition-colors py-2 px-4 rounded-lg font-bold"
           >
             <ClipboardList size={16} />
             Manual Check-in

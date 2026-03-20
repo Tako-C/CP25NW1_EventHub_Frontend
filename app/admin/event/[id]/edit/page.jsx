@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { notification as antNotification } from "antd";
 import EventForm from "@/app/admin/event/components/EventForm";
 import { 
   getEventByIdAdmin, 
@@ -14,6 +13,8 @@ import {
   getData ,
   updateEventAdmin
 } from "@/libs/fetch";
+
+import Notification from "@/components/Notification/Notification";
 
 dayjs.extend(utc);
 
@@ -25,6 +26,28 @@ export default function AdminEditEventPage() {
   const [fetching, setFetching] = useState(true);
   const [initialData, setInitialData] = useState(null);
   const [country, setCountry] = useState([]);
+
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (msg, isErr = false) => {
+    setNotification({
+      isVisible: true,
+      message: msg,
+      isError: isErr,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+  // --------------------------
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -88,7 +111,7 @@ export default function AdminEditEventPage() {
         });
       } catch (error) {
         console.error("Fetch Error:", error);
-        antNotification.error({ message: "ไม่สามารถโหลดข้อมูลกิจกรรมได้" });
+        showNotification("ไม่สามารถโหลดข้อมูลกิจกรรมได้", true);
       } finally {
         setFetching(false);
       }
@@ -138,10 +161,11 @@ export default function AdminEditEventPage() {
       indices.forEach(idx => formData.append("slideshowIndices", idx));
 
       await updateEventAdmin(id, formData);
-      antNotification.success({ message: "อัปเดตกองกิจกรรมสำเร็จ!" });
-      setTimeout(() => router.push("/admin/event"), 1000);
+      showNotification("อัปเดตกองกิจกรรมสำเร็จ!", false);
+      setTimeout(() => router.push("/admin/event"), 1500);
     } catch (error) {
-      antNotification.error({ message: "อัปเดตไม่สำเร็จ", description: error.data?.message });
+      const msg = error.data?.message || "อัปเดตไม่สำเร็จ";
+      showNotification(msg, true);
     } finally {
       setLoading(false);
     }
@@ -151,10 +175,10 @@ export default function AdminEditEventPage() {
     setLoading(true);
     try {
       await hardDeleteEvent(id);
-      antNotification.success({ message: "ลบกิจกรรมถาวรสำเร็จ" });
-      router.push("/admin/event");
+      showNotification("ลบกิจกรรมถาวรสำเร็จ", false);
+      setTimeout(() => router.push("/admin/event"), 1500);
     } catch (error) {
-      antNotification.error({ message: "ลบไม่สำเร็จ", description: error.message });
+      showNotification("ลบไม่สำเร็จ: " + error.message, true);
     } finally {
       setLoading(false);
     }
@@ -174,10 +198,10 @@ export default function AdminEditEventPage() {
       }
       
       await deleteEventImage(id, category, index);
-      antNotification.success({ message: "ลบรูปภาพสำเร็จ" });
+      showNotification("ลบรูปภาพสำเร็จ", false);
       return true;
     } catch (error) {
-      antNotification.error({ message: "ลบรูปไม่สำเร็จ" });
+      showNotification("ลบรูปไม่สำเร็จ", true);
       return false;
     }
   };
@@ -185,7 +209,14 @@ export default function AdminEditEventPage() {
   if (fetching) return <div className="p-10 text-center">กำลังโหลดข้อมูล...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 mt-20">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <EventForm
         initialValues={initialData}
         onFinish={handleUpdate}
@@ -194,7 +225,7 @@ export default function AdminEditEventPage() {
         locationOptions={country}
         isLoading={loading}
         isEditMode={true}
-        onValidationFailed={() => antNotification.warning({ message: "กรุณาตรวจสอบข้อมูล" })}
+        onValidationFailed={() => showNotification("กรุณาตรวจสอบข้อมูล", true)}
       />
     </div>
   );

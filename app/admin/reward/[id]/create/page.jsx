@@ -1,9 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Save, Upload, X, Gift } from "lucide-react";
-import { notification, Select } from "antd";
+import { ArrowLeft, Save, Upload, X } from "lucide-react";
+import { Select } from "antd"; 
 import { createRewardByAdmin } from "@/libs/fetch";
+
+import Notification from "@/components/Notification/Notification";
 
 const REQUIREMENT_TYPES = [
   { value: "NONE", label: "ไม่มีเงื่อนไข" },
@@ -27,47 +29,72 @@ export default function CreateAdminRewardPage() {
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState(null);
 
-const handleSave = async () => {
-  // Validation เบื้องต้น
-  if (!formData.name || !formData.quantity) {
-    return notification.error({ message: "กรุณากรอกชื่อรางวัลและจำนวน" });
-  }
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
 
-  setLoading(true);
-  try {
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("description", formData.description);
-    data.append("requirementType", formData.requirementType);
-    data.append("quantity", formData.quantity);
-    data.append("startRedeemAt", formData.startRedeemAt);
-    data.append("endRedeemAt", formData.endRedeemAt);
-    
-    if (imageFile) {
-      data.append("image", imageFile);
+  const showNotification = (msg, isErr = false) => {
+    setNotification({
+      isVisible: true,
+      message: msg,
+      isError: isErr,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
+  const handleSave = async () => {
+    if (!formData.name || !formData.quantity) {
+      return showNotification("กรุณากรอกชื่อรางวัลและจำนวน", true);
     }
 
-    await createRewardByAdmin(id, data);
+    setLoading(true);
+    try {
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("description", formData.description);
+      data.append("requirementType", formData.requirementType);
+      data.append("quantity", formData.quantity);
+      data.append("startRedeemAt", formData.startRedeemAt);
+      data.append("endRedeemAt", formData.endRedeemAt);
+      
+      if (imageFile) {
+        data.append("image", imageFile);
+      }
 
-    notification.success({ 
-      message: "สร้างรางวัลสำเร็จ",
-      description: "ระบบได้เพิ่มรางวัลเข้าสู่กิจกรรมเรียบร้อยแล้ว"
-    });
-    
-    router.push(`/admin/reward/${id}`);
-  } catch (error) {
-    console.error("Create Reward Error:", error);
-    notification.error({ 
-      message: "สร้างรางวัลไม่สำเร็จ",
-      description: error.message || "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์"
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+      await createRewardByAdmin(id, data);
+
+      showNotification("สร้างรางวัลสำเร็จ! ระบบได้เพิ่มรางวัลเข้าสู่กิจกรรมเรียบร้อยแล้ว");
+      
+      setTimeout(() => {
+        router.push(`/admin/reward/${id}`);
+      }, 2000);
+      
+    } catch (error) {
+      console.error("Create Reward Error:", error);
+      // showNotification(error.message || "เกิดข้อผิดพลาดในการสร้างรางวัล", true);
+      showNotification("เกิดข้อผิดพลาดในการสร้างรางวัล", true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white pt-24 pb-12 px-4">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-10">
           <button
@@ -87,7 +114,6 @@ const handleSave = async () => {
 
         <div className="bg-slate-50 rounded-[2.5rem] p-10 border-2 border-dashed border-slate-200">
           <div className="flex flex-col md:flex-row gap-10">
-            {/* ส่วนอัปโหลดรูปภาพ */}
             <div className="w-full md:w-64 h-64 bg-white border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center relative overflow-hidden group cursor-pointer hover:border-indigo-400 transition-all">
               <input
                 type="file"
@@ -95,8 +121,8 @@ const handleSave = async () => {
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) {
-                    setImageFile(file); // เก็บไฟล์จริงไว้ส่ง API
-                    setPreview(URL.createObjectURL(file)); // เก็บ URL ไว้โชว์ Preview
+                    setImageFile(file);
+                    setPreview(URL.createObjectURL(file));
                   }
                 }}
               />
@@ -104,8 +130,12 @@ const handleSave = async () => {
                 <>
                   <img src={preview} className="w-full h-full object-cover" />
                   <button
-                    onClick={() => setPreview(null)}
-                    className="absolute top-4 right-4 p-2 bg-white/80 rounded-full text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation(); 
+                      setPreview(null);
+                      setImageFile(null);
+                    }}
+                    className="absolute top-4 right-4 p-2 bg-white/80 rounded-full text-rose-500 opacity-0 group-hover:opacity-100 transition-all z-10"
                   >
                     <X size={16} />
                   </button>
@@ -118,7 +148,6 @@ const handleSave = async () => {
               )}
             </div>
 
-            {/* ส่วนข้อมูลฟอร์ม */}
             <div className="flex-1 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

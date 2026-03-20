@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import { notification as antNotification } from "antd";
 
 import {
   getData,
@@ -29,8 +28,19 @@ export default function CreateEventPage() {
   });
 
   const showNotification = (msg, isError = false) => {
-    setNotification({ isVisible: true, isError, message: msg });
-    setTimeout(() => setNotification((prev) => ({ ...prev, isVisible: false })), 3000);
+    setNotification({ 
+      isVisible: true, 
+      isError, 
+      message: msg 
+    });
+    
+    setTimeout(() => {
+      setNotification((prev) => ({ ...prev, isVisible: false }));
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
   };
 
   const fetchLocationData = async () => {
@@ -42,6 +52,7 @@ export default function CreateEventPage() {
       }
     } catch (err) {
       console.error("Fetch location failed", err);
+      showNotification("ไม่สามารถดึงข้อมูลสถานที่ได้", true);
     }
   };
 
@@ -50,107 +61,108 @@ export default function CreateEventPage() {
   }, []);
 
   useEffect(() => {
-  const getCookie = (name) => {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  };
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    };
 
-  const parseJwt = (token) => {
+    const parseJwt = (token) => {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        return JSON.parse(jsonPayload);
+      } catch (e) { return null; }
+    };
+
+    const token = getCookie('token');
+    if (token) {
+      const decoded = parseJwt(token);
+      if (decoded) {
+        setCurrentUserId(decoded.id || decoded.userId); 
+      }
+    } else {
+      router.push('/login');
+    }
+  }, [router]);
+
+  const handleCreate = async (values) => {
+    if (!currentUserId) {
+      showNotification('ไม่พบข้อมูลผู้ใช้งาน กรุณาล็อกอินใหม่', true);
+      return;
+    }
+
+    setLoading(true);
     try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(jsonPayload);
-    } catch (e) { return null; }
+      const formData = new FormData();
+
+      formData.append('eventName', values.eventName);
+      formData.append('eventDesc', values.eventDescription); 
+      formData.append('eventTypeId', values.eventType);
+      formData.append('location', values.location);
+      formData.append('createdBy', currentUserId); 
+      formData.append('hostOrganisation', values.hostOrganization || '');
+
+      const startDateStr = values.startDate
+        ? dayjs(values.startDate).utc().format('YYYY-MM-DDTHH:mm:ss')
+        : '';
+      const endDateStr = values.endDate
+        ? dayjs(values.endDate).utc().format('YYYY-MM-DDTHH:mm:ss')
+        : '';
+
+      formData.append('startDate', startDateStr);
+      formData.append('endDate', endDateStr);
+      
+      formData.append('contactEmail', values.contactEmail || '');
+      formData.append('contactPhone', values.contactPhone || '');
+      formData.append('contactLine', values.contactLine || '');
+      formData.append('contactFacebook', values.contactFacebook || '');
+
+      if (values.eventCard?.[0]?.originFileObj) {
+        formData.append('eventCard', values.eventCard[0].originFileObj);
+      }
+      if (values.eventDetail?.[0]?.originFileObj) {
+        formData.append('eventDetail', values.eventDetail[0].originFileObj);
+      }
+      if (values.eventMap?.[0]?.originFileObj) {
+        formData.append('eventMap', values.eventMap[0].originFileObj);
+      }
+
+      const slideFields = ['slideshowSlot1', 'slideshowSlot2', 'slideshowSlot3'];
+      slideFields.forEach(field => {
+        if (values[field]?.[0]?.originFileObj) {
+          formData.append('eventSlideshow', values[field][0].originFileObj);
+        }
+      });
+
+      await createEventAdmin(formData);
+
+      showNotification('สร้างกิจกรรมสำเร็จแล้ว!', false);
+      
+      setTimeout(() => {
+        router.push('/admin/event');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error:', error);
+      const errMsg = error.response?.data?.message || error.message || 'เกิดข้อผิดพลาดในการสร้างกิจกรรม';
+      showNotification(errMsg, true);
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const token = getCookie('token');
-  if (token) {
-    const decoded = parseJwt(token);
-    if (decoded) {
-      setCurrentUserId(decoded.id || decoded.userId); 
-    }
-  } else {
-    router.push('/login');
-  }
-}, [router]);
-
-const handleCreate = async (values) => {
-  if (!currentUserId) {
-    showNotification('User not identified', true);
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const formData = new FormData();
-
-    formData.append('eventName', values.eventName);
-    formData.append('eventDesc', values.eventDescription); 
-    formData.append('eventTypeId', values.eventType);
-    formData.append('location', values.location);
-    
-    formData.append('createdBy', currentUserId); 
-    
-    formData.append('hostOrganisation', values.hostOrganization || '');
-
-    const startDateStr = values.startDate
-      ? dayjs(values.startDate).utc().format('YYYY-MM-DDTHH:mm:ss')
-      : '';
-    const endDateStr = values.endDate
-      ? dayjs(values.endDate).utc().format('YYYY-MM-DDTHH:mm:ss')
-      : '';
-
-    formData.append('startDate', startDateStr);
-    formData.append('endDate', endDateStr);
-    
-    formData.append('contactEmail', values.contactEmail || '');
-    formData.append('contactPhone', values.contactPhone || '');
-    formData.append('contactLine', values.contactLine || '');
-    formData.append('contactFacebook', values.contactFacebook || '');
-
-    if (values.eventCard?.[0]?.originFileObj) {
-      formData.append('eventCard', values.eventCard[0].originFileObj);
-    }
-    if (values.eventDetail?.[0]?.originFileObj) {
-      formData.append('eventDetail', values.eventDetail[0].originFileObj);
-    }
-    if (values.eventMap?.[0]?.originFileObj) {
-      formData.append('eventMap', values.eventMap[0].originFileObj);
-    }
-
-    const slides = [];
-    if (values.slideshowSlot1?.[0]?.originFileObj) slides.push(values.slideshowSlot1[0].originFileObj);
-    if (values.slideshowSlot2?.[0]?.originFileObj) slides.push(values.slideshowSlot2[0].originFileObj);
-    if (values.slideshowSlot3?.[0]?.originFileObj) slides.push(values.slideshowSlot3[0].originFileObj);
-
-    slides.forEach((file) => {
-      formData.append('eventSlideshow', file); 
-    });
-
-    await createEventAdmin(formData);
-
-    showNotification('Event created successfully!', false);
-    setTimeout(() => router.push('/admin/event'), 1500);
-  } catch (error) {
-    console.error('Error:', error);
-    showNotification(error.data?.message || 'Failed to create event', true);
-  } finally {
-    setLoading(false);
-  }
-};
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8 mt-20">
       <Notification
         isVisible={notification.isVisible}
-        onClose={() => setNotification(p => ({...p, isVisible: false}))}
+        onClose={closeNotification}
         isError={notification.isError}
         message={notification.message}
       />

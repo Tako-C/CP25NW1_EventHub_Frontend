@@ -18,7 +18,6 @@ export default function Page() {
   const [cooldown, setCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isDisabled, setIsDisabled] = useState(true);
-  // const [errors, setErrors] = useState("");
   const [eventId, setEventId] = useState();
 
   const [notification, setNotification] = useState({
@@ -27,6 +26,17 @@ export default function Page() {
     message: "",
   });
 
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
@@ -34,38 +44,31 @@ export default function Page() {
   useEffect(() => {
     const data = Cookie.get("signinData");
     if (data) {
-      const email = JSON?.parse(Cookie.get("signinData"));
-      console.log(email);
-      if (email) setData(email);
+      try {
+        const email = JSON.parse(data);
+        if (email) setData(email);
+      } catch (e) {
+        setData(data);
+      }
     }
   }, []);
 
   useEffect(() => {
     const raw_up = Cookie.get("signupDataFromRegis");
     const raw_in = Cookie.get("signinDataFromRegis");
+    
     if (raw_in) {
       const data = JSON.parse(raw_in);
-      console.log(data);
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message:
-          "You Have an account, Please Sign in by Enter OTP before registration event",
-      });
+      showNotification("ท่านมีบัญชีผู้ใช้อยู่แล้ว กรุณายืนยันรหัส OTP เพื่อเข้าสู่ระบบก่อนลงทะเบียนกิจกรรม", true);
       setData(data?.email);
       setEventId(data?.eventId);
       setCooldown(60);
       Cookie.remove("signinDataFromRegis");
     }
+    
     if (raw_up) {
       const data = JSON.parse(raw_up);
-      console.log(data);
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message:
-          "You Have no an account, Please Sign in by Enter OTP before registration event",
-      });
+      showNotification("ท่านยังไม่มีบัญชีผู้ใช้ กรุณายืนยันรหัส OTP เพื่อสร้างบัญชีและลงทะเบียนกิจกรรม", true);
       setData(data?.email);
       setEventId(data?.eventId);
       setCooldown(60);
@@ -100,17 +103,21 @@ export default function Page() {
   }, [cooldown, data]);
 
   const handleResend = async () => {
-    console.log(data);
     if (cooldown > 0 || !data) return;
 
     setLoading(true);
-    setCooldown(60);
-    const newEnd = Date.now() + 60 * 1000;
-    localStorage.setItem(`otp_end_time_${data}`, newEnd);
+    try {
+      setCooldown(60);
+      const newEnd = Date.now() + 60 * 1000;
+      localStorage.setItem(`otp_end_time_${data}`, newEnd);
 
-    const res = await authLoginOTPRequest(data);
-
-    setTimeout(() => setLoading(false), 500);
+      await authLoginOTPRequest(data);
+      showNotification("ส่งรหัส OTP ใหม่ไปยังอีเมลของท่านแล้ว");
+    } catch (error) {
+      showNotification("ไม่สามารถส่งรหัสใหม่ได้ กรุณาลองใหม่อีกครั้ง", true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOtpChange = (index, value) => {
@@ -121,7 +128,6 @@ export default function Page() {
     setOtp(newOtp);
 
     setIsDisabled(newOtp.join("").length !== 6);
-    // setErrors("");
 
     if (value !== "" && index < 5) {
       inputRefs.current[index + 1]?.focus();
@@ -143,25 +149,26 @@ export default function Page() {
           : await authLoginOTPVerify(data, otpCode);
 
         localStorage.removeItem(`otp_end_time_${data}`);
-
         Cookie.set("token", res?.data.token, { path: "/" });
+        
         if (!eventId) Cookie.remove("signinData");
 
         window.dispatchEvent(new Event("user-logged-in"));
-        if (Cookie.get("surveyPost")) {
-          router.push(`${Cookie.get("surveyPost")}`);
-          Cookie.remove("surveyPost");
-          return;
-        }
-        router.push(eventId ? "/profile?tab=events" : "/home");
+        showNotification("ยืนยันตัวตนสำเร็จ กำลังนำท่านไปยังขั้นตอนถัดไป...");
+
+        setTimeout(() => {
+          if (Cookie.get("surveyPost")) {
+            const redirectPath = Cookie.get("surveyPost");
+            Cookie.remove("surveyPost");
+            router.push(redirectPath);
+            return;
+          }
+          router.push(eventId ? "/profile?tab=events" : "/home");
+        }, 1500);
       }
     } catch (error) {
-      // setErrors("ใส่ OTP ให้ถูกต้อง");
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: error.data?.message,
-      });
+      // showNotification(error.data?.message || "รหัส OTP ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง", true);
+      showNotification("รหัส OTP ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง", true);
     }
   };
 
@@ -176,16 +183,17 @@ export default function Page() {
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
           <h1 className="text-3xl font-semibold text-center mb-8">
-            Verify OTP
+            ยืนยันรหัส OTP
           </h1>
 
           <div className="mb-6">
-            <h2 className="text-lg font-medium mb-2">Sign IN</h2>
-            <p className="text-sm text-gray-500 mb-6">
-              ส่งรหัส 6 หลักไปยัง {data}
+            <h2 className="text-lg font-medium mb-2 text-gray-800 italic">เข้าสู่ระบบ / ยืนยันตัวตน</h2>
+            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+              เราได้ส่งรหัสยืนยัน 6 หลักไปยังอีเมล <br/>
+              <span className="font-bold text-gray-700">{data}</span>
             </p>
 
-            <div className="flex gap-2 justify-center mb-4">
+            <div className="flex gap-2 justify-center mb-8">
               {otp.map((digit, index) => (
                 <input
                   key={index}
@@ -195,35 +203,31 @@ export default function Page() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-14 text-center text-xl border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                  className="w-12 h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-900 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
                 />
               ))}
             </div>
 
-            {/* {errors && (
-              <p className="text-red-500 text-sm text-center mb-4">{errors}</p>
-            )} */}
-
-            <div className="text-center mb-6">
+            <div className="text-center mb-8">
               <button
                 onClick={handleResend}
                 disabled={cooldown > 0 || loading}
-                className="text-sm text-gray-600 underline hover:text-purple-600 disabled:text-gray-400"
+                className="text-sm font-semibold text-blue-600 underline hover:text-blue-800 disabled:text-gray-400 disabled:no-underline transition-colors"
               >
-                {cooldown > 0 ? `รอ ${cooldown} วินาที` : "Resend code"}
+                {cooldown > 0 ? `ขอรหัสใหม่ได้ในอีก ${cooldown} วินาที` : "ส่งรหัสใหม่อีกครั้ง"}
               </button>
             </div>
 
             <button
               onClick={handleContinue}
               disabled={isDisabled}
-              className={`w-full py-3 rounded-lg font-medium transition-colors ${
+              className={`w-full py-3.5 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95 ${
                 isDisabled
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-900 text-white hover:bg-blue-800"
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                  : "bg-blue-900 text-white hover:bg-blue-800 shadow-blue-100"
               }`}
             >
-              Continue
+              ยืนยันรหัส
             </button>
           </div>
         </div>

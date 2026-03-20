@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, Save, Upload, X, ImageIcon } from "lucide-react";
-import { notification, Select, Spin } from "antd";
+import { ArrowLeft, Save, Upload, X } from "lucide-react";
+import { Select, Spin } from "antd";
 import { getData, updateRewardByAdmin } from "@/libs/fetch";
 import { RewardImage } from "@/utils/getImage";
+
+import Notification from "@/components/Notification/Notification";
 
 function toDatetimeLocal(dateStr) {
   if (!dateStr) return "";
@@ -32,6 +34,27 @@ export default function EditAdminRewardPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [currentImagePath, setCurrentImagePath] = useState(null);
 
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (msg, isErr = false) => {
+    setNotification({
+      isVisible: true,
+      message: msg,
+      isError: isErr,
+    });
+    if (!isErr) {
+       setTimeout(() => closeNotification(), 3000);
+    }
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
   useEffect(() => {
     const fetchReward = async () => {
       if (!id || !rewardId) return;
@@ -50,7 +73,7 @@ export default function EditAdminRewardPage() {
           setCurrentImagePath(r.imagePath || null);
         }
       } catch (error) {
-        notification.error({ message: "ไม่สามารถดึงข้อมูลได้" });
+        showNotification("ไม่สามารถดึงข้อมูลรางวัลได้", true);
       }
     };
     fetchReward();
@@ -89,10 +112,14 @@ export default function EditAdminRewardPage() {
 
       await updateRewardByAdmin(id, rewardId, data);
       
-      notification.success({ message: "อัปเดตข้อมูลรางวัลสำเร็จ" });
-      router.back();
+      showNotification("อัปเดตข้อมูลรางวัลสำเร็จ");
+      
+      setTimeout(() => {
+        router.back();
+      }, 2000);
     } catch (error) {
-      notification.error({ message: "เกิดข้อผิดพลาดในการอัปเดต" });
+      // showNotification(error.message || "เกิดข้อผิดพลาดในการอัปเดต", true);
+      showNotification("เกิดข้อผิดพลาดในการอัปเดต", true);
     } finally {
       setLoading(false);
     }
@@ -100,6 +127,13 @@ export default function EditAdminRewardPage() {
 
   return (
     <div className="min-h-screen bg-white pt-24 pb-12 px-4">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-10">
           <button 
@@ -113,7 +147,7 @@ export default function EditAdminRewardPage() {
             disabled={loading} 
             className="bg-amber-500 text-white px-10 py-3 rounded-2xl font-black shadow-lg hover:bg-amber-600 transition-all flex items-center gap-2 disabled:opacity-50"
           >
-            {loading ? <Spin size="small" /> : <Save size={18} />}
+            {loading ? <Spin size="small" className="white-spin" /> : <Save size={18} />}
             {loading ? "SAVING..." : "SAVE CHANGES"}
           </button>
         </div>
@@ -138,7 +172,7 @@ export default function EditAdminRewardPage() {
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   <button 
                     onClick={clearImageSelection}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
                   >
                     <X size={16} />
                   </button>
@@ -163,7 +197,7 @@ export default function EditAdminRewardPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Reward Name</label>
                   <input 
-                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none" 
+                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all" 
                     value={formData.name} 
                     onChange={(e) => setFormData({...formData, name: e.target.value})} 
                   />
@@ -172,7 +206,7 @@ export default function EditAdminRewardPage() {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Stock Quantity</label>
                   <input 
                     type="number" 
-                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none" 
+                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all" 
                     value={formData.quantity} 
                     onChange={(e) => setFormData({...formData, quantity: e.target.value})} 
                   />
@@ -199,7 +233,7 @@ export default function EditAdminRewardPage() {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Start Date</label>
                   <input 
                     type="datetime-local"
-                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none" 
+                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all" 
                     value={formData.startRedeemAt} 
                     onChange={(e) => setFormData({...formData, startRedeemAt: e.target.value})} 
                   />
@@ -208,7 +242,7 @@ export default function EditAdminRewardPage() {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">End Date</label>
                   <input 
                     type="datetime-local"
-                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none" 
+                    className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none transition-all" 
                     value={formData.endRedeemAt} 
                     onChange={(e) => setFormData({...formData, endRedeemAt: e.target.value})} 
                   />
@@ -218,7 +252,7 @@ export default function EditAdminRewardPage() {
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Description</label>
                 <textarea 
-                  className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none min-h-[100px]" 
+                  className="w-full bg-white border-2 border-transparent rounded-2xl p-4 font-bold text-slate-800 shadow-sm focus:border-indigo-500 outline-none min-h-[100px] transition-all" 
                   value={formData.description} 
                   onChange={(e) => setFormData({...formData, description: e.target.value})} 
                 />

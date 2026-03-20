@@ -53,7 +53,7 @@ export default function EditSurveyPage() {
         if (res.statusCode === 200) {
           const data = res.data;
           const surveyData = data?.[role];
-          console.log(surveyData)
+          
           setSurveyTitle(surveyData[0]?.name);
           setSurveyDescription(surveyData[0]?.description);
           setSurveyPoint(surveyData[0]?.points.toString());
@@ -75,15 +75,14 @@ export default function EditSurveyPage() {
           setQuestions(mappedQuestions);
         }
       } catch (error) {
-        // console.error("Fetch error:", error);
-        showNotification(`${error}`, true);
+        showNotification("ไม่สามารถโหลดข้อมูลแบบสำรวจได้", true);
       } finally {
         setLoading(false);
       }
     };
 
     if (id) fetchSurveyData();
-  }, []);
+  }, [id, searchParams]);
 
   const handleAddQuestion = () => {
     setQuestions([
@@ -122,12 +121,14 @@ export default function EditSurveyPage() {
       return showNotification("กรุณาระบุชื่อแบบสำรวจ", true);
     if (!surveyDescription.trim())
       return showNotification("กรุณากรอกรายละเอียดของอีเว้นท์", true);
+    
     const point = parseInt(surveyPoint);
     if (isNaN(point) || point < 0)
       return showNotification(
-        "Survey Points ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0",
+        "แต้มสะสม (Survey Points) ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0",
         true,
       );
+    
     if (questions.length === 0)
       return showNotification("ต้องมีคำถามอย่างน้อย 1 ข้อ", true);
     if (questions.length > 10)
@@ -184,31 +185,24 @@ export default function EditSurveyPage() {
       if (q.questionType === "checkbox" || q.questionType === "MULTIPLE")
         apiType = "MULTIPLE";
 
-      const questionObj = {
+      return {
         id: q.id,
         question: q.question,
         questionType: apiType,
         choices: q.choices || [],
       };
-
-      // if (q.id) {
-      //   questionObj.id = q.id;
-      // }
-
-      return questionObj;
     });
 
     try {
       const res = await updateSurvey(id, eventDetail, formattedQuestions);
       if (res.statusCode === 200) {
-        showNotification(`${res?.message}`, false);
+        showNotification("บันทึกการแก้ไขแบบสำรวจสำเร็จ", false);
         setTimeout(() => {
           router.back();
-        }, 1000);
+        }, 1500);
       }
     } catch (error) {
-      // console.error("Update error:", error);
-      showNotification(`${error}`, true);
+      showNotification("เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง", true);
     }
   };
 
@@ -240,6 +234,7 @@ export default function EditSurveyPage() {
         isError={notification.isError}
         message={notification.message}
       />
+      
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -291,7 +286,7 @@ export default function EditSurveyPage() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         {!showPreview ? (
           <>
-            <div className="bg-white rounded-xl border-2 border-gray-200 p-6 mb-6">
+            <div className="bg-white rounded-xl border-2 border-gray-200 p-6 mb-6 shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
                 ข้อมูลแบบสำรวจ
               </h2>
@@ -304,7 +299,7 @@ export default function EditSurveyPage() {
                     type="text"
                     value={surveyTitle}
                     onChange={(e) => setSurveyTitle(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                   />
                 </div>
                 <div>
@@ -315,12 +310,12 @@ export default function EditSurveyPage() {
                     value={surveyDescription}
                     onChange={(e) => setSurveyDescription(e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Survey Points
+                    แต้มสะสม (Survey Points)
                   </label>
 
                   <div className="relative flex items-center w-full max-w-[200px] group">

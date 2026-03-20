@@ -18,11 +18,23 @@ export default function SignInPage({
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
   const [errors, setErrors] = useState({});
+
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
     message: "",
   });
+
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
 
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
@@ -36,46 +48,40 @@ export default function SignInPage({
     try {
       const res = await authLoginPassword(email, password);
 
-      // if (res.statusCode === 200) {
-      //   Cookie.set("token", res?.data.token);
-      //   router.push("/home");
-      //   setTimeout(() => {
-      //     window.location.reload();
-      //   }, 100);
-      // }
-
       if (res.statusCode === 200) {
         Cookie.set("token", res?.data.token, { path: "/" });
         window.dispatchEvent(new Event("user-logged-in"));
+        
+        showNotification("เข้าสู่ระบบสำเร็จ กำลังนำท่านไปหน้าหลัก...");
+
         if (Cookie.get("surveyPost")) {
-          router.push(`${Cookie.get("surveyPost")}`);
+          const redirectPath = Cookie.get("surveyPost");
           Cookie.remove("surveyPost");
+          setTimeout(() => {
+            router.push(redirectPath);
+          }, 1000);
           return;
         }
-        router.push("/home");
+
+        setTimeout(() => {
+          router.push("/home");
+        }, 1000);
       }
     } catch (error) {
       if (error.status === 401) {
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: error.data?.message || "Email หรือ Password ไม่ถูกต้อง",
-        });
+        showNotification("อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง", true);
       } else {
-        setNotification({
-          isVisible: true,
-          isError: true,
-          message: "เกิดข้อผิดพลาดบางอย่าง กรุณาลองใหม่",
-        });
+        showNotification("เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง", true);
       }
     }
   };
+
   const validateField = (field, value) => {
     switch (field) {
       case "email":
         if (!value.trim()) return "* กรุณากรอกอีเมล";
         if (!value.includes("@") || !value.endsWith(".com"))
-          return "* อีเมลไม่ถูกต้อง (ต้องมี @ และ .com)";
+          return "* รูปแบบอีเมลไม่ถูกต้อง (ต้องมี @ และลงท้ายด้วย .com)";
         return "";
       case "password":
         if (!value.trim()) return "* กรุณากรอกรหัสผ่าน";
@@ -111,20 +117,13 @@ export default function SignInPage({
     setIsSignInOpen(false);
     setIsSignInOTPOpen(true);
   };
+
   const handleSignUp = () => {
     router.push("/sign-up");
   };
-  // useEffect(() => {
-  //   if (Cookie.get("surveyPost")) {
-  //     setNotification({
-  //       isVisible: true,
-  //       isError: true,
-  //       message: "กรุณาล็อคอินเข้าสู่ระบบ ก่อนทำแบบฟอร์ม",
-  //     });
-  //   }
-  // }, []);
 
   if (!isOpen) return null;
+
   return (
     <>
       <Notification
@@ -136,7 +135,7 @@ export default function SignInPage({
       <div className="flex items-center justify-center py-20 px-4 mt-18">
         <div className="w-full max-w-md">
           <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
-            Sign in
+            เข้าสู่ระบบ
           </h1>
           <div className="bg-white rounded-3xl shadow-lg p-8">
             <div className="mb-6">
@@ -144,12 +143,12 @@ export default function SignInPage({
                 htmlFor="email"
                 className="block text-gray-700 font-medium mb-2"
               >
-                Email
+                อีเมล
               </label>
               <input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="กรอกอีเมลของคุณ"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -163,12 +162,12 @@ export default function SignInPage({
                 htmlFor="password"
                 className="block text-gray-700 font-medium mb-2"
               >
-                Password
+                รหัสผ่าน
               </label>
               <input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="กรอกรหัสผ่านของคุณ"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -185,28 +184,28 @@ export default function SignInPage({
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                 />
-                <span className="text-sm text-gray-600">Remember me</span>
+                <span className="text-sm text-gray-600">จดจำฉันไว้</span>
               </label>
               <button
                 onClick={handleForgotPassword}
                 className="text-sm text-blue-500 hover:text-blue-600 underline bg-transparent border-none cursor-pointer"
               >
-                Forgot Password?
+                ลืมรหัสผ่าน?
               </button>
             </div>
             <button
               onClick={handleSubmit}
               className="w-full bg-blue-900 text-white py-3 rounded-full font-semibold hover:bg-blue-800 transition mb-6"
             >
-              Sign in
+              เข้าสู่ระบบ
             </button>
             <div className="relative mb-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">
-                  OR
+                <span className="px-4 bg-white text-gray-500 font-medium uppercase">
+                  หรือ
                 </span>
               </div>
             </div>
@@ -214,18 +213,17 @@ export default function SignInPage({
               onClick={handleOTPLogin}
               className="w-full bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-full font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-2"
             >
-              {/* <Smartphone className="w-5 h-5 text-gray-400" /> */}
-              Sign in with OTP
+              เข้าสู่ระบบด้วย OTP
             </button>
           </div>
 
           <p className="text-center mt-6 text-gray-700">
-            Don't have account?{" "}
+            ยังไม่มีบัญชีผู้ใช้?{" "}
             <button
               onClick={handleSignUp}
               className="text-blue-500 hover:text-blue-600 font-medium"
             >
-              Register Here!
+              ลงทะเบียนที่นี่!
             </button>
           </p>
         </div>

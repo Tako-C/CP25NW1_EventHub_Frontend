@@ -8,7 +8,6 @@ import QuestionEditor from "../components/QuestionEditor";
 import SurveyPreview from "../components/SurveyPreview";
 import Notification from "@/components/Notification/Notification";
 
-// statuses that lock survey creation
 const DISABLED_STATUSES = ["ACTIVE", "INACTIVE"];
 
 const STATUS_LABEL = {
@@ -36,13 +35,13 @@ export default function CreateSurveyPage() {
   ]);
   const [showPreview, setShowPreview] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
     message: "",
   });
 
-  // Fetch event data to get eventStatus
   useEffect(() => {
     const fetchEvent = async () => {
       try {
@@ -66,7 +65,7 @@ export default function CreateSurveyPage() {
   const showNotification = (msg, isError = false) => {
     setNotification({ isVisible: true, isError, message: msg });
     setTimeout(() => {
-      setNotification((prev) => ({ ...prev, isVisible: false }));
+      closeNotification();
     }, 3000);
   };
 
@@ -101,15 +100,14 @@ export default function CreateSurveyPage() {
     return null;
   };
 
-  // Step 1: Validate then show confirmation modal
   const handleSave = () => {
     if (isCreateDisabled) return;
 
     if (!surveyTitle.trim()) return showNotification("กรุณาระบุชื่อแบบสำรวจ", true);
-    if (!surveyDescription.trim()) return showNotification("กรุณากรอกรายละเอียดของอีเว้นท์", true);
+    if (!surveyDescription.trim()) return showNotification("กรุณากรอกรายละเอียดของแบบสำรวจ", true);
     const point = parseInt(surveyPoint);
     if (isNaN(point) || point < 0)
-      return showNotification("Survey Points ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0", true);
+      return showNotification("คะแนนสะสมต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0", true);
     if (questions.length === 0) return showNotification("ต้องมีคำถามอย่างน้อย 1 ข้อ", true);
     if (questions.length > 10) return showNotification("มีคำถามได้ไม่เกิน 10 ข้อ", true);
 
@@ -134,7 +132,6 @@ export default function CreateSurveyPage() {
     setShowConfirmModal(true);
   };
 
-  // Step 2: Actually create the survey after user confirms
   const handleConfirmSave = async () => {
     setShowConfirmModal(false);
 
@@ -155,11 +152,12 @@ export default function CreateSurveyPage() {
     try {
       const res = await createSurvey(eventDetail, eventId, formattedQuestions);
       if (res.statusCode === 200 || res.statusCode === 201) {
-        showNotification(`${res?.message}`, false);
-        setTimeout(() => router.back(), 1000);
+        showNotification("สร้างแบบสำรวจสำเร็จเรียบร้อยแล้ว", false);
+        setTimeout(() => router.back(), 1500);
       }
     } catch (error) {
-      showNotification(`${error}`, true);
+      // showNotification(error.message || "เกิดข้อผิดพลาดในการสร้างแบบสำรวจ", true);
+      showNotification("เกิดข้อผิดพลาดในการสร้างแบบสำรวจ", true);
     }
   };
 
@@ -182,7 +180,6 @@ export default function CreateSurveyPage() {
         message={notification.message}
       />
 
-      {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
@@ -197,7 +194,7 @@ export default function CreateSurveyPage() {
               ยืนยันการสร้างแบบสำรวจ
             </h2>
             <p className="text-sm text-gray-600 text-center mb-2">
-              คุณกำลังจะสร้างแบบสำรวจ
+              คุณกำลังจะสร้างแบบสำรวจใหม่
             </p>
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
               <p className="text-sm text-amber-800 text-center font-medium">
@@ -244,7 +241,6 @@ export default function CreateSurveyPage() {
         </div>
       )}
 
-      {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -275,7 +271,6 @@ export default function CreateSurveyPage() {
                 {showPreview ? "แก้ไข" : "ดูตัวอย่าง"}
               </button>
 
-              {/* Save button — disabled when event is ACTIVE or INACTIVE (or still loading) */}
               <div className="relative group">
                 <button
                   onClick={handleSave}
@@ -294,7 +289,6 @@ export default function CreateSurveyPage() {
                   บันทึก
                 </button>
 
-                {/* Tooltip — only show when we know the status (not loading) */}
                 {!eventLoading && isCreateDisabled && (
                   <div className="absolute right-0 top-full mt-2 w-64 bg-gray-800 text-white text-xs rounded-xl px-3 py-2.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
                     <div className="absolute -top-1.5 right-6 w-3 h-3 bg-gray-800 rotate-45" />
@@ -314,7 +308,6 @@ export default function CreateSurveyPage() {
         </div>
       </div>
 
-      {/* Disabled banner — shown after event data loaded */}
       {!eventLoading && isCreateDisabled && (
         <div className="max-w-7xl mx-auto px-4 md:px-8 pt-6">
           <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-5 py-4">
@@ -367,14 +360,14 @@ export default function CreateSurveyPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Survey Points
+                    คะแนนที่ได้รับ (Points)
                   </label>
                   <div className="relative flex items-center w-full max-w-[200px] group">
                     <button
                       type="button"
                       onClick={handleDecrementPoints}
                       disabled={isCreateDisabled}
-                      className="absolute left-1 z-10 w-10 h-10 flex items-center justify-center bg-white text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 active:scale-90 border border-transparent disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-500"
+                      className="absolute left-1 z-10 w-10 h-10 flex items-center justify-center bg-white text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 active:scale-90 border border-transparent disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Minus className="w-5 h-5" />
                     </button>
@@ -393,7 +386,7 @@ export default function CreateSurveyPage() {
                       type="button"
                       onClick={handleIncrementPoints}
                       disabled={isCreateDisabled}
-                      className="absolute right-1 z-10 w-10 h-10 flex items-center justify-center bg-white text-gray-500 hover:text-green-500 hover:bg-green-50 rounded-lg transition-all duration-200 active:scale-90 border border-transparent disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-gray-500"
+                      className="absolute right-1 z-10 w-10 h-10 flex items-center justify-center bg-white text-gray-500 hover:text-green-500 hover:bg-green-50 rounded-lg transition-all duration-200 active:scale-90 border border-transparent disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Plus className="w-5 h-5" />
                     </button>
@@ -422,7 +415,7 @@ export default function CreateSurveyPage() {
               <button
                 onClick={handleAddQuestion}
                 disabled={isCreateDisabled}
-                className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all flex items-center justify-center gap-2 font-semibold disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-gray-300 disabled:hover:text-gray-600 disabled:hover:bg-transparent"
+                className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 transition-all flex items-center justify-center gap-2 font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus className="w-5 h-5" />
                 เพิ่มคำถาม

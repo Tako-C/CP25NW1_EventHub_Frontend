@@ -16,11 +16,23 @@ export default function RequestOTPForm({
   const [email, setEmail] = useState('');
   const [cooldown, setCooldown] = useState(0);
   const [errors, setErrors] = useState({});
+
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
     message: '',
   });
+
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
 
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
@@ -55,9 +67,9 @@ export default function RequestOTPForm({
   const validateField = (field, value) => {
     switch (field) {
       case 'email':
-        if (!value.trim()) return '* Please enter your email';
+        if (!value.trim()) return '* กรุณากรอกอีเมลของคุณ';
         if (!value.includes('@') || !value.endsWith('.com'))
-          return '* Email not valid (must contain @ and .com)';
+          return '* รูปแบบอีเมลไม่ถูกต้อง (ต้องมี @ และลงท้ายด้วย .com)';
         return '';
       default:
         return '';
@@ -96,15 +108,13 @@ export default function RequestOTPForm({
         const newEndTime = Date.now() + OTP_COOLDOWN_SEC * 1000;
         localStorage.setItem(STORAGE_KEY, newEndTime);
         setCooldown(OTP_COOLDOWN_SEC);
+        showNotification("ส่งรหัส OTP ไปยังอีเมลของท่านเรียบร้อยแล้ว");
         onSuccess(email);
       }
     } catch (error) {
       console.error("OTP Request Error:", error);
-      setNotification({
-        isVisible: true,
-        isError: true,
-        message: error.data?.message || error.message || "OTP request failed. Please try again.",
-      });
+      // showNotification(error.data?.message || error.message || "เกิดข้อผิดพลาดในการขอรหัส OTP กรุณาลองใหม่อีกครั้ง", true);
+      showNotification("เกิดข้อผิดพลาดในการขอรหัส OTP กรุณาลองใหม่อีกครั้ง", true);
       localStorage.removeItem(STORAGE_KEY);
       setCooldown(0);
     }
@@ -126,12 +136,12 @@ export default function RequestOTPForm({
           <div className="bg-white rounded-3xl shadow-lg p-8">
             <div className="mb-6">
               <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
-                Email
+                อีเมล
               </label>
               <input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="กรอกอีเมลของคุณ"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -153,8 +163,8 @@ export default function RequestOTPForm({
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500 font-medium">
-                  OR
+                <span className="px-4 bg-white text-gray-500 font-medium uppercase">
+                  หรือ
                 </span>
               </div>
             </div>

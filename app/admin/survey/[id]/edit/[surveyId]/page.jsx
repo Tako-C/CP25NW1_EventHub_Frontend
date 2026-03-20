@@ -1,11 +1,13 @@
 "use client"
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save, Eye, Plus, Edit3 } from "lucide-react";
-import { notification, Tabs, Modal } from "antd"; 
+import { Tabs, Modal } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { getData, updateSurveyByAdmin } from "@/libs/fetch"; 
 import QuestionEditor from "../../../components/QuestionEditor";
 import SurveyPreview from "../../../components/SurveyPreview";
+
+import Notification from "@/components/Notification/Notification";
 
 export default function EditAdminSurveyPage() {
   const { id: eventId, surveyId } = useParams();
@@ -14,11 +16,36 @@ export default function EditAdminSurveyPage() {
   const [activeTab, setActiveTab] = useState("edit");
   const [loading, setLoading] = useState(false);
 
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
   useEffect(() => {
     const fetchSurveyData = async () => {
-      const resData = await getData(`admin/events/${eventId}/surveys`);
-      const formatData = resData?.data.find((item) => item.id == surveyId);
-      setSurveyData(formatData);
+      try {
+        const resData = await getData(`admin/events/${eventId}/surveys`);
+        const formatData = resData?.data.find((item) => item.id == surveyId);
+        setSurveyData(formatData);
+      } catch (error) {
+        showNotification("ไม่สามารถโหลดข้อมูลแบบสำรวจได้", true);
+      }
     };
     if (eventId) fetchSurveyData();
   }, [eventId, surveyId]);
@@ -30,6 +57,10 @@ export default function EditAdminSurveyPage() {
   };
 
   const handleDeleteQuestion = (index) => {
+    if (surveyData.questions.length <= 1) {
+      showNotification("ต้องมีอย่างน้อย 1 คำถาม", true);
+      return;
+    }
     const updatedQuestions = surveyData.questions.filter((_, i) => i !== index);
     setSurveyData({ ...surveyData, questions: updatedQuestions });
   };
@@ -47,19 +78,23 @@ export default function EditAdminSurveyPage() {
   };
 
   const handleSave = async () => {
+    if (!surveyData.name) {
+      showNotification("กรุณาระบุชื่อแบบสำรวจ", true);
+      return;
+    }
+
     try {
       setLoading(true);
       await updateSurveyByAdmin(eventId, surveyId, surveyData);
-      notification.success({
-        message: "บันทึกการเปลี่ยนแปลงสำเร็จ",
-        description: "ข้อมูลแบบสำรวจถูกอัปเดตเรียบร้อยแล้ว",
-      });
-      router.back(); 
+      
+      showNotification("บันทึกการเปลี่ยนแปลงสำเร็จ ข้อมูลแบบสำรวจถูกอัปเดตแล้ว");
+      
+      setTimeout(() => {
+        router.back(); 
+      }, 2000);
     } catch (error) {
-      notification.error({
-        message: "เกิดข้อผิดพลาดในการบันทึก",
-        description: error.message,
-      });
+      // showNotification(error.message || "เกิดข้อผิดพลาดในการบันทึก", true);
+      showNotification("เกิดข้อผิดพลาดในการบันทึก", true);
     } finally {
       setLoading(false);
     }
@@ -69,11 +104,18 @@ export default function EditAdminSurveyPage() {
 
   return (
     <div className="min-h-screen bg-white pt-24 pb-12 px-4">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-10">
           <button
-            onClick={() => window.history.back()}
-            className="font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-1"
+            onClick={() => router.back()}
+            className="font-bold text-slate-400 hover:text-indigo-600 flex items-center gap-1 transition-colors"
           >
             <ArrowLeft size={18} /> Cancel Changes
           </button>
@@ -152,7 +194,7 @@ export default function EditAdminSurveyPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100">
+          <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-300">
             <SurveyPreview
               surveyTitle={surveyData?.name}
               surveyDescription={surveyData?.description}

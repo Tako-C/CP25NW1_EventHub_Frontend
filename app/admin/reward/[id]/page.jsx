@@ -7,9 +7,6 @@ import {
   Trash2,
   Plus,
   Package,
-  Gift,
-  Calendar,
-  Tag as TagIcon,
   Search,
 } from "lucide-react";
 import {
@@ -20,10 +17,8 @@ import {
   Space,
   Card,
   Modal,
-  notification,
   Input,
 } from "antd";
-import dayjs from "dayjs";
 import { RewardImage } from "@/utils/getImage";
 import {
   getDataNoToken,
@@ -32,6 +27,8 @@ import {
   updateRewardByAdmin,
 } from "@/libs/fetch";
 
+import Notification from "@/components/Notification/Notification";
+
 export default function EventRewardTablePage() {
   const { id } = useParams();
   const router = useRouter();
@@ -39,19 +36,41 @@ export default function EventRewardTablePage() {
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
 
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (msg, isErr = false) => {
+    setNotification({
+      isVisible: true,
+      message: msg,
+      isError: isErr,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
   useEffect(() => {
     fetchData();
-    // checkUserToken();
   }, []);
 
   const fetchData = async () => {
-    const [eventRes, rewardsRes] = await Promise.all([
-      getDataNoToken(`events/${id}`),
-      getData(`admin/events/${id}/rewards`),
-    ]);
-    console.log(eventRes);
-    console.log(rewardsRes);
-    setData(rewardsRes?.data);
+    try {
+      const [eventRes, rewardsRes] = await Promise.all([
+        getDataNoToken(`events/${id}`),
+        getData(`admin/events/${id}/rewards`),
+      ]);
+      setData(rewardsRes?.data || []);
+    } catch (error) {
+      showNotification("ไม่สามารถโหลดข้อมูลของรางวัลได้", true);
+    }
   };
 
   const filteredData = data?.filter((item) =>
@@ -61,8 +80,7 @@ export default function EventRewardTablePage() {
   const handleDelete = (rewardId) => {
     Modal.confirm({
       title: "ยืนยันการลบของรางวัล?",
-      content:
-        "นี่คือการลบแบบ Hard Delete ข้อมูลจะถูกลบออกจากระบบถาวรและไม่สามารถกู้คืนได้",
+      content: "นี่คือการลบแบบ Hard Delete ข้อมูลจะถูกลบออกจากระบบถาวรและไม่สามารถกู้คืนได้",
       okText: "ลบถาวร",
       okType: "danger",
       cancelText: "ยกเลิก",
@@ -70,16 +88,11 @@ export default function EventRewardTablePage() {
       onOk: async () => {
         try {
           await hardDeleteRewardByAdmin(id, rewardId);
-          notification.success({
-            message: "ลบสำเร็จ",
-            description: "ข้อมูลรางวัลถูกลบออกจากระบบแล้ว",
-          });
+          showNotification("ลบข้อมูลรางวัลสำเร็จ");
           fetchData(); 
         } catch (error) {
-          notification.error({
-            message: "ลบไม่สำเร็จ",
-            description: error.message || "เกิดข้อผิดพลาดในการลบ",
-          });
+          // showNotification(error.message || "เกิดข้อผิดพลาดในการลบ", true);
+          showNotification("เกิดข้อผิดพลาดในการลบ", true);
         }
       },
     });
@@ -116,7 +129,7 @@ export default function EventRewardTablePage() {
           color="purple"
           className="font-bold rounded-lg border-none px-3 uppercase text-[10px]"
         >
-          {type.replace(/_/g, " ")}
+          {type?.replace(/_/g, " ")}
         </Tag>
       ),
     },
@@ -148,12 +161,10 @@ export default function EventRewardTablePage() {
                   s.id === record.id ? { ...s, status: val } : s,
                 ),
               );
-              notification.success({ message: "อัปเดตสถานะของรางวัลสำเร็จ" });
+              showNotification("อัปเดตสถานะสำเร็จ");
             } catch (error) {
-              notification.error({
-                message: "อัปเดตไม่สำเร็จ",
-                description: error.message,
-              });
+              // showNotification(error.message || "อัปเดตไม่สำเร็จ", true);
+              showNotification("อัปเดตไม่สำเร็จ", true);
             } finally {
               setLoading(false);
             }
@@ -166,18 +177,12 @@ export default function EventRewardTablePage() {
             </Tag>
           </Select.Option>
           <Select.Option value="INACTIVE">
-            <Tag
-              color="default"
-              className="m-0 border-none font-black uppercase"
-            >
+            <Tag color="default" className="m-0 border-none font-black uppercase">
               INACTIVE
             </Tag>
           </Select.Option>
           <Select.Option value="OUT_OF_STOCK">
-            <Tag
-              color="orange"
-              className="m-0 border-none font-black uppercase"
-            >
+            <Tag color="orange" className="m-0 border-none font-black uppercase">
               OUT OF STOCK
             </Tag>
           </Select.Option>
@@ -209,6 +214,13 @@ export default function EventRewardTablePage() {
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen mt-20">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <div className="max-w-7xl mx-auto">
         <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
@@ -228,6 +240,7 @@ export default function EventRewardTablePage() {
               placeholder="ค้นหาของรางวัล..."
               className="h-12 rounded-2xl border-none shadow-sm font-bold md:w-64"
               onChange={(e) => setSearchText(e.target.value)}
+              allowClear
             />
             <Button
               type="primary"

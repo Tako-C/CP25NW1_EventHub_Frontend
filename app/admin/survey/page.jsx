@@ -6,19 +6,44 @@ import { Table, Button, Input, Card, Space, Tag, Spin } from "antd";
 import { getData } from "@/libs/fetch";
 import dayjs from "dayjs";
 
+import Notification from "@/components/Notification/Notification";
+
 export default function SelectEventSurveyPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const router = useRouter();
 
+  const [notification, setNotification] = useState({
+    isVisible: false,
+    isError: false,
+    message: "",
+  });
+
+  const showNotification = (message, isError = false) => {
+    setNotification({
+      isVisible: true,
+      message: message,
+      isError: isError,
+    });
+    setTimeout(() => {
+      closeNotification();
+    }, 3000);
+  };
+
+  const closeNotification = () => {
+    setNotification((prev) => ({ ...prev, isVisible: false }));
+  };
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        setLoading(true);
         const res = await getData("admin/events");
-        const formatData = res?.data.filter((item) => item.eventStatus !== "DELETED")
+        const formatData = res?.data.filter((item) => item.eventStatus !== "DELETED");
         setEvents(formatData || []);
       } catch (err) {
+        showNotification("ไม่สามารถดึงข้อมูลอีเว้นท์ได้ กรุณาลองใหม่อีกครั้ง", true);
         console.error("Fetch events failed");
       } finally {
         setLoading(false);
@@ -27,7 +52,6 @@ export default function SelectEventSurveyPage() {
     fetchEvents();
   }, []);
 
-  // กรองข้อมูลตามการ Search เหมือนในไฟล์ UserEventPage
   const filteredEvents = events.filter(event =>
     event.eventName.toLowerCase().includes(searchText.toLowerCase()) ||
     event.location?.toLowerCase().includes(searchText.toLowerCase())
@@ -57,16 +81,6 @@ export default function SelectEventSurveyPage() {
         </div>
       ),
     },
-    // {
-    //   title: "STATUS",
-    //   dataIndex: "eventStatus",
-    //   key: "status",
-    //   render: (status) => (
-    //     <Tag color={status === "ONGOING" ? "green" : status === "FINISHED" ? "volcano" : "blue"} className="font-black rounded-lg uppercase px-3">
-    //       {status}
-    //     </Tag>
-    //   ),
-    // },
     {
       title: "ACTION",
       key: "action",
@@ -75,7 +89,10 @@ export default function SelectEventSurveyPage() {
         <Button
           type="primary"
           icon={<ClipboardList size={16} />}
-          onClick={() => router.push(`/admin/survey/${record.id}`)}
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/admin/survey/${record.id}`);
+          }}
           className="bg-indigo-600 hover:bg-indigo-700 h-10 px-6 rounded-xl font-black flex items-center gap-2 border-none shadow-lg shadow-indigo-100"
         >
           Manage Surveys
@@ -86,8 +103,14 @@ export default function SelectEventSurveyPage() {
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen mt-20">
+      <Notification
+        isVisible={notification.isVisible}
+        isError={notification.isError}
+        message={notification.message}
+        onClose={closeNotification}
+      />
+
       <div className="max-w-6xl mx-auto">
-        {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
           <div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight">Survey Management</h1>
@@ -105,8 +128,7 @@ export default function SelectEventSurveyPage() {
           </div>
         </div>
 
-        {/* Table Section อิงตาม UserEventPage */}
-        <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden">
+        <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden bg-white/80 backdrop-blur-sm">
           <Table
             columns={columns}
             dataSource={filteredEvents}
@@ -117,10 +139,9 @@ export default function SelectEventSurveyPage() {
               className: "px-8 py-4",
             }}
             className="custom-admin-table"
-            // เมื่อคลิกที่แถวให้พาไปหน้าจัดการ Survey เลย
             onRow={(record) => ({
               onClick: () => router.push(`/admin/survey/${record.id}`),
-              className: "cursor-pointer",
+              className: "cursor-pointer hover:bg-slate-50 transition-colors",
             })}
           />
         </Card>
