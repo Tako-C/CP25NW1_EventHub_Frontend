@@ -583,7 +583,7 @@ export default function EventSurveyManager() {
                 {(() => {
                   const count =
                     (surveys[tab.key]?.visitor?.length ?? 0) +
-                    (surveys[tab.key]?.exhibitor?.length ?? 0);
+                    (tab.key === "post" ? (surveys[tab.key]?.exhibitor?.length ?? 0) : 0);
                   return count > 0 ? (
                     <span
                       style={{
@@ -639,24 +639,26 @@ export default function EventSurveyManager() {
               }
             />
 
-            <RoleSection
-              title="Exhibitor · ผู้ออกบูธ"
-              icon={Store}
-              color="#f59e0b"
-              accentColor="#fbbf24"
-              surveys={surveys[activeTab]?.exhibitor ?? []}
-              surveyType={activeTab}
-              role="exhibitor"
-              eventId={id}
-              onStatusChange={handleStatusChange}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-              onCreate={() =>
-                router.push(
-                  `/admin/survey/${id}/create?role=exhibitor&type=${activeTab}`,
-                )
-              }
-            />
+            {activeTab === "post" && (
+              <RoleSection
+                title="Exhibitor · ผู้ออกบูธ"
+                icon={Store}
+                color="#f59e0b"
+                accentColor="#fbbf24"
+                surveys={surveys[activeTab]?.exhibitor ?? []}
+                surveyType={activeTab}
+                role="exhibitor"
+                eventId={id}
+                onStatusChange={handleStatusChange}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                onCreate={() =>
+                  router.push(
+                    `/admin/survey/${id}/create?role=exhibitor&type=${activeTab}`,
+                  )
+                }
+              />
+            )}
           </div>
         )}
       </div>
