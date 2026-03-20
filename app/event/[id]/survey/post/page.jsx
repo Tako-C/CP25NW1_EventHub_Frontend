@@ -31,7 +31,7 @@ export default function PostSurveyForm() {
   });
   const [eventDetail, setEventDetail] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
-  
+
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
@@ -93,7 +93,10 @@ export default function PostSurveyForm() {
       setEventDetail(eventRes?.data);
 
       if (!currentEvent || !eventRes.data?.hasPostSurvey) {
-        showNotification("คุณไม่มีสิทธิ์เข้าถึงแบบประเมินนี้ หรือแบบประเมินยังไม่เปิดให้ใช้งาน", true);
+        showNotification(
+          "คุณไม่มีสิทธิ์เข้าถึงแบบประเมินนี้ หรือแบบประเมินยังไม่เปิดให้ใช้งาน",
+          true,
+        );
         setTimeout(() => {
           router.push("/home");
         }, 3000);
@@ -106,7 +109,15 @@ export default function PostSurveyForm() {
         EXHIBITOR: surveyRes.data?.exhibitor?.[0],
       };
 
-      setSurveyData(roleDataMap[currentEvent.eventRole] || null);
+      let selectedSurvey = roleDataMap[currentEvent.eventRole] || null;
+
+      if (selectedSurvey && selectedSurvey.questions) {
+        selectedSurvey.questions = [...selectedSurvey.questions].sort(
+          (a, b) => a.id - b.id,
+        );
+      }
+
+      setSurveyData(selectedSurvey);
     } catch (globalError) {
       console.error("Fetch Survey Error:", globalError);
       showNotification("เกิดข้อผิดพลาดในการโหลดข้อมูลแบบประเมิน", true);
@@ -159,7 +170,9 @@ export default function PostSurveyForm() {
     try {
       const resSurvey = await sendSurveyAnswer(formData?.surveyAnswers, id);
       if (resSurvey.statusCode === 200) {
-        showNotification("ส่งแบบประเมินความพึงพอใจสำเร็จ ขอบคุณสำหรับความคิดเห็นของคุณ");
+        showNotification(
+          "ส่งแบบประเมินความพึงพอใจสำเร็จ ขอบคุณสำหรับความคิดเห็นของคุณ",
+        );
         setIsSuccess(true);
         if (u) Cookie.remove("accessToken");
       }
@@ -244,14 +257,19 @@ export default function PostSurveyForm() {
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between gap-2">
                         {[1, 2, 3, 4, 5].map((val) => {
-                          const selected = formData.surveyAnswers.find(
-                            (a) => a.questionId === q.id,
-                          )?.answers[0] === val.toString();
+                          const selected =
+                            formData.surveyAnswers.find(
+                              (a) => a.questionId === q.id,
+                            )?.answers[0] === val.toString();
                           return (
                             <button
                               key={val}
                               onClick={() =>
-                                handleSurveyChange(q.id, val.toString(), "rating")
+                                handleSurveyChange(
+                                  q.id,
+                                  val.toString(),
+                                  "rating",
+                                )
                               }
                               className={`flex-1 py-3 rounded-xl border-2 font-bold text-lg transition-all active:scale-95 ${
                                 selected

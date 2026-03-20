@@ -1,6 +1,5 @@
 import { Calendar, FileText, CheckSquare, Shield, ScrollText, Eye } from "lucide-react";
 
-// เพิ่ม Props surveyType เข้ามา (รับค่า 'pre' หรือ 'post')
 export default function SurveyPreview({ surveyTitle, surveyDescription, questions, eventDetail, surveyType = 'pre' }) {
   const formatDate = (dateString) => {
     if (!dateString) return "-";
@@ -18,17 +17,14 @@ export default function SurveyPreview({ surveyTitle, surveyDescription, question
     { title: "Email / อีเมล", required: true, type: "email" },
   ];
 
-  // เช็คว่าเป็นแบบสำรวจก่อนเริ่มงานใช่หรือไม่
   const isPreSurvey = surveyType === 'pre';
   
-  // ลำดับข้อของคำถาม ถ้าเป็น pre เริ่มที่ 4 (เพราะ 1-3 เป็นชื่ออีเมล) ถ้าเป็น post เริ่มที่ 1
   const questionStartIndex = isPreSurvey ? 4 : 1;
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         
-        {/* Header Section */}
         <div className="bg-gradient-to-br from-purple-50 via-white to-blue-50 rounded-2xl border border-gray-200 shadow-xl overflow-hidden mb-8">
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-10 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
@@ -85,7 +81,6 @@ export default function SurveyPreview({ surveyTitle, surveyDescription, question
 
         <div className="space-y-6">
           
-          {/* ข้อมูลพื้นฐาน 1-3 (แสดงเฉพาะ pre survey) */}
           {isPreSurvey && mockInputs.map((item, index) => (
             <div key={`mock-${index}`} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
               <div className="flex items-start gap-3 mb-4">
@@ -114,12 +109,10 @@ export default function SurveyPreview({ surveyTitle, surveyDescription, question
             </div>
           ))}
 
-          {/* คำถามแบบสำรวจ */}
           {questions?.map((q, index) => (
             <div key={`q-${index}`} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
               <div className="flex items-start gap-3 mb-4">
                 <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                  {/* ลำดับข้อเปลี่ยนไปตามประเภท pre (เริ่ม 4) หรือ post (เริ่ม 1) */}
                   {index + questionStartIndex}
                 </div>
                 <div className="flex-1">
@@ -170,11 +163,30 @@ export default function SurveyPreview({ surveyTitle, surveyDescription, question
                     </label>
                   ))
                 )}
+
+                {(q.questionType === 'rating' || q.questionType === 'RATING') && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-2">
+                      {Array.from({ length: 5 }, (_, i) => (
+                        <button
+                          key={i}
+                          disabled
+                          className="flex-1 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-400 font-bold text-lg cursor-not-allowed"
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 px-1">
+                      <span>😞 น้อยที่สุด</span>
+                      <span>มากที่สุด 😄</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
 
-          {/* เงื่อนไข Terms & Conditions (แสดงเฉพาะ pre survey) */}
           {isPreSurvey && (
             <div className="bg-white rounded-xl border-2 border-purple-200 p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-4">
@@ -212,7 +224,6 @@ export default function SurveyPreview({ surveyTitle, surveyDescription, question
             </div>
           )}
 
-          {/* ปุ่ม Submit */}
           <div className="flex justify-center pt-4 pb-8">
             <button disabled className="w-full md:w-auto bg-gray-300 text-white font-semibold py-4 px-12 md:px-24 rounded-full shadow-lg text-lg cursor-not-allowed">
               Submit

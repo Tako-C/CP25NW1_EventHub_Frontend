@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Eye, Save, Minus, AlertTriangle, Lock } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Eye,
+  Save,
+  Minus,
+  AlertTriangle,
+  Lock,
+} from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createSurvey, getDataNoToken } from "@/libs/fetch";
 import QuestionEditor from "../components/QuestionEditor";
@@ -30,9 +38,14 @@ export default function CreateSurveyPage() {
   const [surveyTitle, setSurveyTitle] = useState("");
   const [surveyPoint, setSurveyPoint] = useState("");
   const [surveyDescription, setSurveyDescription] = useState("");
-  const [questions, setQuestions] = useState([
-    { questionType: "text", question: "", choices: [] },
-  ]);
+
+  const [questions, setQuestions] = useState(() => {
+    if (searchParams.get("type") === "post") {
+      return [{ questionType: "rating", question: "ความพึงพอใจโดยรวม", choices: [] }];
+    }
+    return [{ questionType: "text", question: "", choices: [] }];
+  });
+
   const [showPreview, setShowPreview] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
@@ -60,7 +73,8 @@ export default function CreateSurveyPage() {
 
   const eventStatus = eventData?.data?.eventStatus ?? null;
   const isCreateDisabled =
-    eventLoading || (eventStatus !== null && DISABLED_STATUSES.includes(eventStatus));
+    eventLoading ||
+    (eventStatus !== null && DISABLED_STATUSES.includes(eventStatus));
 
   const showNotification = (msg, isError = false) => {
     setNotification({ isVisible: true, isError, message: msg });
@@ -74,13 +88,19 @@ export default function CreateSurveyPage() {
   };
 
   const handleAddQuestion = () => {
-    setQuestions([...questions, { questionType: "text", question: "", choices: [] }]);
+    setQuestions([
+      ...questions,
+      { questionType: "text", question: "", choices: [] },
+    ]);
   };
 
   const handleUpdateQuestion = (index, field, value) => {
     const newQuestions = [...questions];
     newQuestions[index] = { ...newQuestions[index], [field]: value };
-    if (field === "questionType" && (value === "multiple_choice" || value === "checkbox")) {
+    if (
+      field === "questionType" &&
+      (value === "multiple_choice" || value === "checkbox")
+    ) {
       newQuestions[index].choices = ["", ""];
     }
     setQuestions(newQuestions);
@@ -103,24 +123,58 @@ export default function CreateSurveyPage() {
   const handleSave = () => {
     if (isCreateDisabled) return;
 
-    if (!surveyTitle.trim()) return showNotification("กรุณาระบุชื่อแบบสำรวจ", true);
-    if (!surveyDescription.trim()) return showNotification("กรุณากรอกรายละเอียดของแบบสำรวจ", true);
+    if (!surveyTitle.trim())
+      return showNotification("กรุณาระบุชื่อแบบสำรวจ", true);
+    if (!surveyDescription.trim())
+      return showNotification("กรุณากรอกรายละเอียดของแบบสำรวจ", true);
     const point = parseInt(surveyPoint);
     if (isNaN(point) || point < 0)
-      return showNotification("คะแนนสะสมต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0", true);
-    if (questions.length === 0) return showNotification("ต้องมีคำถามอย่างน้อย 1 ข้อ", true);
-    if (questions.length > 10) return showNotification("มีคำถามได้ไม่เกิน 10 ข้อ", true);
+      return showNotification(
+        "คะแนนสะสมต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0",
+        true,
+      );
+    if (questions.length === 0)
+      return showNotification("ต้องมีคำถามอย่างน้อย 1 ข้อ", true);
+    if (questions.length > 10)
+      return showNotification("มีคำถามได้ไม่เกิน 10 ข้อ", true);
+
+    if (surveyType === "post") {
+      const hasSuggestion = questions.some(
+        (q) =>
+          q.question.includes("ข้อเสนอแนะ") ||
+          q.question.toLowerCase().includes("suggestion"),
+      );
+
+      if (!hasSuggestion) {
+        return showNotification(
+          "กรุณาเพิ่มคำถามสำหรับ 'ข้อเสนอแนะ' (แบบข้อความสั้น) ก่อนบันทึก",
+          true,
+        );
+      }
+    }
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       const questionNumber = i + 1;
       if (!q.question.trim())
-        return showNotification(`กรุณาระบุหัวข้อคำถามที่ ${questionNumber}`, true);
-      if (q.questionType === "multiple_choice" || q.questionType === "checkbox") {
+        return showNotification(
+          `กรุณาระบุหัวข้อคำถามที่ ${questionNumber}`,
+          true,
+        );
+      if (
+        q.questionType === "multiple_choice" ||
+        q.questionType === "checkbox"
+      ) {
         if (!q.choices || q.choices.length < 3)
-          return showNotification(`คำถามที่ ${questionNumber} ต้องมีอย่างน้อย 3 ตัวเลือก`, true);
+          return showNotification(
+            `คำถามที่ ${questionNumber} ต้องมีอย่างน้อย 3 ตัวเลือก`,
+            true,
+          );
         if (q.choices.length > 10)
-          return showNotification(`คำถามที่ ${questionNumber} มีตัวเลือกได้ไม่เกิน 10 ข้อ`, true);
+          return showNotification(
+            `คำถามที่ ${questionNumber} มีตัวเลือกได้ไม่เกิน 10 ข้อ`,
+            true,
+          );
         if (q.choices.some((c) => !c.trim()))
           return showNotification(
             `กรุณากรอกข้อความในทุกตัวเลือกของคำถามที่ ${questionNumber}`,
@@ -146,7 +200,11 @@ export default function CreateSurveyPage() {
       let apiType = "TEXT";
       if (q.questionType === "multiple_choice") apiType = "SINGLE";
       if (q.questionType === "checkbox") apiType = "MULTIPLE";
-      return { question: q.question, questionType: apiType, choices: q.choices || [] };
+      return {
+        question: q.question,
+        questionType: apiType,
+        choices: q.choices || [],
+      };
     });
 
     try {
@@ -156,7 +214,6 @@ export default function CreateSurveyPage() {
         setTimeout(() => router.back(), 1500);
       }
     } catch (error) {
-      // showNotification(error.message || "เกิดข้อผิดพลาดในการสร้างแบบสำรวจ", true);
       showNotification("เกิดข้อผิดพลาดในการสร้างแบบสำรวจ", true);
     }
   };
@@ -215,11 +272,15 @@ export default function CreateSurveyPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">จำนวนคำถาม</span>
-                <span className="font-semibold text-gray-900">{questions.length} ข้อ</span>
+                <span className="font-semibold text-gray-900">
+                  {questions.length} ข้อ
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">คะแนนที่ได้รับ</span>
-                <span className="font-semibold text-purple-600">{surveyPoint || 0} แต้ม</span>
+                <span className="font-semibold text-purple-600">
+                  {surveyPoint || 0} แต้ม
+                </span>
               </div>
             </div>
             <div className="flex gap-3">
@@ -245,14 +306,21 @@ export default function CreateSurveyPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => router.back()} className="text-gray-600 hover:text-gray-900">
+              <button
+                onClick={() => router.back()}
+                className="text-gray-600 hover:text-gray-900"
+              >
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">สร้างแบบสำรวจ</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  สร้างแบบสำรวจ
+                </h1>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-semibold inline-block">
-                    {surveyType === "pre" ? "Pre-Event Survey" : "Post-Event Survey"}
+                    {surveyType === "pre"
+                      ? "Pre-Event Survey"
+                      : "Post-Event Survey"}
                   </div>
                 </div>
               </div>
@@ -292,13 +360,16 @@ export default function CreateSurveyPage() {
                 {!eventLoading && isCreateDisabled && (
                   <div className="absolute right-0 top-full mt-2 w-64 bg-gray-800 text-white text-xs rounded-xl px-3 py-2.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
                     <div className="absolute -top-1.5 right-6 w-3 h-3 bg-gray-800 rotate-45" />
-                    <p className="font-semibold mb-1">ไม่สามารถสร้างแบบสำรวจได้</p>
+                    <p className="font-semibold mb-1">
+                      ไม่สามารถสร้างแบบสำรวจได้
+                    </p>
                     <p className="text-gray-300 leading-relaxed">
                       อีเว้นท์มีสถานะ{" "}
                       <span className="text-yellow-300 font-semibold">
                         {STATUS_LABEL[eventStatus] ?? eventStatus}
                       </span>{" "}
-                      — สามารถสร้างได้เฉพาะเมื่ออีเว้นท์ยังไม่ Active หรือ Inactive เท่านั้น
+                      — สามารถสร้างได้เฉพาะเมื่ออีเว้นท์ยังไม่ Active หรือ
+                      Inactive เท่านั้น
                     </p>
                   </div>
                 )}
@@ -318,8 +389,11 @@ export default function CreateSurveyPage() {
               </p>
               <p className="text-sm text-red-600 mt-0.5">
                 อีเว้นท์นี้มีสถานะเป็น{" "}
-                <span className="font-bold">{STATUS_LABEL[eventStatus] ?? eventStatus}</span>{" "}
-                — การสร้างหรือแก้ไขแบบสำรวจจะถูกล็อกในระหว่างที่อีเว้นท์ Active หรือ Inactive
+                <span className="font-bold">
+                  {STATUS_LABEL[eventStatus] ?? eventStatus}
+                </span>{" "}
+                — การสร้างหรือแก้ไขแบบสำรวจจะถูกล็อกในระหว่างที่อีเว้นท์ Active
+                หรือ Inactive
               </p>
             </div>
           </div>
@@ -330,7 +404,9 @@ export default function CreateSurveyPage() {
         {!showPreview ? (
           <>
             <div className="bg-white rounded-xl border-2 border-gray-200 p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">ข้อมูลแบบสำรวจ</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                ข้อมูลแบบสำรวจ
+              </h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -404,6 +480,7 @@ export default function CreateSurveyPage() {
                   key={index}
                   questions={question}
                   index={index}
+                  surveyType={surveyType} 
                   onUpdate={handleUpdateQuestion}
                   onDelete={handleDeleteQuestion}
                   disabled={isCreateDisabled}
@@ -428,7 +505,9 @@ export default function CreateSurveyPage() {
               <div className="flex items-start gap-3">
                 <Eye className="w-5 h-5 text-purple-700 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-purple-900 mb-1">ตัวอย่างหน้าแบบสำรวจ</h3>
+                  <h3 className="font-semibold text-purple-900 mb-1">
+                    ตัวอย่างหน้าแบบสำรวจ
+                  </h3>
                   <p className="text-sm text-purple-800">
                     นี่คือสิ่งที่ผู้ใช้จะเห็นเมื่อเข้ามาทำแบบสำรวจ
                   </p>
