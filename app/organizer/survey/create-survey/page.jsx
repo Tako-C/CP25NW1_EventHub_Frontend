@@ -41,7 +41,7 @@ export default function CreateSurveyPage() {
 
   const [questions, setQuestions] = useState(() => {
     if (searchParams.get("type") === "post") {
-      return [{ questionType: "rating", question: "ความพึงพอใจโดยรวม", choices: [] }];
+      return [{ questionType: "multiple_choice", question: "ความพึงพอใจโดยรวม", choices: ["1","2","3","4","5"] }];
     }
     return [{ questionType: "text", question: "", choices: [] }];
   });

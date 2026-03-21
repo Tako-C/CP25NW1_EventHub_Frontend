@@ -13,7 +13,7 @@ const questionTypes = [
   { value: "TEXT", label: "ข้อความสั้น", icon: Type },
   { value: "SINGLE", label: "เลือกตอบ (เลือกได้ 1)", icon: Circle },
   { value: "MULTIPLE", label: "เลือกตอบ (เลือกได้หลายข้อ)", icon: ListChecks },
-  { value: "RATING", label: "ให้คะแนน", icon: Star },
+  // { value: "RATING", label: "ให้คะแนน", icon: Star },
 ];
 
 export default function QuestionEditor({
@@ -115,11 +115,11 @@ export default function QuestionEditor({
             </div>
           )}
 
-          {questions?.questionType === "RATING" && (
+          {/* {questions?.questionType === "RATING" && (
             <div className="mb-3">
               <span className="text-sm text-gray-500">ให้คะแนน 1-5</span>
             </div>
-          )}
+          )} */}
 
           <div className="flex items-center gap-2 mt-2">
             <input

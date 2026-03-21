@@ -13,7 +13,7 @@ const questionTypes = [
   { value: "text", label: "ข้อความสั้น", icon: Type },
   { value: "multiple_choice", label: "เลือกตอบ (เลือกได้ 1)", icon: Circle },
   { value: "checkbox", label: "เลือกตอบ (เลือกได้หลายข้อ)", icon: ListChecks },
-  { value: "rating", label: "ให้คะแนน", icon: Star },
+  // { value: "rating", label: "ให้คะแนน", icon: Star },
 ];
 
 export default function QuestionEditor({
@@ -28,6 +28,7 @@ export default function QuestionEditor({
     Type;
 
   const isLockedPost = surveyType === "post" && index === 0;
+  console.log(questions)
   return (
     <div className="bg-white rounded-xl border-2 border-gray-200 p-6 hover:border-purple-300 transition-all">
       <div className="flex items-start gap-4">
@@ -117,11 +118,11 @@ export default function QuestionEditor({
             </div>
           )}
 
-          {questions?.questionType === "rating" && (
+          {/* {questions?.questionType === "rating" && (
             <div className="mb-3">
               <span className="text-sm text-gray-500">ให้คะแนน 1-5</span>
             </div>
-          )}
+          )} */}
         </div>
 
         {!isLockedPost && (

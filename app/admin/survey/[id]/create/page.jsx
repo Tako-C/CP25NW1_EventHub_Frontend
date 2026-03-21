@@ -39,7 +39,7 @@ export default function CreateAdminSurveyPage() {
   const [surveyData, setSurveyData] = useState(() => {
     const initialQuestion =
       surveyType === "post"
-        ? { question: "ความพึงพอใจโดยรวม", questionType: "RATING", choices: [] }
+        ? { question: "ความพึงพอใจโดยรวม", questionType: "SINGLE", choices: ['1','2','3','4','5'] }
         : { question: "", questionType: "TEXT", choices: [] };
     return {
       name: "",
