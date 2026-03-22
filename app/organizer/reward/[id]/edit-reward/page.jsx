@@ -8,7 +8,7 @@ import { RewardImage } from "@/utils/getImage";
 import Notification from "@/components/Notification/Notification";
 
 const REQUIREMENT_TYPES = [
-  { value: "NONE", label: "ไม่มีเงื่อนไข" },
+  { value: "FREE", label: "ไม่มีเงื่อนไข" },
   { value: "PRE_SURVEY_DONE", label: "ทำ Pre-Survey แล้ว" },
   { value: "POST_SURVEY_DONE", label: "ทำ Post-Survey แล้ว" },
   { value: "CHECK_IN", label: "Check-in แล้ว" },
@@ -28,7 +28,7 @@ export default function EditRewardPage() {
   const [form, setForm] = useState({
     name: "",
     description: "",
-    requirementType: "NONE",
+    requirementType: "FREE",
     startRedeemAt: "",
     endRedeemAt: "",
     quantity: "",
@@ -66,7 +66,7 @@ export default function EditRewardPage() {
           setForm({
             name: r.name || "",
             description: r.description || "",
-            requirementType: r.requirementType || "NONE",
+            requirementType: r.requirementType || "FREE",
             startRedeemAt: toDatetimeLocal(r.startRedeemAt),
             endRedeemAt: toDatetimeLocal(r.endRedeemAt),
             quantity: r.quantity?.toString() || "",

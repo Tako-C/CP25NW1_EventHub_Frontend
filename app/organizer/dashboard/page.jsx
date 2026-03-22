@@ -46,7 +46,6 @@ export default function ExhibitionSummary() {
         res?.data.filter((event) => event?.eventRole === 'ORGANIZER') || [];
 
       setData(organizer_event);
-      console.log(organizer_event);
 
       setTotalCount({
         count_exhibition: organizer_event.length,

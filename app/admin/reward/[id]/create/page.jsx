@@ -8,7 +8,7 @@ import { createRewardByAdmin } from "@/libs/fetch";
 import Notification from "@/components/Notification/Notification";
 
 const REQUIREMENT_TYPES = [
-  { value: "NONE", label: "ไม่มีเงื่อนไข" },
+  { value: "FREE", label: "ไม่มีเงื่อนไข" },
   { value: "PRE_SURVEY_DONE", label: "ทำ Pre-Survey แล้ว" },
   { value: "POST_SURVEY_DONE", label: "ทำ Post-Survey แล้ว" },
   { value: "CHECK_IN", label: "Check-in แล้ว" },
@@ -21,7 +21,7 @@ export default function CreateAdminRewardPage() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    requirementType: "NONE",
+    requirementType: "FREE",
     quantity: 0,
     startRedeemAt: "",
     endRedeemAt: "",

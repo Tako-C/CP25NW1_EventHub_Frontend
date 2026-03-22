@@ -3,18 +3,37 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { UserOutlined, MailOutlined, CheckCircleOutlined } from "@ant-design/icons";
-import { getData, postUserCheckIn, getDataNoToken } from "@/libs/fetch";
+import { getData, postUserCheckInDashboard } from "@/libs/fetch";
 import { FormatDate } from "@/utils/format";
 
-// Imports Components & Columns
+// Components & Columns
 import StatCard from "./components/StatCard";
 import ResponsiveTable from "./components/ResponsiveTable";
-import { participantColumns, createSurveyColumns } from "./libs/columns"; // สมมติว่าแยกไฟล์
+import { participantColumns, createSurveyColumns } from "./libs/columns";
+
+// Analysis
+import AnalysisPanel from "./components/AnalysisPanel";
+
+// Charts
+import {
+  RegistrationByTimeChart,
+  CheckinByTimeChart,
+  OccupationChart,
+  ProvinceChart,
+  RolePieChart,
+  AgeChart,
+  GenderPieChart,
+  VisitorSubmittedChart,
+  ExhibitorSubmittedChart,
+  SatisfactionWidget,
+  AnswerRatioChart,
+  SuggestionTable,
+  ChartCard,
+} from "./components/DashboardCharts";
 
 export default function ExhibitionDashboard() {
   const { id } = useParams();
-  
-  // State
+
   const [loading, setLoading] = useState(false);
   const [participants, setParticipant] = useState([]);
   const [title, setTitle] = useState("");
@@ -22,119 +41,58 @@ export default function ExhibitionDashboard() {
   const [surveyVisitor, setSurveyVisitor] = useState([]);
   const [surveyExhibitor, setSurveyExhibitor] = useState([]);
 
-  // Derived State (คำนวณค่าจาก State)
   const totalCheckedIn = participants.filter((item) => item.status === "check_in").length;
   const filteredParticipants = participants.filter((item) =>
     String(item.name || "").toLowerCase().includes(searchText.toLowerCase())
   );
-  
   const visitorSubmitted = surveyVisitor.filter((s) => s.status === "SUBMITTED").length;
   const exhibitorSubmitted = surveyExhibitor.filter((s) => s.status === "SUBMITTED").length;
 
-  // Fetch Logic (Version แก้ไข Pre+Post รวมกัน)
-const fetchData = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      // --- Step 1: ยิง Request ข้อมูลหลักพร้อมกัน (Parallel) ---
-      // ยิง Profile และ Event Info พร้อมกันเลย ไม่ต้องรอ
       const [resProfile, eventRes] = await Promise.all([
         getData("users/me/profile"),
-        getData(`events/${id}`)
+        getData(`events/${id}`),
       ]);
-
       setTitle(eventRes?.data?.eventName);
 
-      // --- Step 2: เตรียมยิง Request ย่อยพร้อมกัน ---
-      // สร้าง Promise Array ไว้รอรันพร้อมกัน
-      const promises = [];
-
-      // 2.1: Check-in (อันนี้ต้องรอ Profile ID ก่อน ถึงจะทำได้)
-      const checkInPromise = postUserCheckIn("list/check-in", id, resProfile?.data?.id);
-      promises.push(checkInPromise);
-
-      // 2.2: ฟังก์ชันสำหรับเตรียมดึง Survey (ปรับให้คืนค่า Promise แทนการ await ทันที)
       const getSurveyData = async (type) => {
         const isPre = type === "Pre";
         if (!eventRes?.data?.[isPre ? "hasPreSurvey" : "hasPostSurvey"]) return [];
-
         const endpoint = isPre ? "pre" : "post";
-        // ดึง Config ก่อน
         const surveyConfig = await getData(`events/${id}/surveys/${endpoint}`);
-        // ค้นหารายการที่มี status เป็น ACTIVE จาก Array
-        const activeVisitor = surveyConfig.data?.visitor?.find(
-          (v) => v.status === "ACTIVE",
-        );
-        const activeExhibitor = surveyConfig.data?.exhibitor?.find(
-          (e) => e.status === "ACTIVE",
-        );
-
-        // นำ id มาใช้
+        const activeVisitor = surveyConfig.data?.visitor?.find((v) => v.status === "ACTIVE");
+        const activeExhibitor = surveyConfig.data?.exhibitor?.find((e) => e.status === "ACTIVE");
         const visitorId = activeVisitor?.id;
         const exhibitorId = activeExhibitor?.id;
-
-        // ยิงดึง Visitor และ Exhibitor พร้อมกัน (Parallel ในระดับย่อย)
         const [visRes, exRes] = await Promise.all([
           visitorId ? getData(`events/${id}/surveys/${visitorId}/submission-status/visitor`) : Promise.resolve(null),
-          exhibitorId ? getData(`events/${id}/surveys/${exhibitorId}/submission-status/exhibitor`) : Promise.resolve(null)
+          exhibitorId ? getData(`events/${id}/surveys/${exhibitorId}/submission-status/exhibitor`) : Promise.resolve(null),
         ]);
-
         let results = [];
-
-        // Map Visitor
-        if (Array.isArray(visRes)) {
-          results.push(...visRes.map((item, idx) => ({
-            ...item,
-            key: `${type.toLowerCase()}-vis-${item.memberEventId || idx}`,
-            surveyType: `${type}-Survey`,
-            role: 'VISITOR' // แปะ Role ไว้เผื่อ filter ง่ายๆ
-          })));
-        }
-
-        // Map Exhibitor
-        if (Array.isArray(exRes)) {
-          results.push(...exRes.map((item, idx) => ({
-            ...item,
-            key: `${type.toLowerCase()}-ex-${idx}`,
-            surveyType: `${type}-Survey`,
-            role: 'EXHIBITOR'
-          })));
-        }
-
+        if (Array.isArray(visRes)) results.push(...visRes.map((item, idx) => ({ ...item, key: `${type.toLowerCase()}-vis-${item.memberEventId || idx}`, surveyType: `${type}-Survey`, role: "VISITOR" })));
+        if (Array.isArray(exRes)) results.push(...exRes.map((item, idx) => ({ ...item, key: `${type.toLowerCase()}-ex-${idx}`, surveyType: `${type}-Survey`, role: "EXHIBITOR" })));
         return results;
       };
 
-      // สั่งให้ดึง Pre และ Post พร้อมกัน
-      const preSurveyPromise = getSurveyData("Pre");
-      const postSurveyPromise = getSurveyData("Post");
-      
-      // --- Step 3: รอทุกอย่างเสร็จพร้อมกัน ---
+      const checkInPromise = postUserCheckInDashboard("list/check-in", id);
       const [resListUser, preSurveyData, postSurveyData] = await Promise.all([
         checkInPromise,
-        preSurveyPromise,
-        postSurveyPromise
+        getSurveyData("Pre"),
+        getSurveyData("Post"),
       ]);
 
-      // --- Step 4: รวมข้อมูลและ Set State ---
-      // รวม Survey ทั้งหมด
       const allSurveys = [...preSurveyData, ...postSurveyData];
-      
-      // แยก Visitor / Exhibitor จากข้อมูลที่รวมมา
-      const allVisitors = allSurveys.filter(s => s.role === 'VISITOR');
-      const allExhibitors = allSurveys.filter(s => s.role === 'EXHIBITOR');
-
-      console.log(preSurveyPromise)
+      const allVisitors = allSurveys.filter((s) => s.role === "VISITOR");
+      const allExhibitors = allSurveys.filter((s) => s.role === "EXHIBITOR");
       setSurveyVisitor(allVisitors.map((item, index) => ({ ...item, no: index + 1 })));
       setSurveyExhibitor(allExhibitors.map((item, index) => ({ ...item, no: index + 1 })));
-
-      // Set Participants
       if (Array.isArray(resListUser?.data)) {
-        setParticipant(
-          resListUser.data.map((item, index) => ({ ...item, key: index, no: index + 1 }))
-        );
+        setParticipant(resListUser.data.map((item, index) => ({ ...item, key: index, no: index + 1 })));
       } else {
         setParticipant([]);
       }
-
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -142,11 +100,8 @@ const fetchData = async () => {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [id]);
+  useEffect(() => { fetchData(); }, [id]);
 
-  // Mobile Render Functions (ส่งเข้าไปใน ResponsiveTable)
   const renderParticipantMobile = (item) => (
     <div key={item.key} className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col gap-3">
       <div className="flex justify-between items-start">
@@ -182,9 +137,7 @@ const fetchData = async () => {
   const renderSurveyMobile = (item) => (
     <div key={item.key} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
       <div className="flex justify-between items-center mb-2">
-        <span className="font-bold text-gray-800">
-          {item.firstName} {item.lastName}
-        </span>
+        <span className="font-bold text-gray-800">{item.firstName} {item.lastName}</span>
         <span className={`text-[10px] px-2 py-0.5 rounded-full ${item.status === "PENDING" ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-600"}`}>
           {item.status}
         </span>
@@ -199,12 +152,25 @@ const fetchData = async () => {
         {title || "Exhibition Name"}
       </h1>
 
-      {/* --- Section 1: Participant Check-in --- */}
+      {/* ══════════════════════════════════════════════════
+          SECTION 1: Participant Check-in
+      ══════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <StatCard title="Total Registration" value={participants.length} valueColor="text-[#6366F1]" />
         <StatCard title="Total Checked-in" value={totalCheckedIn} valueColor="text-[#6366F1]" />
       </div>
 
+      {/* Registration by Time Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <ChartCard title="Total Registration — แบ่งตามช่วงเวลา">
+          <RegistrationByTimeChart />
+        </ChartCard>
+        <ChartCard title="Total Checked-in — แบ่งตามช่วงเวลา">
+          <CheckinByTimeChart />
+        </ChartCard>
+      </div>
+
+      {/* Participants Table */}
       <ResponsiveTable
         title="Participants"
         data={filteredParticipants}
@@ -216,11 +182,40 @@ const fetchData = async () => {
         renderMobileItem={renderParticipantMobile}
       />
 
-      {/* --- Section 2: Visitor Survey --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 mb-6">
+      {/* Occupation / Province / Role */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <ChartCard title="ช่วงอาชีพที่เข้าร่วม">
+          <OccupationChart />
+        </ChartCard>
+        <ChartCard title="กลุ่มจังหวัดที่เข้าร่วม">
+          <ProvinceChart />
+        </ChartCard>
+      </div>
+
+      {/* Role Pie / Age / Gender */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 mb-6">
+        <ChartCard title="สัดส่วน Staff / Visitor / Exhibitor">
+          <RolePieChart />
+        </ChartCard>
+        <ChartCard title="ช่วงอายุ">
+          <AgeChart />
+        </ChartCard>
+        <ChartCard title="ช่วงเพศ">
+          <GenderPieChart />
+        </ChartCard>
+      </div>
+
+      {/* ══════════════════════════════════════════════════
+          SECTION 2: Visitor Survey
+      ══════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 mb-4">
         <StatCard title="Total Survey Visitor" value={surveyVisitor.length} valueColor="text-blue-600" />
         <StatCard title="Visitor Submitted" value={visitorSubmitted} valueColor="text-green-500" />
       </div>
+
+      <ChartCard title="Visitor Submitted — แบ่งตามประเภทและช่วงเวลา" className="mb-4">
+        <VisitorSubmittedChart />
+      </ChartCard>
 
       <ResponsiveTable
         title="Visitor Survey Status"
@@ -230,11 +225,17 @@ const fetchData = async () => {
         renderMobileItem={renderSurveyMobile}
       />
 
-      {/* --- Section 3: Exhibitor Survey --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 mb-6">
+      {/* ══════════════════════════════════════════════════
+          SECTION 3: Exhibitor Survey
+      ══════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 mb-4">
         <StatCard title="Total Survey Exhibitor" value={surveyExhibitor.length} valueColor="text-purple-600" />
         <StatCard title="Exhibitor Submitted" value={exhibitorSubmitted} valueColor="text-green-500" />
       </div>
+
+      <ChartCard title="Exhibitor Submitted — แบ่งตามประเภทและช่วงเวลา" className="mb-4">
+        <ExhibitorSubmittedChart />
+      </ChartCard>
 
       <ResponsiveTable
         title="Exhibitor Survey Status"
@@ -243,6 +244,41 @@ const fetchData = async () => {
         loading={loading}
         renderMobileItem={renderSurveyMobile}
       />
+
+      {/* ══════════════════════════════════════════════════
+          SECTION 4: Satisfaction
+      ══════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+        <SatisfactionWidget
+          title="ความพึงพอใจ Visitor"
+          data={{ 5: 142, 4: 98, 3: 41, 2: 18, 1: 9 }}
+          color="#3B82F6"
+        />
+        <SatisfactionWidget
+          title="ความพึงพอใจ Exhibitor"
+          data={{ 5: 54, 4: 43, 3: 19, 2: 8, 1: 3 }}
+          color="#7C3AED"
+        />
+      </div>
+
+      {/* ══════════════════════════════════════════════════
+          SECTION 5: Answer Ratio per Question
+      ══════════════════════════════════════════════════ */}
+      <ChartCard title="สัดส่วนคำตอบที่ตอบมาในแต่ละคำถาม" className="mt-6">
+        <AnswerRatioChart />
+      </ChartCard>
+
+      {/* ══════════════════════════════════════════════════
+          SECTION 6: Suggestion Table
+      ══════════════════════════════════════════════════ */}
+      <div className="mt-6">
+        <SuggestionTable />
+      </div>
+
+      {/* ══════════════════════════════════════════════════
+          SECTION 7: AI Analysis
+      ══════════════════════════════════════════════════ */}
+      <AnalysisPanel eventId={id} eventData={{ eventName: title }} />
     </div>
   );
 }

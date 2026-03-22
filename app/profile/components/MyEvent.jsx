@@ -12,7 +12,6 @@ import { EventCardImage, QrCodeImage } from "@/utils/getImage";
 import { useRouter } from "next/navigation";
 
 export default function MyEventPage({ events }) {
-  console.log(events);
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState("ALL");
 

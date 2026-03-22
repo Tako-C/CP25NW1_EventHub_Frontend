@@ -28,7 +28,6 @@ export default function QuestionEditor({
     Type;
 
   const isLockedPost = surveyType === "post" && index === 0;
-  console.log(questions)
   return (
     <div className="bg-white rounded-xl border-2 border-gray-200 p-6 hover:border-purple-300 transition-all">
       <div className="flex items-start gap-4">

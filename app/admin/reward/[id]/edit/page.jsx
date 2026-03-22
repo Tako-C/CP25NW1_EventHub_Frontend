@@ -23,7 +23,7 @@ export default function EditAdminRewardPage() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    requirementType: "NONE",
+    requirementType: "FREE",
     startRedeemAt: "",
     endRedeemAt: "",
     quantity: ""
@@ -65,7 +65,7 @@ export default function EditAdminRewardPage() {
           setFormData({
             name: r.name || "",
             description: r.description || "",
-            requirementType: r.requirementType || "NONE",
+            requirementType: r.requirementType || "FREE",
             startRedeemAt: toDatetimeLocal(r.startRedeemAt),
             endRedeemAt: toDatetimeLocal(r.endRedeemAt),
             quantity: r.quantity?.toString() || "",
@@ -220,7 +220,7 @@ export default function EditAdminRewardPage() {
                   value={formData.requirementType} 
                   onChange={(v) => setFormData({...formData, requirementType: v})} 
                   options={[
-                    { value: "NONE", label: "ไม่มีเงื่อนไข" },
+                    { value: "FREE", label: "ไม่มีเงื่อนไข" },
                     { value: "PRE_SURVEY_DONE", label: "ทำ Pre-Survey แล้ว" },
                     { value: "POST_SURVEY_DONE", label: "ทำ Post-Survey แล้ว" },
                     { value: "CHECK_IN", label: "Check-in แล้ว" }

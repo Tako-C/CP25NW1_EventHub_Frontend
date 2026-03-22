@@ -68,14 +68,14 @@ export default function EventSurveysDetailPage() {
 
   const fetchData = async () => {
     try {
-      const eventRes = await getDataNoToken(`/events/${id}`);
+      const eventRes = await getDataNoToken(`events/${id}`);
       let preRes = null;
       let postRes = null;
 
       if (eventRes?.statusCode === 200) setEvent(eventRes.data);
       
-      preRes = await getDataNoToken(`/events/${id}/surveys/pre`);
-      postRes = await getDataNoToken(`/events/${id}/surveys/post`);
+      preRes = await getDataNoToken(`events/${id}/surveys/pre`);
+      postRes = await getDataNoToken(`events/${id}/surveys/post`);
 
       setSurveys({
         pre: {

@@ -49,7 +49,7 @@ export default function EditSurveyPage() {
         setLoading(true);
         const type = searchParams.get("type");
         const role = searchParams.get("role");
-        const res = await getDataNoToken(`/events/${id}/surveys/${type}`);
+        const res = await getDataNoToken(`events/${id}/surveys/${type}`);
         if (res.statusCode === 200) {
           const data = res.data;
           const surveyData = data?.[role];
@@ -57,7 +57,7 @@ export default function EditSurveyPage() {
           setSurveyTitle(surveyData[0]?.name);
           setSurveyDescription(surveyData[0]?.description);
           setSurveyPoint(surveyData[0]?.points.toString());
-          setSurveyType(type);
+          setSurveyType(surveyData[0]?.type);
           setSurveyId(surveyData[0]?.id);
 
           const mappedQuestions = surveyData[0].questions.map((q) => {

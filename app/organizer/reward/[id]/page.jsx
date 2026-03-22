@@ -54,7 +54,7 @@ export default function EventRewardsDetailPage() {
 
   useEffect(() => {
     if (id) fetchData();
-  }, [id]);
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -74,7 +74,7 @@ export default function EventRewardsDetailPage() {
   };
 
   const handleDelete = async (rewardId) => {
-    if (!confirm("คุณต้องการลบรางวัลนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้")) return;
+    if (!confirm("คุณต้องการลบรางวัลนี้ใช่หรือไม่? ถ้าหากมีผู้เข้าร่วมแลกรางวัลไปแล้ว ราลวัลจะถือว่าเป็นดมฆะ และไม่สามารถกู้คืนได้")) return;
     try {
       const res = await deleteReward(id, rewardId);
       if (res === true || res?.statusCode === 200) {

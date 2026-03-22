@@ -27,7 +27,7 @@ export default function Page() {
     postCode: '',
     address: '',
     job: '',
-    totalPoint: '',
+    // totalPoint: '',
     gender: 'N', 
     dateOfBirth: '', 
   });
@@ -52,7 +52,7 @@ export default function Page() {
         postCode: userData?.postCode || '',
         address: userData?.address || '',
         job: userData?.job || '',
-        totalPoint: userData?.totalPoint || '',
+        // totalPoint: userData?.totalPoint || '',
         gender: userData?.gender || 'N',
         dateOfBirth: userData?.dateOfBirth ? userData.dateOfBirth.split('T')[0] : '',
       });
@@ -103,7 +103,6 @@ const fetchEventData = async () => {
 
       const res = await getData(`events/rewards/${userId}`);
       if (res?.statusCode === 200 && Array.isArray(res?.data)) {
-        console.log(res?.data)
         setRewards(res.data);
       }
     } catch (error) {

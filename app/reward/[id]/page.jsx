@@ -21,7 +21,7 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 
 const REQUIREMENT_CONFIG = {
-  NONE: {
+  FREE: {
     label: "ไม่มีเงื่อนไข",
     description: "ทุกคนสามารถรับรางวัลนี้ได้ทันที ไม่มีข้อกำหนดเพิ่มเติม",
     color: "bg-green-50 border-green-200 text-green-800",
@@ -30,21 +30,24 @@ const REQUIREMENT_CONFIG = {
   },
   PRE_SURVEY_DONE: {
     label: "ต้องทำ Pre-Survey ก่อน",
-    description: "คุณต้องกรอกแบบสอบถามก่อนงาน (Pre-Survey) ให้ครบถ้วนเสียก่อน จึงจะสามารถรับรางวัลนี้ได้",
+    description:
+      "คุณต้องกรอกแบบสอบถามก่อนงาน (Pre-Survey) ให้ครบถ้วนเสียก่อน จึงจะสามารถรับรางวัลนี้ได้",
     color: "bg-blue-50 border-blue-200 text-blue-800",
     iconColor: "text-blue-500",
     Icon: AlertCircle,
   },
   POST_SURVEY_DONE: {
     label: "ต้องทำ Post-Survey ก่อน",
-    description: "คุณต้องกรอกแบบสอบถามหลังงาน (Post-Survey) ให้ครบถ้วนเสียก่อน จึงจะสามารถรับรางวัลนี้ได้",
+    description:
+      "คุณต้องกรอกแบบสอบถามหลังงาน (Post-Survey) ให้ครบถ้วนเสียก่อน จึงจะสามารถรับรางวัลนี้ได้",
     color: "bg-purple-50 border-purple-200 text-purple-800",
     iconColor: "text-purple-500",
     Icon: AlertCircle,
   },
   CHECK_IN: {
     label: "ต้อง Check-in ก่อน",
-    description: "คุณต้อง Check-in เข้างานก่อนเท่านั้น จึงจะสามารถรับรางวัลนี้ได้",
+    description:
+      "คุณต้อง Check-in เข้างานก่อนเท่านั้น จึงจะสามารถรับรางวัลนี้ได้",
     color: "bg-orange-50 border-orange-200 text-orange-800",
     iconColor: "text-orange-500",
     Icon: AlertCircle,
@@ -71,7 +74,9 @@ export default function RewardDetailPage() {
   const [redeeming, setRedeeming] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
   const [userId, setUserId] = useState(null);
-  const [eligible, setEligible] = useState(null) 
+  const [eligible, setEligible] = useState(null);
+  const [eventUserCheck, setEventUserCheck] = useState(false);
+  const token = Cookies.get("token");
 
   const [notification, setNotification] = useState({
     isVisible: false,
@@ -94,18 +99,28 @@ export default function RewardDetailPage() {
     const fetchAll = async () => {
       setLoading(true);
       try {
-        const res = await getDataNoToken("events/rewards");
+        // const res = await getDataNoToken("events/rewards");
+        const res = await getDataNoToken(`events/rewards/detail/${id}`);
         const all = res?.data || [];
-        const found = all.find((r) => r.id == id);
-        
+        const found = res?.data;
+
         if (found) {
-          const resData = await getData(`events/${found?.eventId}/rewards/visitor`);
-          const foundEligible = resData?.data.find((r) => r.id == id) || [];
           setReward(found);
-          setEligible(foundEligible?.eligible);
+          if (token) {
+            // const res = await getData("users/me/registered-events");
+            // const data = res?.data.find((r) => r.eventId === found?.eventId);
+            // if (data !== null || data !== undefined) {
+            const resData = await getData(
+              `events/${found?.eventId}/rewards/visitor`,
+            );
+            const foundEligible = resData?.data || [];
+            setEligible(foundEligible?.eligible);
+            // } else {
+            //   setEligible();
+            // }
+          }
         }
 
-        const token = Cookies.get("token");
         if (token) {
           const decoded = jwtDecode(token);
           const uid = decoded.id || decoded.userId || decoded.sub;
@@ -121,9 +136,15 @@ export default function RewardDetailPage() {
           }
         }
       } catch (error) {
-        console.error("Error fetching reward:", error);
-        showNotification("ไม่สามารถโหลดข้อมูลของรางวัลได้ กรุณาลองใหม่อีกครั้ง", true);
-        setReward(null);
+        // console.error("Error fetching reward:", error);
+        // showNotification(
+        //   "ไม่สามารถโหลดข้อมูลของรางวัลได้ กรุณาลองใหม่อีกครั้ง",
+        //   true,
+        // );
+        // setReward(null);
+        if (error.status === 403) {
+          setEventUserCheck(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -140,7 +161,10 @@ export default function RewardDetailPage() {
       showNotification("แลกรับของรางวัลสำเร็จ! 🎉", false);
     } catch (error) {
       // showNotification(error.message || "เกิดข้อผิดพลาดในการแลกรับรางวัล กรุณาลองใหม่อีกครั้ง", true);
-      showNotification("เกิดข้อผิดพลาดในการแลกรับรางวัล กรุณาลองใหม่อีกครั้ง", true);
+      showNotification(
+        "เกิดข้อผิดพลาดในการแลกรับรางวัล กรุณาลองใหม่อีกครั้ง",
+        true,
+      );
     } finally {
       setRedeeming(false);
     }
@@ -161,15 +185,21 @@ export default function RewardDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4 px-4">
         <XCircle className="w-16 h-16 text-gray-300" />
-        <p className="text-gray-500 text-lg font-medium">ไม่พบข้อมูลของรางวัลนี้</p>
-        <button onClick={() => router.back()} className="text-sm text-blue-600 hover:underline font-bold">
+        <p className="text-gray-500 text-lg font-medium">
+          ไม่พบข้อมูลของรางวัลนี้
+        </p>
+        <button
+          onClick={() => router.back()}
+          className="text-sm text-blue-600 hover:underline font-bold"
+        >
           กลับไปหน้าก่อนหน้า
         </button>
       </div>
     );
   }
 
-  const reqConfig = REQUIREMENT_CONFIG[reward.requirementType] || REQUIREMENT_CONFIG.NONE;
+  const reqConfig =
+    REQUIREMENT_CONFIG[reward.requirementType] || REQUIREMENT_CONFIG.FREE;
   const { Icon } = reqConfig;
   const endDate = new Date(reward.endRedeemAt);
   const startDate = new Date(reward.startRedeemAt);
@@ -178,9 +208,15 @@ export default function RewardDetailPage() {
   const isNotStarted = startDate > now;
   const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
   const isOutOfStock = reward.quantity <= 0;
-  const isNotEligible = eligible === false; 
-  const canRedeem = !isExpired && !isNotStarted && !isOutOfStock && !redeemed && !isNotEligible;
-
+  const isNotEligible = eligible === false;
+  const canRedeem =
+    !isExpired &&
+    !isNotStarted &&
+    !isOutOfStock &&
+    !redeemed &&
+    !isNotEligible &&
+    token &&
+    !eventUserCheck;
   return (
     <div className="min-h-screen bg-gray-50">
       <Notification
@@ -212,8 +248,12 @@ export default function RewardDetailPage() {
             <Calendar className="w-4 h-4" />
             {reward.eventName}
           </p>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">{reward.name}</h1>
-          <p className="text-gray-500 leading-relaxed text-sm">{reward.description}</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            {reward.name}
+          </h1>
+          <p className="text-gray-500 leading-relaxed text-sm">
+            {reward.description}
+          </p>
         </div>
 
         {redeemed ? (
@@ -221,7 +261,9 @@ export default function RewardDetailPage() {
             <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
             <div>
               <p className="font-semibold text-green-800">รับรางวัลแล้ว</p>
-              <p className="text-sm text-green-600">คุณได้ทำการแลกรับของรางวัลนี้เรียบร้อยแล้ว</p>
+              <p className="text-sm text-green-600">
+                คุณได้ทำการแลกรับของรางวัลนี้เรียบร้อยแล้ว
+              </p>
             </div>
           </div>
         ) : isExpired ? (
@@ -229,7 +271,9 @@ export default function RewardDetailPage() {
             <XCircle className="w-6 h-6 text-gray-400 flex-shrink-0" />
             <div>
               <p className="font-semibold text-gray-600">หมดระยะเวลาการแลก</p>
-              <p className="text-sm text-gray-400">ของรางวัลนี้สิ้นสุดระยะเวลาการแลกรับแล้ว</p>
+              <p className="text-sm text-gray-400">
+                ของรางวัลนี้สิ้นสุดระยะเวลาการแลกรับแล้ว
+              </p>
             </div>
           </div>
         ) : isNotStarted ? (
@@ -237,7 +281,9 @@ export default function RewardDetailPage() {
             <Clock className="w-6 h-6 text-yellow-500 flex-shrink-0" />
             <div>
               <p className="font-semibold text-yellow-800">ยังไม่เปิดให้แลก</p>
-              <p className="text-sm text-yellow-600">จะเปิดให้แลกในวันที่ {FormatDateTime(reward.startRedeemAt)}</p>
+              <p className="text-sm text-yellow-600">
+                จะเปิดให้แลกในวันที่ {FormatDateTime(reward.startRedeemAt)}
+              </p>
             </div>
           </div>
         ) : isOutOfStock ? (
@@ -245,7 +291,9 @@ export default function RewardDetailPage() {
             <Package className="w-6 h-6 text-red-400 flex-shrink-0" />
             <div>
               <p className="font-semibold text-red-700">ของรางวัลหมดแล้ว</p>
-              <p className="text-sm text-red-500">ขออภัย รางวัลนี้ถูกแลกครบตามจำนวนที่กำหนดแล้ว</p>
+              <p className="text-sm text-red-500">
+                ขออภัย รางวัลนี้ถูกแลกครบตามจำนวนที่กำหนดแล้ว
+              </p>
             </div>
           </div>
         ) : (
@@ -269,7 +317,8 @@ export default function RewardDetailPage() {
               <span className="text-xs uppercase">จำนวนคงเหลือ</span>
             </div>
             <p className="text-xl font-bold text-gray-900">
-              {reward.quantity} <span className="text-sm font-normal text-gray-400">ชิ้น</span>
+              {reward.quantity}{" "}
+              <span className="text-sm font-normal text-gray-400">ชิ้น</span>
             </p>
           </div>
 
@@ -287,7 +336,11 @@ export default function RewardDetailPage() {
               <span className="text-xs uppercase">เริ่มแลกได้เมื่อ</span>
             </div>
             <p className="text-sm font-bold text-gray-900">
-              {startDate.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}
+              {startDate.toLocaleDateString("th-TH", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
             </p>
           </div>
 
@@ -297,7 +350,11 @@ export default function RewardDetailPage() {
               <span className="text-xs uppercase">หมดเขตวันที่</span>
             </div>
             <p className="text-sm font-bold text-gray-900">
-              {endDate.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}
+              {endDate.toLocaleDateString("th-TH", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })}
             </p>
           </div>
         </div>
@@ -306,59 +363,121 @@ export default function RewardDetailPage() {
           onClick={handleRedeem}
           disabled={!canRedeem || redeeming}
           className={`w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-all duration-200
-            ${redeemed
-              ? "bg-green-100 text-green-700 cursor-default"
-              : canRedeem
-                ? "bg-gray-900 text-white hover:bg-gray-700 active:scale-95 shadow-lg"
-                : "bg-gray-100 text-gray-400 cursor-not-allowed font-black"
+            ${
+              redeemed
+                ? "bg-green-100 text-green-700 cursor-default"
+                : canRedeem
+                  ? "bg-gray-900 text-white hover:bg-gray-700 active:scale-95 shadow-lg"
+                  : "bg-gray-100 text-gray-400 cursor-not-allowed font-black"
             }`}
         >
           {redeeming ? (
-            <><Loader2 className="w-5 h-5 animate-spin" /> กำลังดำเนินการ...</>
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" /> กำลังดำเนินการ...
+            </>
           ) : redeemed ? (
-            <><CheckCircle2 className="w-5 h-5" /> รับรางวัลเรียบร้อยแล้ว</>
+            <>
+              <CheckCircle2 className="w-5 h-5" /> รับรางวัลเรียบร้อยแล้ว
+            </>
           ) : isExpired ? (
-            <><XCircle className="w-5 h-5" /> หมดเวลาแลกรับ</>
+            <>
+              <XCircle className="w-5 h-5" /> หมดเวลาแลกรับ
+            </>
           ) : isOutOfStock ? (
-            <><Package className="w-5 h-5" /> ขออภัย ของรางวัลหมดแล้ว</>
+            <>
+              <Package className="w-5 h-5" /> ขออภัย ของรางวัลหมดแล้ว
+            </>
           ) : isNotStarted ? (
-            <><Clock className="w-5 h-5" /> ยังไม่ถึงเวลาเปิดรับ</>
+            <>
+              <Clock className="w-5 h-5" /> ยังไม่ถึงเวลาเปิดรับ
+            </>
+          ) : !token ? (
+            <>
+              <Gift className="w-5 h-5" /> กรุณาเข้าสู่ระบบถึงจะรับรางวัลได้
+            </>
+          ) : eventUserCheck ? (
+            <>
+              <Gift className="w-5 h-5" /> ไม่สามารถรับรางวัลได้
+            </>
           ) : (
-            <><Gift className="w-5 h-5" /> ยืนยันรับของรางวัลนี้</>
+            <>
+              <Gift className="w-5 h-5" /> ยืนยันรับของรางวัลนี้
+            </>
           )}
         </button>
 
-        {eligible === false && reward.requirementType !== "NONE" && !redeemed && !isExpired && (
-          <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-2xl p-4">
-            <AlertCircle className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
+        {eligible === false &&
+          reward.requirementType !== "FREE" &&
+          !redeemed &&
+          !isExpired && (
+            <div className="flex items-start gap-3 bg-purple-50 border border-purple-200 rounded-2xl p-4">
+              <AlertCircle className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-semibold text-purple-800 text-sm mb-1">
+                  ยังไม่สามารถแลกรับรางวัลได้
+                </p>
+                <p className="text-purple-700 text-sm opacity-80">
+                  {reqConfig.description}
+                </p>
+                {eligible === false && (
+                  <button
+                    onClick={() =>
+                      router.push(`/event/${reward.eventId}/survey/post`)
+                    }
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-full transition-colors"
+                  >
+                    ไปทำ Post-Survey ตอนนี้ →
+                  </button>
+                )}
+                {reward.requirementType === "PRE_SURVEY_DONE" && (
+                  <button
+                    onClick={() =>
+                      router.push(`/event/${reward.eventId}/survey/pre`)
+                    }
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-full transition-colors"
+                  >
+                    ไปทำ Pre-Survey ตอนนี้ →
+                  </button>
+                )}
+                {reward.requirementType === "POST_SURVEY_DONE" && (
+                  <button
+                    onClick={() =>
+                      router.push(`/event/${reward.eventId}/survey/post`)
+                    }
+                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-full transition-colors"
+                  >
+                    ไปทำ Post-Survey ตอนนี้ →
+                  </button>
+                )}
+                {reward.requirementType === "CHECK_IN" && (
+                  <p className="mt-2 text-xs text-purple-500 font-bold">
+                    ⚠️ กรุณาทำการ Check-in ที่หน้างานก่อนจึงจะรับรางวัลได้
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+        {eventUserCheck && (
+          <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-2xl p-4">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="font-semibold text-purple-800 text-sm mb-1">
+              <p className="font-semibold text-red-800 text-sm mb-1">
                 ยังไม่สามารถแลกรับรางวัลได้
               </p>
-              <p className="text-purple-700 text-sm opacity-80">
-                {reqConfig.description}
+              <p className="text-red-700 text-sm opacity-80">
+                เนื่องจากคุณยังไม่ได้ลงทะเบียนอีเว้นท์นี้ จึงไม่สามารถรับรางวัลนี้ได้
               </p>
-              {reward.requirementType === "PRE_SURVEY_DONE" && (
+              (
                 <button
-                  onClick={() => router.push(`/event/${reward.eventId}/survey/pre`)}
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-full transition-colors"
+                  onClick={() =>
+                    router.push(`/event/${reward.eventId}`)
+                  }
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-full transition-colors"
                 >
-                  ไปทำ Pre-Survey ตอนนี้ →
+                  ลงทะเบียนอีเว้นท์ เพื่อรับรางวัล →
                 </button>
-              )}
-              {reward.requirementType === "POST_SURVEY_DONE" && (
-                <button
-                  onClick={() => router.push(`/event/${reward.eventId}/survey/post`)}
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-full transition-colors"
-                >
-                  ไปทำ Post-Survey ตอนนี้ →
-                </button>
-              )}
-              {reward.requirementType === "CHECK_IN" && (
-                <p className="mt-2 text-xs text-purple-500 font-bold">
-                  ⚠️ กรุณาทำการ Check-in ที่หน้างานก่อนจึงจะรับรางวัลได้
-                </p>
-              )}
+              )
             </div>
           </div>
         )}

@@ -48,8 +48,25 @@ const apiFetch = async (endpoint, options = {}, isBlob = false) => {
 
 export const getData = (path) => apiFetch(path, { method: "GET" });
 
-export const getDataNoToken = (path) =>
-  fetch(`${url}/${path}`).then((res) => res.json());
+// export const getDataNoToken = (path) =>
+//   fetch(`${url}/${path}`).then((res) => res.json());
+
+export const getDataNoToken = async (path) => {
+  const response = await fetch(`${url}/${path}`);
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Error ${response.status}: ${errorText}`);
+  }
+
+  const contentType = response.headers.get("content-type");
+
+  if (contentType && contentType.includes("application/json")) {
+    return await response.json();
+  }
+
+  return await response.text();
+};
 
 export const authLoginPassword = (email, password) =>
   apiFetch("auth/login", {
@@ -57,10 +74,10 @@ export const authLoginPassword = (email, password) =>
     body: JSON.stringify({ email, password }),
   });
 
-export const authRegisterRequest = (firstName, lastName, email, password) =>
+export const authRegisterRequest = (firstName, lastName, email, password, gender, dateOfBirth) =>
   apiFetch("auth/register/otp/request", {
     method: "POST",
-    body: JSON.stringify({ firstName, lastName, email, password }),
+    body: JSON.stringify({ firstName, lastName, email, password, gender, dateOfBirth }),
   });
 
 export const authRegisterVerify = (email, otp, password) =>
@@ -117,6 +134,12 @@ export const postUserCheckIn = (path, eventId, userId) =>
   apiFetch(path, {
     method: "POST",
     body: JSON.stringify({ eventId, userId }),
+  });
+
+export const postUserCheckInDashboard = (path, eventId) =>
+  apiFetch(path, {
+    method: "POST",
+    body: JSON.stringify({ eventId }),
   });
 
 export const getListUser = (path, payload) =>

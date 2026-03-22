@@ -88,11 +88,38 @@ export default function ProfilePage({
   };
 
   const handleSave = async () => {
-    await editData(updateProfile);
+const cleanPayload = {
+    firstName: updateProfile.firstName,
+    lastName: updateProfile.lastName,
+    email: updateProfile.email,
+    phone: updateProfile.phone || "",
+    address: updateProfile.address || "",
+    postCode: updateProfile.postCode || "",
+    gender: updateProfile.gender,
+    dateOfBirth: updateProfile.dateOfBirth || null,
+    job: updateProfile.job?.id ? {
+      id: updateProfile.job.id,
+      jobNameTh: updateProfile.job.jobNameTh,
+      jobNameEn: updateProfile.job.jobNameEn
+    } : null,
+    
+    country: updateProfile.country?.id ? {
+      id: updateProfile.country.id,
+      countryNameTh: updateProfile.country.countryNameTh,
+      countryNameEn: updateProfile.country.countryNameEn
+    } : null,
+    
+    city: updateProfile.city?.id ? {
+      id: updateProfile.city.id,
+      cityNameTh: updateProfile.city.cityNameTh,
+      cityNameEn: updateProfile.city.cityNameEn
+    } : null,
+  };
+    await editData(cleanPayload);
     setIsEditing(false);
-    setTimeout(() => {
-        window.location.reload();
-    }, 1000);
+    // setTimeout(() => {
+    //     window.location.reload();
+    // }, 1000);
   };
 
   const editData = async (data) => {
