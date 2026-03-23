@@ -1,95 +1,65 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, Button, Spin } from "antd";
-import { RobotOutlined, ReloadOutlined, CloseOutlined } from "@ant-design/icons";
-import { getData, getDataNoToken } from "@/libs/fetch";
+import {
+  RobotOutlined,
+  ReloadOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { getDataNoToken } from "@/libs/fetch";
 
-// ─── MOCK RESPONSE (ปิดไว้ ใช้ตอน API จริงยังไม่พร้อม) ──────────────────────
-const MOCK_ANALYSIS = `
-## 1. ภาพรวมงาน (Overview)
-- งานมีผู้ลงทะเบียนทั้งสิ้น **1,200 คน** โดยมีผู้ Check-in จริง **980 คน** คิดเป็น **81.7%** ของผู้ลงทะเบียนทั้งหมด ซึ่งถือว่าอยู่ในระดับดี
-- มีผู้ให้ Feedback กลับมาทั้งสิ้น **250 คน** คิดเป็น **25.5%** ของผู้เข้าร่วมงาน ซึ่งแสดงให้เห็นถึงความสนใจในการมีส่วนร่วมของผู้เข้าร่วมงาน
-- กลุ่มเป้าหมายหลักคือเจ้าของธุรกิจร้านอาหาร ซึ่งมีความสำคัญต่อการพัฒนานวัตกรรมในอุตสาหกรรมอาหาร
-
-## 2. จุดแข็งและปัจจัยความสำเร็จ (Core Strengths)
-- สรุปสิ่งที่ทำได้ดีเยี่ยม ได้แก่ ระบบเข้าถึงที่รวดเร็วและเสถียรภาพของเทคโนโลยี WiFi ในฮอลล์ ซึ่งช่วยให้การสาธิตระบบ POS ของผู้จัดบูทเป็นไปอย่างราบรื่น
-- แนวทางการรักษามาตรฐานนี้ไว้สำหรับงานในอนาคตควรนำการพัฒนาระบบเทคโนโลยีและการบริการที่ตอบสนองความต้องการของผู้เข้าร่วมงาน
-
-## 3. ประเด็นที่ต้องปรับปรุงเร่งด่วน (Critical Issues)
-- วิเคราะห์ช่องว่างความพึงพอใจ: ปัจจุบัน Gap อยู่ที่ 1.2 สถานะคือ สภาวะขาดสมดุลเชิงกลยุทธ์ (Strategic Imbalance) โดยที่ Visitor ได้คะแนน **4.5** ในขณะที่ Exhibitor ได้คะแนน **3.3**
-- *ค่าอธิบายเชิงกลยุทธ์*: สภาวะสมดุลเชิงกลยุทธ์มาถึงหมายความว่าทรัพยากรหรือการบริหารจัดการเอนเอียงไปดูแลโจทย์กลุ่มหนึ่งมากเกินไป จนทำให้อีกกลุ่มเสียประโยชน์
-- วิเคราะห์ความย้อนแย้งในหมวดหมู่ **"Catering"** ซึ่งมีการรับรู้ถึงความแออัดและผลที่น่าพึงพอใจ ส่งผลกระทบต่อการเจรจาธุรกิจทั้ง Visitor และ Exhibitor
-- การที่ระบบลงทะเบียนรวดเร็วให้ผู้เข้าร่วมงานเข้างานได้ทันทีแต่กลับสอลล์พร้อมกัน ส่งผลให้พื้นที่ส่วนกลางไม่สามารถรองรับได้ทัน
-
-## 4. ข้อเสนอแนะเชิงกลยุทธ์ (Future Action Plan)
-- แนวทางแก้ไขปัญหาเชิงเทคนิคและโลจิสติกส์:
-  1. เพิ่มจำนวนจุดบริการในพื้นที่รับประทานอาหารเพื่อรองรับผู้เข้าร่วมงานในช่วงเวลาพักเที่ยง
-  2. จัดเตรียมไฟให้เพียงพอเพื่อให้ผู้เข้าร่วมงานสามารถสาธิตเครื่องจักรได้อย่างมีประสิทธิภาพ
-- กลยุทธ์การรักษาฐานผู้เข้าร่วมเดิม: สร้างความสัมพันธ์ที่ดีกับ Exhibitor โดยการจัดกิจกรรม Networking ที่เอื้อต่อการสร้างความร่วมมือ
-- กลยุทธ์สร้างคุณค่าร่วม: การแก้ไขปัญหานี้ช่วยเพิ่มโอกาสในการปิดขายให้ Exhibitor และเพิ่มความประทับใจให้ Visitor พร้อมกัน
-- แผนการกู้คืนความมั่นใจ: จัดทำแบบสอบถามหลังงานเพื่อรับฟังความคิดเห็นและปรับปรุงการจัดงานในอนาคต
-
-เรามุ่งมั่นที่จะพัฒนางานในอนาคตให้มีคุณภาพและประสิทธิภาพยิ่งขึ้น เพื่อสร้างความพึงพอใจให้กับทุกฝ่ายที่เกี่ยวข้อง
-`;
-
-// ─── SIMPLE MARKDOWN RENDERER ─────────────────────────────────────────────────
-function parseBold(text) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) =>
-    part.startsWith("**") && part.endsWith("**") ? (
-      <strong key={i} className="font-semibold text-gray-900">{part.slice(2, -2)}</strong>
-    ) : (
-      part
-    )
+function isValidMetrics(payload) {
+  return (
+    payload &&
+    typeof payload === "object" &&
+    (Number.isFinite(Number(payload.check_in_rate)) ||
+      Number.isFinite(Number(payload.survey_rate)))
   );
 }
 
-function renderMarkdown(text) {
-  const lines = text.trim().split("\n");
-  const elements = [];
-  let key = 0;
-
-  for (const line of lines) {
-    if (line.startsWith("## ")) {
-      elements.push(
-        <h2 key={key++} className="text-sm font-bold text-[#7C3AED] mt-5 mb-2 pb-1 border-b border-purple-100">
-          {line.replace("## ", "")}
-        </h2>
-      );
-    } else if (line.match(/^\s{2}\d+\.\s/)) {
-      // indented numbered list (sub-item)
-      elements.push(
-        <div key={key++} className="flex gap-2 ml-8 mb-1 text-sm text-gray-700">
-          <span className="text-purple-300 shrink-0 font-bold">{line.match(/\d+/)[0]}.</span>
-          <span>{parseBold(line.replace(/^\s+\d+\.\s/, ""))}</span>
-        </div>
-      );
-    } else if (line.match(/^\d+\.\s/)) {
-      elements.push(
-        <div key={key++} className="flex gap-2 ml-4 mb-1 text-sm text-gray-700">
-          <span className="text-purple-400 font-bold shrink-0">{line.match(/^\d+/)[0]}.</span>
-          <span>{parseBold(line.replace(/^\d+\.\s/, ""))}</span>
-        </div>
-      );
-    } else if (line.startsWith("- ")) {
-      elements.push(
-        <div key={key++} className="flex gap-2 ml-2 mb-1.5 text-sm text-gray-700">
-          <span className="text-purple-300 shrink-0 mt-0.5">•</span>
-          <span className="leading-relaxed">{parseBold(line.replace("- ", ""))}</span>
-        </div>
-      );
-    } else if (line.trim() === "") {
-      elements.push(<div key={key++} className="h-1" />);
-    } else {
-      elements.push(
-        <p key={key++} className="text-sm text-gray-600 mb-1 leading-relaxed italic">
-          {parseBold(line)}
-        </p>
-      );
-    }
+function parseAiResult(raw) {
+  if (typeof raw !== "string") {
+    return { metrics: null, markdown: "" };
   }
 
-  return elements;
+  const text = raw.trim();
+  if (!text) {
+    return { metrics: null, markdown: "" };
+  }
+
+  const segments = text.split(/\r?\n---\r?\n/);
+  if (segments.length > 1) {
+    const [firstBlock, ...rest] = segments;
+    let metrics = null;
+
+    try {
+      const parsed = JSON.parse(firstBlock.trim());
+      if (isValidMetrics(parsed)) {
+        metrics = parsed;
+      }
+    } catch {
+      // Keep null and render full text fallback below.
+    }
+
+    const markdown = rest.join("\n---\n").trim();
+    return { metrics, markdown: markdown || text };
+  }
+
+  try {
+    const parsed = JSON.parse(text);
+    if (isValidMetrics(parsed)) {
+      return { metrics: parsed, markdown: "" };
+    }
+    if (typeof parsed?.analysis === "string") {
+      return { metrics: null, markdown: parsed.analysis };
+    }
+  } catch {
+    // This path is plain markdown/text.
+  }
+
+  return { metrics: null, markdown: text };
 }
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
@@ -97,6 +67,7 @@ export default function AnalysisPanel({ eventId, eventData }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const parsed = useMemo(() => parseAiResult(result), [result]);
 
   // const handleAnalyze = async () => {
   //   setLoading(true);
@@ -142,11 +113,10 @@ export default function AnalysisPanel({ eventId, eventData }) {
     try {
       // เรียกใช้ getDataNoToken ซึ่งคุณได้ปรับให้รองรับการ return response.text() ไว้แล้ว
       const res = await getDataNoToken(`ai/summary/${eventId}`);
-      
+
       // แสดงผลข้อมูลทั้งหมดที่ได้รับมา (Plain Text) ลงใน State โดยตรง
       // ไม่ว่าจะเป็น JSON metadata หรือเนื้อหา Markdown
       setResult(res);
-
     } catch (err) {
       console.error("Analysis error:", err);
       setError("เกิดข้อผิดพลาดในการวิเคราะห์ กรุณาลองใหม่อีกครั้ง");
@@ -168,7 +138,9 @@ export default function AnalysisPanel({ eventId, eventData }) {
           <button
             onClick={handleAnalyze}
             className="group flex items-center gap-3 px-7 py-3.5 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl active:scale-95"
-            style={{ background: "linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)" }}
+            style={{
+              background: "linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)",
+            }}
           >
             <RobotOutlined className="text-xl group-hover:animate-spin" />
             วิเคราะห์ประสิทธิภาพงาน (AI Analysis)
@@ -185,7 +157,9 @@ export default function AnalysisPanel({ eventId, eventData }) {
         >
           <div className="flex flex-col items-center gap-4">
             <Spin size="large" />
-            <p className="text-gray-400 text-sm">AI กำลังวิเคราะห์ข้อมูลงาน...</p>
+            <p className="text-gray-400 text-sm">
+              AI กำลังวิเคราะห์ข้อมูลงาน...
+            </p>
           </div>
         </Card>
       )}
@@ -199,7 +173,11 @@ export default function AnalysisPanel({ eventId, eventData }) {
         >
           <div className="flex flex-col items-center gap-3 text-red-400">
             <p className="text-sm">{error}</p>
-            <Button onClick={handleAnalyze} icon={<ReloadOutlined />} size="small">
+            <Button
+              onClick={handleAnalyze}
+              icon={<ReloadOutlined />}
+              size="small"
+            >
               ลองอีกครั้ง
             </Button>
           </div>
@@ -237,9 +215,117 @@ export default function AnalysisPanel({ eventId, eventData }) {
           }
           styles={{ body: { padding: "16px 24px 24px" } }}
         >
-          <div>{renderMarkdown(result)}</div>
+          {parsed.metrics && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+              {Number.isFinite(Number(parsed.metrics.check_in_rate)) && (
+                <MetricCard
+                  label="Check-in Rate"
+                  value={`${Number(parsed.metrics.check_in_rate).toFixed(2)}%`}
+                  tone="blue"
+                />
+              )}
+              {Number.isFinite(Number(parsed.metrics.survey_rate)) && (
+                <MetricCard
+                  label="Survey Rate"
+                  value={`${Number(parsed.metrics.survey_rate).toFixed(2)}%`}
+                  tone="green"
+                />
+              )}
+            </div>
+          )}
+
+          <div className="rounded-xl border border-purple-100 bg-white/70 overflow-x-auto">
+            <div className="px-4 py-4 text-gray-700 leading-7">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  h1: ({ children }) => (
+                    <h1 className="text-xl font-bold text-gray-900 mt-4 mb-3">
+                      {children}
+                    </h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 className="text-lg font-bold text-[#6D28D9] mt-5 mb-3 border-b border-purple-100 pb-1">
+                      {children}
+                    </h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="text-base font-semibold text-gray-900 mt-4 mb-2">
+                      {children}
+                    </h3>
+                  ),
+                  p: ({ children }) => (
+                    <p className="text-sm text-gray-700 mb-3">{children}</p>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="list-disc pl-5 mb-3 space-y-1 text-sm">
+                      {children}
+                    </ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="list-decimal pl-5 mb-3 space-y-1 text-sm">
+                      {children}
+                    </ol>
+                  ),
+                  li: ({ children }) => (
+                    <li className="text-gray-700">{children}</li>
+                  ),
+                  table: ({ children }) => (
+                    <table className="w-full text-sm border-collapse mb-4 border border-gray-200 rounded-lg overflow-hidden">
+                      {children}
+                    </table>
+                  ),
+                  thead: ({ children }) => (
+                    <thead className="bg-purple-50 text-gray-700">
+                      {children}
+                    </thead>
+                  ),
+                  th: ({ children }) => (
+                    <th className="text-left px-3 py-2 border border-gray-200 font-semibold">
+                      {children}
+                    </th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="px-3 py-2 border border-gray-200 align-top">
+                      {children}
+                    </td>
+                  ),
+                  hr: () => <hr className="my-4 border-purple-100" />,
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-violet-300 bg-violet-50/60 px-3 py-2 rounded-r text-sm mb-3">
+                      {children}
+                    </blockquote>
+                  ),
+                }}
+              >
+                {parsed.markdown || "ไม่พบผลการวิเคราะห์"}
+              </ReactMarkdown>
+            </div>
+          </div>
         </Card>
       )}
+    </div>
+  );
+}
+
+function MetricCard({ label, value, tone = "blue" }) {
+  const toneClass = {
+    blue: {
+      wrap: "border-blue-100 bg-blue-50/50",
+      value: "text-blue-600",
+    },
+    green: {
+      wrap: "border-emerald-100 bg-emerald-50/50",
+      value: "text-emerald-600",
+    },
+  };
+
+  const selected = toneClass[tone] || toneClass.blue;
+
+  return (
+    <div className={`rounded-lg border px-4 py-3 ${selected.wrap}`}>
+      <div className="text-xs text-gray-500 font-medium">{label}</div>
+      <div className={`text-2xl font-bold mt-1 ${selected.value}`}>{value}</div>
     </div>
   );
 }

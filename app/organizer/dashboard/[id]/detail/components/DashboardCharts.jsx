@@ -2,6 +2,22 @@
 import { Pie, Column, Line } from "@ant-design/plots";
 import { Card, Table, Tag, Rate } from "antd";
 
+const PALETTE = {
+  primary: ["#2563EB", "#0EA5E9", "#8B5CF6"],
+  accent: [
+    "#F97316",
+    "#14B8A6",
+    "#A855F7",
+    "#EC4899",
+    "#22C55E",
+    "#EAB308",
+    "#3B82F6",
+  ],
+  pieRole: ["#2563EB", "#9333EA", "#F97316"],
+  pieGender: ["#0EA5E9", "#F43F5E", "#14B8A6"],
+  survey: ["#14B8A6", "#6366F1", "#F97316"],
+};
+
 // ─── MOCK DATA ────────────────────────────────────────────────────────────────
 
 const REGISTRATION_BY_TIME = [
@@ -105,17 +121,67 @@ const QUESTION_ANSWER_RATIO = [
 ];
 
 const SUGGESTION_DATA = [
-  { key: 1, no: 1, eventId: 1, role: "VISITOR", answerId: 308, feedback: "ดีมาก", type: "POST_VISITOR", keyword: null, sentiment: null },
-  { key: 2, no: 2, eventId: 1, role: "VISITOR", answerId: 296, feedback: "มาซื้อเสื้อผ้าจำนวนมาก", type: "POST_VISITOR", keyword: null, sentiment: null },
-  { key: 3, no: 3, eventId: 1, role: "VISITOR", answerId: 241, feedback: "สินค้าหลากหลาย ราคาสมเหตุสมผล", type: "POST_VISITOR", keyword: "ราคา", sentiment: "POSITIVE" },
-  { key: 4, no: 4, eventId: 1, role: "EXHIBITOR", answerId: 189, feedback: "ต้องการพื้นที่มากขึ้น", type: "POST_EXHIBITOR", keyword: "พื้นที่", sentiment: "NEUTRAL" },
-  { key: 5, no: 5, eventId: 1, role: "VISITOR", answerId: 177, feedback: "แสงไฟในงานดีมาก บรรยากาศสวย", type: "POST_VISITOR", keyword: "บรรยากาศ", sentiment: "POSITIVE" },
+  {
+    key: 1,
+    no: 1,
+    eventId: 1,
+    role: "VISITOR",
+    answerId: 308,
+    feedback: "ดีมาก",
+    type: "POST_VISITOR",
+    keyword: null,
+    sentiment: null,
+  },
+  {
+    key: 2,
+    no: 2,
+    eventId: 1,
+    role: "VISITOR",
+    answerId: 296,
+    feedback: "มาซื้อเสื้อผ้าจำนวนมาก",
+    type: "POST_VISITOR",
+    keyword: null,
+    sentiment: null,
+  },
+  {
+    key: 3,
+    no: 3,
+    eventId: 1,
+    role: "VISITOR",
+    answerId: 241,
+    feedback: "สินค้าหลากหลาย ราคาสมเหตุสมผล",
+    type: "POST_VISITOR",
+    keyword: "ราคา",
+    sentiment: "POSITIVE",
+  },
+  {
+    key: 4,
+    no: 4,
+    eventId: 1,
+    role: "EXHIBITOR",
+    answerId: 189,
+    feedback: "ต้องการพื้นที่มากขึ้น",
+    type: "POST_EXHIBITOR",
+    keyword: "พื้นที่",
+    sentiment: "NEUTRAL",
+  },
+  {
+    key: 5,
+    no: 5,
+    eventId: 1,
+    role: "VISITOR",
+    answerId: 177,
+    feedback: "แสงไฟในงานดีมาก บรรยากาศสวย",
+    type: "POST_VISITOR",
+    keyword: "บรรยากาศ",
+    sentiment: "POSITIVE",
+  },
 ];
 
 // ─── HELPER: Multi-series bar chart data transformer ─────────────────────────
 const toMultiSeries = (data, timeKey, series) =>
   series.flatMap((s) =>
-    data.map((d) => ({ time: d[timeKey], value: d[s.key], type: s.label }))
+    data.map((d) => ({ time: d[timeKey], value: d[s.key], type: s.label })),
   );
 
 // ─── CHART COMPONENTS ─────────────────────────────────────────────────────────
@@ -132,7 +198,7 @@ export const RegistrationByTimeChart = () => {
       xField="time"
       yField="value"
       seriesField="type"
-      color={["#6366F1", "#3B82F6", "#EC4899"]}
+      color={PALETTE.primary}
       isGroup
       label={false}
       legend={{ position: "top-right" }}
@@ -155,7 +221,7 @@ export const CheckinByTimeChart = () => {
       xField="time"
       yField="value"
       seriesField="type"
-      color={["#7C3AED", "#6366F1", "#A78BFA"]}
+      color={["#0F766E", "#14B8A6", "#2DD4BF"]}
       isGroup
       label={false}
       legend={{ position: "top-right" }}
@@ -171,7 +237,9 @@ export const OccupationChart = () => (
     data={OCCUPATION_DATA}
     xField="occupation"
     yField="count"
-    color="#6366F1"
+    colorField="occupation"
+    color={PALETTE.accent}
+    legend={false}
     label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
     height={260}
     xAxis={{ title: { text: "อาชีพ" } }}
@@ -184,7 +252,9 @@ export const ProvinceChart = () => (
     data={PROVINCE_DATA}
     xField="province"
     yField="count"
-    color="#7C3AED"
+    colorField="province"
+    color={PALETTE.accent}
+    legend={false}
     label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
     height={260}
     xAxis={{ title: { text: "จังหวัด" } }}
@@ -199,11 +269,12 @@ export const RolePieChart = () => {
       data={ROLE_DATA}
       angleField="value"
       colorField="type"
-      color={["#6366F1", "#A855F7", "#EC4899"]}
+      color={PALETTE.pieRole}
       radius={0.8}
       label={{
         position: "outside",
-        text: (item) => `${item.type}: ${((item.value / total) * 100).toFixed(1)}%`,
+        text: (item) =>
+          `${item.type}: ${((item.value / total) * 100).toFixed(1)}%`,
       }}
       legend={{ position: "bottom" }}
       height={280}
@@ -216,7 +287,9 @@ export const AgeChart = () => (
     data={AGE_DATA}
     xField="age"
     yField="value"
-    color="#A855F7"
+    colorField="age"
+    color={PALETTE.accent}
+    legend={false}
     label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
     height={240}
     xAxis={{ title: { text: "ช่วงอายุ" } }}
@@ -231,7 +304,7 @@ export const GenderPieChart = () => {
       data={GENDER_DATA}
       angleField="value"
       colorField="type"
-      color={["#4F46E5", "#10B981"]}
+      color={PALETTE.pieGender}
       radius={0.8}
       label={{
         position: "inside",
@@ -256,7 +329,7 @@ export const VisitorSubmittedChart = () => {
       xField="time"
       yField="value"
       seriesField="type"
-      color={["#3B82F6", "#6366F1", "#A78BFA"]}
+      color={PALETTE.survey}
       isGroup
       label={false}
       legend={{ position: "top-right" }}
@@ -277,7 +350,7 @@ export const ExhibitorSubmittedChart = () => {
       xField="time"
       yField="value"
       seriesField="type"
-      color={["#7C3AED", "#A855F7", "#C084FC"]}
+      color={["#F97316", "#6366F1", "#14B8A6"]}
       isGroup
       label={false}
       legend={{ position: "top-right" }}
@@ -293,7 +366,12 @@ const SatisfactionBar = ({ level, count, total, color }) => {
   return (
     <div className="flex items-center gap-3 text-sm">
       <div className="flex items-center gap-1 w-20 shrink-0">
-        <Rate disabled defaultValue={level} count={level} style={{ fontSize: 11, color }} />
+        <Rate
+          disabled
+          defaultValue={level}
+          count={level}
+          style={{ fontSize: 11, color }}
+        />
       </div>
       <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
         <div
@@ -301,7 +379,9 @@ const SatisfactionBar = ({ level, count, total, color }) => {
           style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
-      <span className="w-12 text-right font-semibold text-gray-700">{count} คน</span>
+      <span className="w-12 text-right font-semibold text-gray-700">
+        {count} คน
+      </span>
     </div>
   );
 };
@@ -325,10 +405,18 @@ export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
     >
       <div className="flex flex-col gap-3">
         {[5, 4, 3, 2, 1].map((lvl) => (
-          <SatisfactionBar key={lvl} level={lvl} count={data[lvl]} total={total} color={color} />
+          <SatisfactionBar
+            key={lvl}
+            level={lvl}
+            count={data[lvl]}
+            total={total}
+            color={color}
+          />
         ))}
       </div>
-      <div className="mt-3 text-right text-xs text-gray-400">จากทั้งหมด {total} คน</div>
+      <div className="mt-3 text-right text-xs text-gray-400">
+        จากทั้งหมด {total} คน
+      </div>
     </Card>
   );
 };
@@ -345,7 +433,7 @@ export const AnswerRatioChart = () => {
       question: q.question,
       value: q.total - q.answered,
       type: "ยังไม่ตอบ",
-    }))
+    })),
   );
 
   return (
@@ -354,7 +442,7 @@ export const AnswerRatioChart = () => {
       xField="question"
       yField="value"
       seriesField="type"
-      color={["#6366F1", "#E5E7EB"]}
+      color={["#2563EB", "#CBD5E1"]}
       isStack
       label={false}
       legend={{ position: "top-right" }}
@@ -371,23 +459,49 @@ const sentimentColor = { POSITIVE: "green", NEUTRAL: "blue", NEGATIVE: "red" };
 
 const suggestionColumns = [
   { title: "No.", dataIndex: "no", key: "no", width: 55 },
-  { title: "Role", dataIndex: "role", key: "role", render: (r) => <Tag color={r === "VISITOR" ? "blue" : "purple"}>{r}</Tag> },
-  { title: "Feedback", dataIndex: "feedback", key: "feedback" },
-  { title: "Survey Type", dataIndex: "type", key: "type", render: (t) => <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">{t}</span> },
   {
-    title: "Keyword", dataIndex: "keyword", key: "keyword",
-    render: (k) => k ? <Tag>{k}</Tag> : <span className="text-gray-300">-</span>,
+    title: "Role",
+    dataIndex: "role",
+    key: "role",
+    render: (r) => <Tag color={r === "VISITOR" ? "blue" : "purple"}>{r}</Tag>,
+  },
+  { title: "Feedback", dataIndex: "feedback", key: "feedback" },
+  {
+    title: "Survey Type",
+    dataIndex: "type",
+    key: "type",
+    render: (t) => (
+      <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">
+        {t}
+      </span>
+    ),
   },
   {
-    title: "Sentiment", dataIndex: "sentiment", key: "sentiment",
-    render: (s) => s ? <Tag color={sentimentColor[s]}>{s}</Tag> : <span className="text-gray-300">-</span>,
+    title: "Keyword",
+    dataIndex: "keyword",
+    key: "keyword",
+    render: (k) =>
+      k ? <Tag>{k}</Tag> : <span className="text-gray-300">-</span>,
+  },
+  {
+    title: "Sentiment",
+    dataIndex: "sentiment",
+    key: "sentiment",
+    render: (s) =>
+      s ? (
+        <Tag color={sentimentColor[s]}>{s}</Tag>
+      ) : (
+        <span className="text-gray-300">-</span>
+      ),
   },
 ];
 
 export const SuggestionTable = () => (
   <Card
     variant="borderless"
-    title={<span className="text-lg font-semibold">ตารางแสดงคำตอบข้อเสนอแนะ</span>}
+    title={
+      <span className="text-lg font-semibold">ตารางแสดงคำตอบข้อเสนอแนะ</span>
+    }
     className="rounded-xl border-2 border-[#f0f0f0] shadow-sm"
     styles={{ body: { padding: "24px" } }}
   >
