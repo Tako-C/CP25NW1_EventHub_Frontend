@@ -340,7 +340,7 @@ export default function Navbar({ token }) {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 w-full bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b shadow-md z-50">
+      <nav className="fixed top-0 left-0 w-full bg-white px-4 md:px-8 py-4 flex items-center justify-between border-b border-slate-200/80 shadow-[0_2px_12px_rgba(15,23,42,0.06)] z-50">
         <div
           className="flex items-center gap-2 cursor-pointer z-50"
           onClick={() => handleNavigation("/home")}

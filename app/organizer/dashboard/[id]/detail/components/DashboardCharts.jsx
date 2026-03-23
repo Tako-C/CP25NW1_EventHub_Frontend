@@ -18,6 +18,8 @@ const PALETTE = {
   survey: ["#14B8A6", "#6366F1", "#F97316"],
 };
 
+const getPalette = (palette) => ({ ...PALETTE, ...(palette || {}) });
+
 // ─── MOCK DATA ────────────────────────────────────────────────────────────────
 
 const REGISTRATION_BY_TIME = [
@@ -186,7 +188,8 @@ const toMultiSeries = (data, timeKey, series) =>
 
 // ─── CHART COMPONENTS ─────────────────────────────────────────────────────────
 
-export const RegistrationByTimeChart = () => {
+export const RegistrationByTimeChart = ({ palette }) => {
+  const p = getPalette(palette);
   const data = toMultiSeries(REGISTRATION_BY_TIME, "time", [
     { key: "all", label: "ทั้งหมด" },
     { key: "male", label: "ชาย" },
@@ -198,7 +201,7 @@ export const RegistrationByTimeChart = () => {
       xField="time"
       yField="value"
       seriesField="type"
-      color={PALETTE.primary}
+      color={p.primary}
       isGroup
       label={false}
       legend={{ position: "top-right" }}
@@ -209,7 +212,8 @@ export const RegistrationByTimeChart = () => {
   );
 };
 
-export const CheckinByTimeChart = () => {
+export const CheckinByTimeChart = ({ palette }) => {
+  const p = getPalette(palette);
   const data = toMultiSeries(CHECKIN_BY_TIME, "time", [
     { key: "all", label: "ทั้งหมด" },
     { key: "male", label: "ชาย" },
@@ -221,7 +225,7 @@ export const CheckinByTimeChart = () => {
       xField="time"
       yField="value"
       seriesField="type"
-      color={["#0F766E", "#14B8A6", "#2DD4BF"]}
+      color={p.checkin || ["#0F766E", "#14B8A6", "#2DD4BF"]}
       isGroup
       label={false}
       legend={{ position: "top-right" }}
@@ -232,44 +236,51 @@ export const CheckinByTimeChart = () => {
   );
 };
 
-export const OccupationChart = () => (
-  <Column
-    data={OCCUPATION_DATA}
-    xField="occupation"
-    yField="count"
-    colorField="occupation"
-    color={PALETTE.accent}
-    legend={false}
-    label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
-    height={260}
-    xAxis={{ title: { text: "อาชีพ" } }}
-    yAxis={{ title: { text: "จำนวนคน" } }}
-  />
-);
+export const OccupationChart = ({ palette }) => {
+  const p = getPalette(palette);
+  return (
+    <Column
+      data={OCCUPATION_DATA}
+      xField="occupation"
+      yField="count"
+      colorField="occupation"
+      color={p.accent}
+      legend={false}
+      label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
+      height={260}
+      xAxis={{ title: { text: "อาชีพ" } }}
+      yAxis={{ title: { text: "จำนวนคน" } }}
+    />
+  );
+};
 
-export const ProvinceChart = () => (
-  <Column
-    data={PROVINCE_DATA}
-    xField="province"
-    yField="count"
-    colorField="province"
-    color={PALETTE.accent}
-    legend={false}
-    label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
-    height={260}
-    xAxis={{ title: { text: "จังหวัด" } }}
-    yAxis={{ title: { text: "จำนวนคน" } }}
-  />
-);
+export const ProvinceChart = ({ palette }) => {
+  const p = getPalette(palette);
+  return (
+    <Column
+      data={PROVINCE_DATA}
+      xField="province"
+      yField="count"
+      colorField="province"
+      color={p.accent}
+      legend={false}
+      label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
+      height={260}
+      xAxis={{ title: { text: "จังหวัด" } }}
+      yAxis={{ title: { text: "จำนวนคน" } }}
+    />
+  );
+};
 
-export const RolePieChart = () => {
+export const RolePieChart = ({ palette }) => {
+  const p = getPalette(palette);
   const total = ROLE_DATA.reduce((s, d) => s + d.value, 0);
   return (
     <Pie
       data={ROLE_DATA}
       angleField="value"
       colorField="type"
-      color={PALETTE.pieRole}
+      color={p.pieRole}
       radius={0.8}
       label={{
         position: "outside",
@@ -282,29 +293,33 @@ export const RolePieChart = () => {
   );
 };
 
-export const AgeChart = () => (
-  <Column
-    data={AGE_DATA}
-    xField="age"
-    yField="value"
-    colorField="age"
-    color={PALETTE.accent}
-    legend={false}
-    label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
-    height={240}
-    xAxis={{ title: { text: "ช่วงอายุ" } }}
-    yAxis={{ title: { text: "จำนวนคน" } }}
-  />
-);
+export const AgeChart = ({ palette }) => {
+  const p = getPalette(palette);
+  return (
+    <Column
+      data={AGE_DATA}
+      xField="age"
+      yField="value"
+      colorField="age"
+      color={p.accent}
+      legend={false}
+      label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
+      height={240}
+      xAxis={{ title: { text: "ช่วงอายุ" } }}
+      yAxis={{ title: { text: "จำนวนคน" } }}
+    />
+  );
+};
 
-export const GenderPieChart = () => {
+export const GenderPieChart = ({ palette }) => {
+  const p = getPalette(palette);
   const total = GENDER_DATA.reduce((s, d) => s + d.value, 0);
   return (
     <Pie
       data={GENDER_DATA}
       angleField="value"
       colorField="type"
-      color={PALETTE.pieGender}
+      color={p.pieGender}
       radius={0.8}
       label={{
         position: "inside",
@@ -317,7 +332,8 @@ export const GenderPieChart = () => {
   );
 };
 
-export const VisitorSubmittedChart = () => {
+export const VisitorSubmittedChart = ({ palette }) => {
+  const p = getPalette(palette);
   const data = toMultiSeries(VISITOR_SUBMITTED_BY_TIME, "time", [
     { key: "all", label: "ทั้งหมด" },
     { key: "post", label: "Post Visitor" },
@@ -329,7 +345,7 @@ export const VisitorSubmittedChart = () => {
       xField="time"
       yField="value"
       seriesField="type"
-      color={PALETTE.survey}
+      color={p.survey}
       isGroup
       label={false}
       legend={{ position: "top-right" }}
@@ -338,7 +354,8 @@ export const VisitorSubmittedChart = () => {
   );
 };
 
-export const ExhibitorSubmittedChart = () => {
+export const ExhibitorSubmittedChart = ({ palette }) => {
+  const p = getPalette(palette);
   const data = toMultiSeries(EXHIBITOR_SUBMITTED_BY_TIME, "time", [
     { key: "all", label: "ทั้งหมด" },
     { key: "post", label: "Post Exhibitor" },
@@ -350,7 +367,7 @@ export const ExhibitorSubmittedChart = () => {
       xField="time"
       yField="value"
       seriesField="type"
-      color={["#F97316", "#6366F1", "#14B8A6"]}
+      color={p.surveyExhibitor || ["#F97316", "#6366F1", "#14B8A6"]}
       isGroup
       label={false}
       legend={{ position: "top-right" }}
@@ -423,7 +440,8 @@ export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
 
 // ─── ANSWER RATIO WIDGET ──────────────────────────────────────────────────────
 
-export const AnswerRatioChart = () => {
+export const AnswerRatioChart = ({ palette }) => {
+  const p = getPalette(palette);
   const data = QUESTION_ANSWER_RATIO.map((q) => ({
     question: q.question,
     value: q.answered,
@@ -442,7 +460,7 @@ export const AnswerRatioChart = () => {
       xField="question"
       yField="value"
       seriesField="type"
-      color={["#2563EB", "#CBD5E1"]}
+      color={p.stack || ["#2563EB", "#CBD5E1"]}
       isStack
       label={false}
       legend={{ position: "top-right" }}
@@ -500,9 +518,11 @@ export const SuggestionTable = () => (
   <Card
     variant="borderless"
     title={
-      <span className="text-lg font-semibold">ตารางแสดงคำตอบข้อเสนอแนะ</span>
+      <span className="text-lg font-extrabold text-slate-800">
+        ตารางแสดงคำตอบข้อเสนอแนะ
+      </span>
     }
-    className="rounded-xl border-2 border-[#f0f0f0] shadow-sm"
+    className="rounded-2xl border border-slate-200 bg-white/95 shadow-sm"
     styles={{ body: { padding: "24px" } }}
   >
     <Table
@@ -521,8 +541,10 @@ export const SuggestionTable = () => (
 export const ChartCard = ({ title, children, className = "" }) => (
   <Card
     variant="borderless"
-    title={<span className="text-base font-semibold">{title}</span>}
-    className={`rounded-xl border-2 border-[#f0f0f0] shadow-sm ${className}`}
+    title={
+      <span className="text-base font-extrabold text-slate-800">{title}</span>
+    }
+    className={`h-fit rounded-2xl border border-slate-200 bg-white/95 shadow-sm ${className}`}
     styles={{ body: { padding: "20px" } }}
   >
     {children}
