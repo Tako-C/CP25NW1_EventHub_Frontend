@@ -27,7 +27,14 @@ export default function QuestionEditor({
     questionTypes.find((t) => t.value === questions?.questionType)?.icon ||
     Type;
 
-  const isLockedPost = surveyType === "post" && index === 0;
+  const isLockedPost = surveyType === "post" && (index === 0 || index === 1);
+  const getPlaceholder = () => {
+    if (surveyType === "post") {
+      if (index === 0) return "ความพึงพอใจโดยรวม";
+      if (index === 1) return "ท่านเคยเข้าร่วมงานนี้มาก่อนหรือไม่?";
+    }
+    return "พิมพ์คำถามของคุณที่นี่...";
+  };
   return (
     <div className="bg-white rounded-xl border-2 border-gray-200 p-6 hover:border-purple-300 transition-all">
       <div className="flex items-start gap-4">
@@ -65,9 +72,7 @@ export default function QuestionEditor({
             type="text"
             value={questions?.question}
             onChange={(e) => onUpdate(index, "question", e.target.value)}
-            placeholder={
-              isLockedPost ? "ความพึงพอใจโดยรวม" : "พิมพ์คำถามของคุณที่นี่..."
-            }
+            placeholder={getPlaceholder()}
             className="w-full text-lg font-medium mb-3 px-0 border-0 border-b-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors"
           />
 

@@ -23,13 +23,12 @@ export default function QuestionEditor({
   onDelete,
   surveyType,
 }) {
-  const QuestionIcon =
-    questionTypes.find((t) => t.value === questions?.questionType)?.icon || Type;
-
-  const isLockedPost = surveyType === "post" && index === 0;
+  // 1. ปรับ Logic ล็อค 2 ข้อแรกสำหรับ Post Survey
+  // หรือล็อคจากตัวแปร KPI_TYPE โดยตรงเพื่อให้ชัวร์ว่าข้อที่มี KPI จะแก้ไม่ได้
+  const isLockedPost = (surveyType === "post" && (index === 0 || index === 1)) || !!questions?.kpiType;
 
   return (
-    <div className="bg-white rounded-xl border-2 border-gray-200 p-6 hover:border-purple-300 transition-all">
+    <div className={`bg-white rounded-xl border-2 p-6 transition-all ${isLockedPost ? "border-indigo-100 bg-slate-50/50" : "border-gray-200 hover:border-purple-300"}`}>
       <div className="flex items-start gap-4">
         {!isLockedPost && (
           <div className="cursor-move text-gray-400 hover:text-gray-600 pt-2">
@@ -39,15 +38,15 @@ export default function QuestionEditor({
 
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-3">
-            <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-semibold">
-              คำถามที่ {index + 1} {isLockedPost && "(บังคับ)"}
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${isLockedPost ? "bg-indigo-100 text-indigo-700" : "bg-purple-100 text-purple-700"}`}>
+              คำถามที่ {index + 1} {isLockedPost && "(ระบบบังคับ)"}
             </span>
             <div className="relative flex-1 max-w-xs">
               <select
                 value={questions?.questionType}
-                disabled={isLockedPost}
+                disabled={isLockedPost} // ล็อคประเภทคำถาม
                 onChange={(e) => onUpdate(index, "questionType", e.target.value)}
-                className="w-full appearance-none bg-gray-50 border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                className="w-full appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 {questionTypes.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -62,11 +61,13 @@ export default function QuestionEditor({
           <input
             type="text"
             value={questions?.question}
+            readOnly={isLockedPost} // ล็อคห้ามแก้หัวข้อ
             onChange={(e) => onUpdate(index, "question", e.target.value)}
             placeholder={
-              isLockedPost ? "ความพึงพอใจโดยรวม" : "พิมพ์คำถามของคุณที่นี่..."
+              index === 0 && surveyType === "post" ? "ความพึงพอใจโดยรวม" : 
+              index === 1 && surveyType === "post" ? "ท่านเคยเข้าร่วมงานนี้มาก่อนหรือไม่?" : "พิมพ์คำถามของคุณที่นี่..."
             }
-            className="w-full text-lg font-medium mb-3 px-0 border-0 border-b-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors"
+            className={`w-full text-lg font-medium mb-3 px-0 border-0 border-b-2 focus:outline-none transition-colors ${isLockedPost ? "border-transparent text-indigo-900 bg-transparent" : "border-gray-200 focus:border-purple-500"}`}
           />
 
           {(questions?.questionType === "SINGLE" ||
@@ -77,28 +78,33 @@ export default function QuestionEditor({
                   <input
                     type="text"
                     value={option}
+                    readOnly={isLockedPost} // ล็อคห้ามแก้ Choice
                     onChange={(e) => {
                       const newOptions = [...questions.choices];
                       newOptions[optIndex] = e.target.value;
                       onUpdate(index, "choices", newOptions);
                     }}
                     placeholder={`ตัวเลือกที่ ${optIndex + 1}`}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-white"
                   />
-                  <button
-                    onClick={() => {
-                      const newOptions = questions.choices.filter(
-                        (_, i) => i !== optIndex
-                      );
-                      onUpdate(index, "choices", newOptions);
-                    }}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {!isLockedPost && (
+                    <button
+                      onClick={() => {
+                        const newOptions = questions.choices.filter(
+                          (_, i) => i !== optIndex
+                        );
+                        onUpdate(index, "choices", newOptions);
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               ))}
-              {questions.choices?.length < 10 && (
+              
+              {/* ซ่อนปุ่มเพิ่มตัวเลือกถ้าถูกล็อค */}
+              {!isLockedPost && questions.choices?.length < 10 && (
                 <button
                   onClick={() => {
                     onUpdate(index, "choices", [
@@ -114,28 +120,6 @@ export default function QuestionEditor({
               )}
             </div>
           )}
-
-          {/* {questions?.questionType === "RATING" && (
-            <div className="mb-3">
-              <span className="text-sm text-gray-500">ให้คะแนน 1-5</span>
-            </div>
-          )} */}
-
-          <div className="flex items-center gap-2 mt-2">
-            <input
-              type="checkbox"
-              id={`required-${index}`}
-              checked={questions?.required || false}
-              onChange={(e) => onUpdate(index, "required", e.target.checked)}
-              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-            />
-            <label
-              htmlFor={`required-${index}`}
-              className="text-sm text-gray-600"
-            >
-              คำถามบังคับ
-            </label>
-          </div>
         </div>
 
         {!isLockedPost && (

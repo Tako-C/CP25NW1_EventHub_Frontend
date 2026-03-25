@@ -152,7 +152,7 @@ export default function EditAdminSurveyPage() {
                     onChange={(e) => setSurveyData({ ...surveyData, name: e.target.value })}
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Reward Points</label>
                   <input
                     type="number"
@@ -160,7 +160,7 @@ export default function EditAdminSurveyPage() {
                     value={surveyData?.points}
                     onChange={(e) => setSurveyData({ ...surveyData, points: e.target.value })}
                   />
-                </div>
+                </div> */}
               </div>
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Description</label>

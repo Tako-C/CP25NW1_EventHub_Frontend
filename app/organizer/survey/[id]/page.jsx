@@ -71,11 +71,11 @@ export default function EventSurveysDetailPage() {
       const eventRes = await getDataNoToken(`events/${id}`);
       let preRes = null;
       let postRes = null;
-
+      console.log(eventRes);
       if (eventRes?.statusCode === 200) setEvent(eventRes.data);
-      
-      preRes = await getDataNoToken(`events/${id}/surveys/pre`);
-      postRes = await getDataNoToken(`events/${id}/surveys/post`);
+
+      if (eventRes?.data?.hasPreSurvey) preRes = await getDataNoToken(`events/${id}/surveys/pre`);
+      if (eventRes?.data?.hasPostSurvey) postRes = await getDataNoToken(`events/${id}/surveys/post`);
 
       setSurveys({
         pre: {
@@ -116,13 +116,14 @@ export default function EventSurveysDetailPage() {
   };
 
   const handleToggleStatus = async (surveyId, currentStatus) => {
-    const newStatusLabel = currentStatus === "ACTIVE" ? "ปิดใช้งาน" : "เปิดใช้งาน";
+    const newStatusLabel =
+      currentStatus === "ACTIVE" ? "ปิดใช้งาน" : "เปิดใช้งาน";
     try {
       const res = await patchSurvey(id, surveyId);
       if (res.statusCode === 200) {
         showNotification(
           `เปลี่ยนสถานะแบบสำรวจเป็น ${newStatusLabel} สำเร็จ`,
-          false
+          false,
         );
         fetchData();
       }
@@ -201,11 +202,14 @@ export default function EventSurveysDetailPage() {
               เกี่ยวกับแบบสำรวจประเภทต่างๆ
             </h3>
             <p className="text-sm text-blue-800 leading-relaxed">
-              <strong>Pre-Event Survey:</strong> แบบสำรวจก่อนเริ่มงาน เพื่อเก็บข้อมูลความคาดหวังและข้อมูลพื้นฐาน
+              <strong>Pre-Event Survey:</strong> แบบสำรวจก่อนเริ่มงาน
+              เพื่อเก็บข้อมูลความคาดหวังและข้อมูลพื้นฐาน
               <br />
-              <strong>Post-Event Survey:</strong> แบบสำรวจหลังจบงาน เพื่อประเมินความพึงพอใจและรับข้อเสนอแนะ
+              <strong>Post-Event Survey:</strong> แบบสำรวจหลังจบงาน
+              เพื่อประเมินความพึงพอใจและรับข้อเสนอแนะ
               <br />
-              <strong>Visitor:</strong> สำหรับผู้เข้าชมงาน | <strong>Exhibitor:</strong> สำหรับผู้ออกบูธ
+              <strong>Visitor:</strong> สำหรับผู้เข้าชมงาน |{" "}
+              <strong>Exhibitor:</strong> สำหรับผู้ออกบูธ
             </p>
           </div>
         </div>
@@ -221,10 +225,14 @@ export default function EventSurveysDetailPage() {
               type="pre"
               userType="visitor"
               onCreate={() =>
-                router.push(`/organizer/survey/create-survey?type=pre&role=visitor&eventId=${id}`)
+                router.push(
+                  `/organizer/survey/create-survey?type=pre&role=visitor&eventId=${id}`,
+                )
               }
               onEdit={() =>
-                router.push(`/organizer/survey/${id}/edit-survey?type=pre&role=visitor`)
+                router.push(
+                  `/organizer/survey/${id}/edit-survey?type=pre&role=visitor`,
+                )
               }
               onView={(sId) => router.push(`/organizer/survey/results/${sId}`)}
               onDelete={(sId) => handleDelete(sId)}
@@ -245,10 +253,14 @@ export default function EventSurveysDetailPage() {
               type="post"
               userType="visitor"
               onCreate={() =>
-                router.push(`/organizer/survey/create-survey?type=post&role=visitor&eventId=${id}`)
+                router.push(
+                  `/organizer/survey/create-survey?type=post&role=visitor&eventId=${id}`,
+                )
               }
               onEdit={() =>
-                router.push(`/organizer/survey/${id}/edit-survey?type=post&role=visitor`)
+                router.push(
+                  `/organizer/survey/${id}/edit-survey?type=post&role=visitor`,
+                )
               }
               onView={(sId) => router.push(`/organizer/survey/results/${sId}`)}
               onDelete={(sId) => handleDelete(sId)}
@@ -260,10 +272,14 @@ export default function EventSurveysDetailPage() {
               type="post"
               userType="exhibitor"
               onCreate={() =>
-                router.push(`/organizer/survey/create-survey?type=post&role=exhibitor&eventId=${id}`)
+                router.push(
+                  `/organizer/survey/create-survey?type=post&role=exhibitor&eventId=${id}`,
+                )
               }
               onEdit={() =>
-                router.push(`/organizer/survey/${id}/edit-survey?type=post&role=exhibitor`)
+                router.push(
+                  `/organizer/survey/${id}/edit-survey?type=post&role=exhibitor`,
+                )
               }
               onView={(sId) => router.push(`/organizer/survey/results/${sId}`)}
               onDelete={(sId) => handleDelete(sId)}

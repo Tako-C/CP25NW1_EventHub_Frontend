@@ -162,11 +162,10 @@ export default function PostSurveyForm() {
   };
 
   const handleSubmit = async () => {
-    if (formData.surveyAnswers.length === 0) {
-      showNotification("กรุณาตอบแบบสำรวจก่อนส่งข้อมูล", true);
+    if (!validateSurveys()) {
+      showNotification("กรุณาตอบแบบสำรวจให้ครบทุกข้อก่อนส่งข้อมูล", true);
       return;
     }
-
     try {
       const resSurvey = await sendSurveyAnswer(formData?.surveyAnswers, id);
       if (resSurvey.statusCode === 200) {
@@ -181,6 +180,35 @@ export default function PostSurveyForm() {
       showNotification("เกิดข้อผิดพลาดในการส่งข้อมูลแบบประเมิน", true);
       if (u) Cookie.remove("accessToken");
     }
+  };
+
+  const validateSurveys = () => {
+    // 1. ดึงคำถามทั้งหมดจาก surveyData
+    const allQuestions = surveyData?.questions || [];
+    if (allQuestions.length === 0) return true;
+
+    // 2. ตรวจสอบว่าทุกคำถาม มีคำตอบอยู่ใน formData.surveyAnswers
+    return allQuestions.every((q) => {
+      const userAnswer = formData.surveyAnswers.find(
+        (a) => a.questionId === q.id,
+      );
+
+      // ถ้าไม่มีการตอบข้อนี้เลย
+      if (
+        !userAnswer ||
+        !userAnswer.answers ||
+        userAnswer.answers.length === 0
+      ) {
+        return false;
+      }
+
+      // กรณีเป็น TEXT หรือ TEXTAREA ต้องเช็คว่าไม่ใช่ค่าว่างหรือมีแต่ space
+      if (q.questionType === "TEXT" || q.questionType === "TEXTAREA") {
+        return userAnswer.answers[0]?.trim().length > 0;
+      }
+
+      return true;
+    });
   };
 
   return (
@@ -234,7 +262,10 @@ export default function PostSurveyForm() {
             {surveyData?.questions?.map((q, index) => (
               <div
                 key={q.id}
-                className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all"
+                // className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all"
+                className={`bg-white rounded-xl border p-6 transition-all ${
+                  !isAnswered ? "border-red-200" : "border-gray-200"
+                }`}
               >
                 <div className="flex items-start gap-3 mb-4">
                   <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">

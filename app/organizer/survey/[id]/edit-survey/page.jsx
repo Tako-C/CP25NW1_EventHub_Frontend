@@ -56,7 +56,7 @@ export default function EditSurveyPage() {
           
           setSurveyTitle(surveyData[0]?.name);
           setSurveyDescription(surveyData[0]?.description);
-          setSurveyPoint(surveyData[0]?.points.toString());
+          // setSurveyPoint(surveyData[0]?.points.toString());
           setSurveyType(surveyData[0]?.type);
           setSurveyId(surveyData[0]?.id);
 
@@ -122,12 +122,12 @@ export default function EditSurveyPage() {
     if (!surveyDescription.trim())
       return showNotification("กรุณากรอกรายละเอียดของอีเว้นท์", true);
     
-    const point = parseInt(surveyPoint);
-    if (isNaN(point) || point < 0)
-      return showNotification(
-        "แต้มสะสม (Survey Points) ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0",
-        true,
-      );
+    // const point = parseInt(surveyPoint);
+    // if (isNaN(point) || point < 0)
+    //   return showNotification(
+    //     "แต้มสะสม (Survey Points) ต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0",
+    //     true,
+    //   );
     
     if (questions.length === 0)
       return showNotification("ต้องมีคำถามอย่างน้อย 1 ข้อ", true);
@@ -174,7 +174,7 @@ export default function EditSurveyPage() {
       name: surveyTitle || "",
       surveyId: surveyId || null,
       description: surveyDescription || "",
-      points: parseInt(surveyPoint) || 0,
+      // points: parseInt(surveyPoint) || 0,
       type: surveyType,
     };
 
@@ -214,17 +214,17 @@ export default function EditSurveyPage() {
     );
   }
 
-  const handleIncrementPoints = () => {
-    const current = parseInt(surveyPoint) || 0;
-    setSurveyPoint((current + 1).toString());
-  };
+  // const handleIncrementPoints = () => {
+  //   const current = parseInt(surveyPoint) || 0;
+  //   setSurveyPoint((current + 1).toString());
+  // };
 
-  const handleDecrementPoints = () => {
-    const current = parseInt(surveyPoint) || 0;
-    if (current > 0) {
-      setSurveyPoint((current - 1).toString());
-    }
-  };
+  // const handleDecrementPoints = () => {
+  //   const current = parseInt(surveyPoint) || 0;
+  //   if (current > 0) {
+  //     setSurveyPoint((current - 1).toString());
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -313,7 +313,7 @@ export default function EditSurveyPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     แต้มสะสม (Survey Points)
                   </label>
@@ -350,7 +350,7 @@ export default function EditSurveyPage() {
                   <p className="mt-2 text-xs text-gray-400">
                     * ระบุแต้มที่ผู้ใช้จะได้รับเมื่อทำแบบสำรวจสำเร็จ
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
 

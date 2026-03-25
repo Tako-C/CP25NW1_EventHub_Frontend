@@ -144,6 +144,11 @@ export default function ExpoRegisterForm() {
   };
 
   const handleSubmit = async () => {
+    if (!validateSurveys()) {
+      showNotification("กรุณาตอบแบบสำรวจให้ครบทุกข้อ", true);
+      return;
+    }
+
     if (isSurveyOnly) {
       try {
         await sendSurveyAnswer(formData?.surveyAnswers, id);
@@ -229,6 +234,25 @@ export default function ExpoRegisterForm() {
     }
   };
 
+  const validateSurveys = () => {
+    const currentQuestions = surveys.pre.visitor?.questions || [];
+    if (currentQuestions.length === 0) return true;
+
+    // ตรวจสอบว่าทุกคำถามมีคำตอบอย่างน้อย 1 อย่าง (และกรณี Text ต้องไม่เป็นค่าว่าง)
+    return currentQuestions.every((q) => {
+      const answer = formData.surveyAnswers.find((a) => a.questionId === q.id);
+      if (!answer) return false;
+
+      // ถ้าเป็น Text field ต้องเช็คว่าไม่ได้พิมพ์แค่ space
+      if (q.questionType === "TEXT") {
+        return answer.answers[0]?.trim().length > 0;
+      }
+
+      // ถ้าเป็น Single/Multiple ต้องมีอย่างน้อย 1 คำตอบ
+      return answer.answers.length > 0;
+    });
+  };
+
   const handleSurveyChange = (questionId, value, type) => {
     setFormData((prev) => {
       const currentAnswers = [...prev.surveyAnswers];
@@ -269,7 +293,7 @@ export default function ExpoRegisterForm() {
         message={notification.message}
         onClose={closeNotification}
       />
-      
+
       {isSuccess ? (
         <SuccessPage detail={eventDetail} />
       ) : (
@@ -284,7 +308,9 @@ export default function ExpoRegisterForm() {
                   <div className="flex items-center gap-2 mb-3">
                     <FileText className="w-6 h-6" />
                     <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
-                      {isSurveyOnly ? "แบบสำรวจก่อนงาน" : "ลงทะเบียนเข้าร่วมกิจกรรม"}
+                      {isSurveyOnly
+                        ? "แบบสำรวจก่อนงาน"
+                        : "ลงทะเบียนเข้าร่วมกิจกรรม"}
                     </span>
                   </div>
                   <h1 className="text-3xl md:text-4xl font-bold mb-3">
@@ -338,10 +364,16 @@ export default function ExpoRegisterForm() {
                 <>
                   <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">1</div>
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                        1
+                      </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">ชื่อ (First Name)</h3>
-                        <span className="inline-block mt-1 text-xs text-red-500 font-medium">* จำเป็นต้องตอบ</span>
+                        <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">
+                          ชื่อ (First Name)
+                        </h3>
+                        <span className="inline-block mt-1 text-xs text-red-500 font-medium">
+                          * จำเป็นต้องตอบ
+                        </span>
                       </div>
                     </div>
                     <div className="mt-4">
@@ -359,10 +391,16 @@ export default function ExpoRegisterForm() {
 
                   <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">2</div>
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                        2
+                      </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">นามสกุล (Last Name)</h3>
-                        <span className="inline-block mt-1 text-xs text-red-500 font-medium">* จำเป็นต้องตอบ</span>
+                        <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">
+                          นามสกุล (Last Name)
+                        </h3>
+                        <span className="inline-block mt-1 text-xs text-red-500 font-medium">
+                          * จำเป็นต้องตอบ
+                        </span>
                       </div>
                     </div>
                     <div className="mt-4">
@@ -380,10 +418,16 @@ export default function ExpoRegisterForm() {
 
                   <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all duration-200">
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">3</div>
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                        3
+                      </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">อีเมล (Email)</h3>
-                        <span className="inline-block mt-1 text-xs text-red-500 font-medium">* จำเป็นต้องตอบ</span>
+                        <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">
+                          อีเมล (Email)
+                        </h3>
+                        <span className="inline-block mt-1 text-xs text-red-500 font-medium">
+                          * จำเป็นต้องตอบ
+                        </span>
                       </div>
                     </div>
                     <div className="mt-4">
@@ -401,9 +445,13 @@ export default function ExpoRegisterForm() {
 
                   <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">4</div>
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                        4
+                      </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">เพศ (Gender)</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          เพศ (Gender)
+                        </h3>
                         <span className="text-xs text-red-500">* จำเป็น</span>
                       </div>
                     </div>
@@ -416,19 +464,31 @@ export default function ExpoRegisterForm() {
                         className={`w-full p-4 pl-12 bg-gray-50 border-2 border-gray-200 rounded-xl appearance-none ${token ? "opacity-70 cursor-not-allowed bg-gray-100" : "focus:bg-white focus:border-purple-400"}`}
                       >
                         {genderOptions.map((opt) => (
-                          <option key={opt.id} value={opt.id}>{opt.label}</option>
+                          <option key={opt.id} value={opt.id}>
+                            {opt.label}
+                          </option>
                         ))}
                       </select>
-                      <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                      <Users
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                        size={20}
+                      />
+                      <ChevronDown
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                        size={20}
+                      />
                     </div>
                   </div>
 
                   <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">5</div>
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                        5
+                      </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900">วันเกิด (Date of Birth)</h3>
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          วันเกิด (Date of Birth)
+                        </h3>
                         <span className="text-xs text-red-500">* จำเป็น</span>
                       </div>
                     </div>
@@ -444,7 +504,9 @@ export default function ExpoRegisterForm() {
                         />
                       </div>
                       <div className="bg-purple-50 border-2 border-purple-100 rounded-xl p-4 flex items-center justify-center">
-                        <span className="font-bold text-purple-700">อายุ: {calculateAge(formData.dateOfBirth)} ปี</span>
+                        <span className="font-bold text-purple-700">
+                          อายุ: {calculateAge(formData.dateOfBirth)} ปี
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -461,12 +523,17 @@ export default function ExpoRegisterForm() {
                       {!isSurveyOnly ? index + 6 : index + 1}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">{q.question}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 leading-relaxed">
+                        {q.question}
+                      </h3>
                       {q.questionType === "MULTIPLE" && (
-                        <span className="text-xs text-blue-600 font-medium italic">* เลือกได้หลายคำตอบ</span>
+                        <span className="text-xs text-blue-600 font-medium italic">
+                          * เลือกได้หลายคำตอบ
+                        </span>
                       )}
                     </div>
-                    {(q.questionType === "MULTIPLE" || q.questionType === "SINGLE") && (
+                    {(q.questionType === "MULTIPLE" ||
+                      q.questionType === "SINGLE") && (
                       <div className="flex-shrink-0">
                         <div className="p-2 bg-green-50 rounded-lg">
                           <CheckSquare className="w-4 h-4 text-green-600" />
@@ -476,21 +543,34 @@ export default function ExpoRegisterForm() {
                   </div>
 
                   <div className="mt-4 space-y-2">
-                    {(q.questionType === "SINGLE" || q.questionType === "MULTIPLE") &&
+                    {(q.questionType === "SINGLE" ||
+                      q.questionType === "MULTIPLE") &&
                       q.choices.map((choice, cIdx) => (
                         <label
                           key={cIdx}
                           className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl bg-gray-50 hover:bg-green-50 hover:border-green-300 transition-all cursor-pointer group"
                         >
                           <input
-                            type={q.questionType === "MULTIPLE" ? "checkbox" : "radio"}
+                            type={
+                              q.questionType === "MULTIPLE"
+                                ? "checkbox"
+                                : "radio"
+                            }
                             name={`question-${q.id}`}
                             value={choice}
-                            onChange={() => handleSurveyChange(q.id, choice, q.questionType)}
-                            checked={formData.surveyAnswers.find((a) => a.questionId === q.id)?.answers.includes(choice) || false}
+                            onChange={() =>
+                              handleSurveyChange(q.id, choice, q.questionType)
+                            }
+                            checked={
+                              formData.surveyAnswers
+                                .find((a) => a.questionId === q.id)
+                                ?.answers.includes(choice) || false
+                            }
                             className="w-5 h-5 rounded border-2 border-gray-400 group-hover:border-green-500 flex-shrink-0 transition-colors accent-green-600"
                           />
-                          <span className="text-gray-700 group-hover:text-gray-900 transition-colors">{choice}</span>
+                          <span className="text-gray-700 group-hover:text-gray-900 transition-colors">
+                            {choice}
+                          </span>
                         </label>
                       ))}
 
@@ -498,8 +578,14 @@ export default function ExpoRegisterForm() {
                       <input
                         type="text"
                         placeholder="พิมพ์คำตอบของคุณที่นี่..."
-                        value={formData.surveyAnswers.find((a) => a.questionId === q.id)?.answers[0] || ""}
-                        onChange={(e) => handleSurveyChange(q.id, e.target.value, "TEXT")}
+                        value={
+                          formData.surveyAnswers.find(
+                            (a) => a.questionId === q.id,
+                          )?.answers[0] || ""
+                        }
+                        onChange={(e) =>
+                          handleSurveyChange(q.id, e.target.value, "TEXT")
+                        }
                         className="w-full p-4 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700 focus:border-purple-400 focus:bg-white transition-all outline-none"
                       />
                     )}
@@ -508,20 +594,28 @@ export default function ExpoRegisterForm() {
               ))}
 
               {!isSurveyOnly && (
-                <div className={`bg-white rounded-xl border-2 p-6 shadow-sm transition-all ${formData.agreeTerms ? "border-purple-400 bg-purple-50/30" : "border-purple-200"}`}>
+                <div
+                  className={`bg-white rounded-xl border-2 p-6 shadow-sm transition-all ${formData.agreeTerms ? "border-purple-400 bg-purple-50/30" : "border-purple-200"}`}
+                >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
                       <Shield className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">ข้อกำหนดและเงื่อนไข</h3>
-                    <span className="text-xs text-red-500 font-medium">* จำเป็น</span>
+                    <h3 className="font-semibold text-gray-900">
+                      ข้อกำหนดและเงื่อนไข
+                    </h3>
+                    <span className="text-xs text-red-500 font-medium">
+                      * จำเป็น
+                    </span>
                   </div>
 
                   <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
                     <div className="flex items-start gap-3">
                       <ScrollText className="w-5 h-5 text-purple-500 mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 mb-1">นโยบายความเป็นส่วนตัวและการใช้ข้อมูล</p>
+                        <p className="text-sm font-medium text-gray-800 mb-1">
+                          นโยบายความเป็นส่วนตัวและการใช้ข้อมูล
+                        </p>
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
                           ข้อมูลส่วนบุคคลของท่านจะถูกรวบรวมและใช้เพื่อวัตถุประสงค์ในการลงทะเบียนและการจัดการอีเว้นท์...
                         </p>
@@ -540,11 +634,24 @@ export default function ExpoRegisterForm() {
                     <input
                       type="checkbox"
                       checked={formData.agreeTerms}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, agreeTerms: e.target.checked }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          agreeTerms: e.target.checked,
+                        }))
+                      }
                       className="w-5 h-5 mt-0.5 rounded border-2 border-gray-400 accent-purple-600"
                     />
                     <span className="text-sm text-gray-700 leading-relaxed">
-                      ฉันได้อ่านและยอมรับ <button type="button" onClick={() => setShowTermsModal(true)} className="text-purple-600 underline font-semibold">ข้อกำหนดและเงื่อนไข</button> ทั้งหมด
+                      ฉันได้อ่านและยอมรับ{" "}
+                      <button
+                        type="button"
+                        onClick={() => setShowTermsModal(true)}
+                        className="text-purple-600 underline font-semibold"
+                      >
+                        ข้อกำหนดและเงื่อนไข
+                      </button>{" "}
+                      ทั้งหมด
                     </span>
                   </label>
                 </div>
@@ -552,26 +659,56 @@ export default function ExpoRegisterForm() {
 
               {showTermsModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowTermsModal(false)} />
+                  <div
+                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    onClick={() => setShowTermsModal(false)}
+                  />
                   <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[85vh]">
                     <div className="flex items-center justify-between px-6 py-5 border-b shrink-0">
-                      <h2 className="text-lg font-bold text-gray-900">ข้อกำหนดและเงื่อนไข</h2>
-                      <button onClick={() => setShowTermsModal(false)} className="text-gray-500 hover:text-gray-700"><X /></button>
+                      <h2 className="text-lg font-bold text-gray-900">
+                        ข้อกำหนดและเงื่อนไข
+                      </h2>
+                      <button
+                        onClick={() => setShowTermsModal(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        <X />
+                      </button>
                     </div>
                     <div className="overflow-y-auto px-6 py-5 flex-1 text-sm text-gray-700 space-y-4">
                       <section>
-                        <h3 className="font-bold mb-2">1. การเก็บรวบรวมข้อมูลส่วนบุคคล</h3>
-                        <p>ระบบจะเก็บรวบรวมข้อมูลส่วนบุคคลของท่านเพื่อใช้ในการดำเนินการที่เกี่ยวข้องกับการจัดงานนี้เท่านั้น</p>
+                        <h3 className="font-bold mb-2">
+                          1. การเก็บรวบรวมข้อมูลส่วนบุคคล
+                        </h3>
+                        <p>
+                          ระบบจะเก็บรวบรวมข้อมูลส่วนบุคคลของท่านเพื่อใช้ในการดำเนินการที่เกี่ยวข้องกับการจัดงานนี้เท่านั้น
+                        </p>
                       </section>
                       <section>
-                        <h3 className="font-bold mb-2">2. วัตถุประสงค์ในการใช้ข้อมูล</h3>
-                        <p>เพื่อยืนยันการลงทะเบียน การสื่อสาร และการวิเคราะห์ปรับปรุงการจัดงาน</p>
+                        <h3 className="font-bold mb-2">
+                          2. วัตถุประสงค์ในการใช้ข้อมูล
+                        </h3>
+                        <p>
+                          เพื่อยืนยันการลงทะเบียน การสื่อสาร
+                          และการวิเคราะห์ปรับปรุงการจัดงาน
+                        </p>
                       </section>
                     </div>
                     <div className="px-6 py-4 border-t flex gap-3">
-                      <button onClick={() => setShowTermsModal(false)} className="flex-1 py-3 rounded-xl border text-gray-700 font-semibold">ปิด</button>
-                      <button 
-                        onClick={() => { setFormData(prev => ({ ...prev, agreeTerms: true })); setShowTermsModal(false); }}
+                      <button
+                        onClick={() => setShowTermsModal(false)}
+                        className="flex-1 py-3 rounded-xl border text-gray-700 font-semibold"
+                      >
+                        ปิด
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            agreeTerms: true,
+                          }));
+                          setShowTermsModal(false);
+                        }}
                         className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold"
                       >
                         ยอมรับข้อกำหนด

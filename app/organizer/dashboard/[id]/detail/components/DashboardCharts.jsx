@@ -1,5 +1,5 @@
 "use client";
-import { Pie, Column, Line } from "@ant-design/plots";
+import { Pie, Column } from "@ant-design/plots";
 import { Card, Table, Tag, Rate } from "antd";
 
 const PALETTE = {
@@ -20,184 +20,28 @@ const PALETTE = {
 
 const getPalette = (palette) => ({ ...PALETTE, ...(palette || {}) });
 
-// ─── MOCK DATA ────────────────────────────────────────────────────────────────
-
-const REGISTRATION_BY_TIME = [
-  { time: "08:00", all: 12, male: 7, female: 5 },
-  { time: "09:00", all: 34, male: 20, female: 14 },
-  { time: "10:00", all: 58, male: 32, female: 26 },
-  { time: "11:00", all: 45, male: 25, female: 20 },
-  { time: "12:00", all: 20, male: 11, female: 9 },
-  { time: "13:00", all: 38, male: 22, female: 16 },
-  { time: "14:00", all: 62, male: 35, female: 27 },
-  { time: "15:00", all: 41, male: 23, female: 18 },
-  { time: "16:00", all: 27, male: 15, female: 12 },
-  { time: "17:00", all: 15, male: 8, female: 7 },
-];
-
-const CHECKIN_BY_TIME = [
-  { time: "08:00", all: 8, male: 5, female: 3 },
-  { time: "09:00", all: 28, male: 16, female: 12 },
-  { time: "10:00", all: 51, male: 29, female: 22 },
-  { time: "11:00", all: 39, male: 22, female: 17 },
-  { time: "12:00", all: 16, male: 9, female: 7 },
-  { time: "13:00", all: 31, male: 18, female: 13 },
-  { time: "14:00", all: 55, male: 31, female: 24 },
-  { time: "15:00", all: 36, male: 20, female: 16 },
-  { time: "16:00", all: 22, male: 12, female: 10 },
-  { time: "17:00", all: 11, male: 6, female: 5 },
-];
-
-const OCCUPATION_DATA = [
-  { occupation: "วิศวกร", count: 85 },
-  { occupation: "นักศึกษา", count: 72 },
-  { occupation: "ผู้ประกอบการ", count: 61 },
-  { occupation: "นักออกแบบ", count: 48 },
-  { occupation: "ที่ปรึกษา", count: 37 },
-  { occupation: "นักวิจัย", count: 29 },
-  { occupation: "อื่นๆ", count: 42 },
-];
-
-const PROVINCE_DATA = [
-  { province: "กรุงเทพฯ", count: 180 },
-  { province: "เชียงใหม่", count: 62 },
-  { province: "ขอนแก่น", count: 48 },
-  { province: "ชลบุรี", count: 41 },
-  { province: "นครราชสีมา", count: 35 },
-  { province: "สงขลา", count: 28 },
-  { province: "อื่นๆ", count: 74 },
-];
-
-const ROLE_DATA = [
-  { type: "Visitor", value: 215 },
-  { type: "Exhibitor", value: 87 },
-  { type: "Staff", value: 46 },
-];
-
-const AGE_DATA = [
-  { age: "< 18", value: 12 },
-  { age: "18-25", value: 68 },
-  { age: "26-35", value: 94 },
-  { age: "36-45", value: 71 },
-  { age: "46-55", value: 45 },
-  { age: "55+", value: 22 },
-];
-
-const GENDER_DATA = [
-  { type: "ชาย", value: 198 },
-  { type: "หญิง", value: 154 },
-];
-
-// Survey submitted over time
-const VISITOR_SUBMITTED_BY_TIME = [
-  { time: "09:00", all: 5, post: 3, suggestion: 2 },
-  { time: "10:00", all: 18, post: 11, suggestion: 7 },
-  { time: "11:00", all: 32, post: 20, suggestion: 12 },
-  { time: "12:00", all: 14, post: 9, suggestion: 5 },
-  { time: "13:00", all: 22, post: 14, suggestion: 8 },
-  { time: "14:00", all: 41, post: 26, suggestion: 15 },
-  { time: "15:00", all: 28, post: 18, suggestion: 10 },
-  { time: "16:00", all: 19, post: 12, suggestion: 7 },
-];
-
-const EXHIBITOR_SUBMITTED_BY_TIME = [
-  { time: "09:00", all: 3, post: 2, suggestion: 1 },
-  { time: "10:00", all: 11, post: 7, suggestion: 4 },
-  { time: "11:00", all: 20, post: 13, suggestion: 7 },
-  { time: "12:00", all: 8, post: 5, suggestion: 3 },
-  { time: "13:00", all: 15, post: 10, suggestion: 5 },
-  { time: "14:00", all: 26, post: 17, suggestion: 9 },
-  { time: "15:00", all: 17, post: 11, suggestion: 6 },
-  { time: "16:00", all: 12, post: 8, suggestion: 4 },
-];
-
-const SATISFACTION_VISITOR = { 5: 142, 4: 98, 3: 41, 2: 18, 1: 9 };
-const SATISFACTION_EXHIBITOR = { 5: 54, 4: 43, 3: 19, 2: 8, 1: 3 };
-
-const QUESTION_ANSWER_RATIO = [
-  { question: "ความพึงพอใจโดยรวม", answered: 308, total: 352 },
-  { question: "คุณภาพสินค้า/บริการ", answered: 291, total: 352 },
-  { question: "ความพร้อมของสถานที่", answered: 275, total: 352 },
-  { question: "การให้บริการของเจ้าหน้าที่", answered: 263, total: 352 },
-  { question: "ข้อเสนอแนะ", answered: 188, total: 352 },
-];
-
-const SUGGESTION_DATA = [
-  {
-    key: 1,
-    no: 1,
-    eventId: 1,
-    role: "VISITOR",
-    answerId: 308,
-    feedback: "ดีมาก",
-    type: "POST_VISITOR",
-    keyword: null,
-    sentiment: null,
-  },
-  {
-    key: 2,
-    no: 2,
-    eventId: 1,
-    role: "VISITOR",
-    answerId: 296,
-    feedback: "มาซื้อเสื้อผ้าจำนวนมาก",
-    type: "POST_VISITOR",
-    keyword: null,
-    sentiment: null,
-  },
-  {
-    key: 3,
-    no: 3,
-    eventId: 1,
-    role: "VISITOR",
-    answerId: 241,
-    feedback: "สินค้าหลากหลาย ราคาสมเหตุสมผล",
-    type: "POST_VISITOR",
-    keyword: "ราคา",
-    sentiment: "POSITIVE",
-  },
-  {
-    key: 4,
-    no: 4,
-    eventId: 1,
-    role: "EXHIBITOR",
-    answerId: 189,
-    feedback: "ต้องการพื้นที่มากขึ้น",
-    type: "POST_EXHIBITOR",
-    keyword: "พื้นที่",
-    sentiment: "NEUTRAL",
-  },
-  {
-    key: 5,
-    no: 5,
-    eventId: 1,
-    role: "VISITOR",
-    answerId: 177,
-    feedback: "แสงไฟในงานดีมาก บรรยากาศสวย",
-    type: "POST_VISITOR",
-    keyword: "บรรยากาศ",
-    sentiment: "POSITIVE",
-  },
-];
-
-// ─── HELPER: Multi-series bar chart data transformer ─────────────────────────
-const toMultiSeries = (data, timeKey, series) =>
-  series.flatMap((s) =>
-    data.map((d) => ({ time: d[timeKey], value: d[s.key], type: s.label })),
-  );
-
 // ─── CHART COMPONENTS ─────────────────────────────────────────────────────────
 
-export const RegistrationByTimeChart = ({ palette }) => {
+// RegistrationByTimeChart
+// data: { hourlyStats: [{hourRange, total}] }
+// from API: dashboard/events/${id}/registrations
+export const RegistrationByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
-  const data = toMultiSeries(REGISTRATION_BY_TIME, "time", [
-    { key: "all", label: "ทั้งหมด" },
-    { key: "male", label: "ชาย" },
-    { key: "female", label: "หญิง" },
-  ]);
+
+  const chartData = (data?.hourlyStats || []).map((h) => ({
+    time: h.hourRange,
+    value: h.total,
+    type: "ทั้งหมด",
+  }));
+
+  if (!chartData.length)
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+
   return (
     <Column
-      data={data}
+      data={chartData}
       xField="time"
       yField="value"
       seriesField="type"
@@ -206,22 +50,35 @@ export const RegistrationByTimeChart = ({ palette }) => {
       label={false}
       legend={{ position: "top-right" }}
       height={260}
-      xAxis={{ title: { text: "ช่วงเวลา" } }}
+      xAxis={{
+        label: { autoRotate: true, style: { fontSize: 10 } },
+        title: { text: "ช่วงเวลา" },
+      }}
       yAxis={{ title: { text: "จำนวนคน" } }}
     />
   );
 };
 
-export const CheckinByTimeChart = ({ palette }) => {
+// CheckinByTimeChart
+// data: { hourlyStats: [{hourRange, total}] }
+// from API: dashboard/events/${id}/check-ins
+export const CheckinByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
-  const data = toMultiSeries(CHECKIN_BY_TIME, "time", [
-    { key: "all", label: "ทั้งหมด" },
-    { key: "male", label: "ชาย" },
-    { key: "female", label: "หญิง" },
-  ]);
+
+  const chartData = (data?.hourlyStats || []).map((h) => ({
+    time: h.hourRange,
+    value: h.total,
+    type: "ทั้งหมด",
+  }));
+
+  if (!chartData.length)
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+
   return (
     <Column
-      data={data}
+      data={chartData}
       xField="time"
       yField="value"
       seriesField="type"
@@ -230,17 +87,33 @@ export const CheckinByTimeChart = ({ palette }) => {
       label={false}
       legend={{ position: "top-right" }}
       height={260}
-      xAxis={{ title: { text: "ช่วงเวลา" } }}
+      xAxis={{
+        label: { autoRotate: true, style: { fontSize: 10 } },
+        title: { text: "ช่วงเวลา" },
+      }}
       yAxis={{ title: { text: "จำนวนคน" } }}
     />
   );
 };
 
-export const OccupationChart = ({ palette }) => {
+// OccupationChart
+// data: [{jobName, total}]
+// from API: dashboard/events/${id}/jobs
+export const OccupationChart = ({ palette, data }) => {
   const p = getPalette(palette);
+  const chartData = (data || []).map((d) => ({
+    occupation: d.jobName,
+    count: d.total,
+  }));
+
+  if (!chartData.length)
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+
   return (
     <Column
-      data={OCCUPATION_DATA}
+      data={chartData}
       xField="occupation"
       yField="count"
       colorField="occupation"
@@ -248,17 +121,33 @@ export const OccupationChart = ({ palette }) => {
       legend={false}
       label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
       height={260}
-      xAxis={{ title: { text: "อาชีพ" } }}
+      xAxis={{
+        label: { autoRotate: true, style: { fontSize: 10 } },
+        title: { text: "อาชีพ" },
+      }}
       yAxis={{ title: { text: "จำนวนคน" } }}
     />
   );
 };
 
-export const ProvinceChart = ({ palette }) => {
+// ProvinceChart
+// data: [{cityName, total}]
+// from API: dashboard/events/${id}/cities
+export const ProvinceChart = ({ palette, data }) => {
   const p = getPalette(palette);
+  const chartData = (data || []).map((d) => ({
+    province: d.cityName,
+    count: d.total,
+  }));
+
+  if (!chartData.length)
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+
   return (
     <Column
-      data={PROVINCE_DATA}
+      data={chartData}
       xField="province"
       yField="count"
       colorField="province"
@@ -266,18 +155,34 @@ export const ProvinceChart = ({ palette }) => {
       legend={false}
       label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
       height={260}
-      xAxis={{ title: { text: "จังหวัด" } }}
+      xAxis={{
+        label: { autoRotate: true, style: { fontSize: 10 } },
+        title: { text: "จังหวัด" },
+      }}
       yAxis={{ title: { text: "จำนวนคน" } }}
     />
   );
 };
 
-export const RolePieChart = ({ palette }) => {
+// RolePieChart
+// data: [{roleName, total, percentage}]
+// from API: dashboard/events/${id}/roles
+export const RolePieChart = ({ palette, data }) => {
   const p = getPalette(palette);
-  const total = ROLE_DATA.reduce((s, d) => s + d.value, 0);
+  const chartData = (data || []).map((d) => ({
+    type: d.roleName,
+    value: d.total,
+  }));
+  const total = chartData.reduce((s, d) => s + d.value, 0);
+
+  if (!chartData.length)
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+
   return (
     <Pie
-      data={ROLE_DATA}
+      data={chartData}
       angleField="value"
       colorField="type"
       color={p.pieRole}
@@ -293,11 +198,24 @@ export const RolePieChart = ({ palette }) => {
   );
 };
 
-export const AgeChart = ({ palette }) => {
+// AgeChart
+// data: [{ageRange, total}]
+// from API: dashboard/events/${id}/ages
+export const AgeChart = ({ palette, data }) => {
   const p = getPalette(palette);
+  const chartData = (data || []).map((d) => ({
+    age: d.ageRange,
+    value: d.total,
+  }));
+
+  if (!chartData.length)
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+
   return (
     <Column
-      data={AGE_DATA}
+      data={chartData}
       xField="age"
       yField="value"
       colorField="age"
@@ -311,12 +229,25 @@ export const AgeChart = ({ palette }) => {
   );
 };
 
-export const GenderPieChart = ({ palette }) => {
+// GenderPieChart
+// data: [{genderName, total}]
+// from API: dashboard/events/${id}/genders
+export const GenderPieChart = ({ palette, data }) => {
   const p = getPalette(palette);
-  const total = GENDER_DATA.reduce((s, d) => s + d.value, 0);
+  const chartData = (data || []).map((d) => ({
+    type: d.genderName,
+    value: d.total,
+  }));
+  const total = chartData.reduce((s, d) => s + d.value, 0);
+
+  if (!chartData.length)
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+
   return (
     <Pie
-      data={GENDER_DATA}
+      data={chartData}
       angleField="value"
       colorField="type"
       color={p.pieGender}
@@ -332,16 +263,25 @@ export const GenderPieChart = ({ palette }) => {
   );
 };
 
-export const VisitorSubmittedChart = ({ palette }) => {
+// VisitorSubmittedChart
+// data: { hourlyPostSurveyStats: [{hourRange, total}] }
+// from API: dashboard/events/${id}/surveys/visitor/stats
+export const VisitorSubmittedChart = ({ palette, data }) => {
   const p = getPalette(palette);
-  const data = toMultiSeries(VISITOR_SUBMITTED_BY_TIME, "time", [
-    { key: "all", label: "ทั้งหมด" },
-    { key: "post", label: "Post Visitor" },
-    { key: "suggestion", label: "Suggestion" },
-  ]);
+  const chartData = (data?.hourlyPostSurveyStats || []).map((h) => ({
+    time: h.hourRange,
+    value: h.total,
+    type: "Post Survey",
+  }));
+
+  if (!chartData.length)
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+
   return (
     <Column
-      data={data}
+      data={chartData}
       xField="time"
       yField="value"
       seriesField="type"
@@ -350,20 +290,30 @@ export const VisitorSubmittedChart = ({ palette }) => {
       label={false}
       legend={{ position: "top-right" }}
       height={240}
+      xAxis={{ label: { autoRotate: true, style: { fontSize: 10 } } }}
     />
   );
 };
 
-export const ExhibitorSubmittedChart = ({ palette }) => {
+// ExhibitorSubmittedChart
+// data: { hourlyPostSurveyStats: [{hourRange, total}] }
+// from API: dashboard/events/${id}/surveys/exhibitor/stats
+export const ExhibitorSubmittedChart = ({ palette, data }) => {
   const p = getPalette(palette);
-  const data = toMultiSeries(EXHIBITOR_SUBMITTED_BY_TIME, "time", [
-    { key: "all", label: "ทั้งหมด" },
-    { key: "post", label: "Post Exhibitor" },
-    { key: "suggestion", label: "Suggestion" },
-  ]);
+  const chartData = (data?.hourlyPostSurveyStats || []).map((h) => ({
+    time: h.hourRange,
+    value: h.total,
+    type: "Post Survey",
+  }));
+
+  if (!chartData.length)
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+
   return (
     <Column
-      data={data}
+      data={chartData}
       xField="time"
       yField="value"
       seriesField="type"
@@ -372,14 +322,17 @@ export const ExhibitorSubmittedChart = ({ palette }) => {
       label={false}
       legend={{ position: "top-right" }}
       height={240}
+      xAxis={{ label: { autoRotate: true, style: { fontSize: 10 } } }}
     />
   );
 };
 
 // ─── SATISFACTION WIDGET ──────────────────────────────────────────────────────
+// data: [{answer, count, percentage}]  (answer = "1".."5")
+// from API: dashboard/events/${id}/surveys/visitor/satisfaction  (or /exhibitor/satisfaction)
 
 const SatisfactionBar = ({ level, count, total, color }) => {
-  const pct = Math.round((count / total) * 100);
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div className="flex items-center gap-3 text-sm">
       <div className="flex items-center gap-1 w-20 shrink-0">
@@ -404,10 +357,22 @@ const SatisfactionBar = ({ level, count, total, color }) => {
 };
 
 export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
-  const total = Object.values(data).reduce((a, b) => a + b, 0);
-  const avg = (
-    Object.entries(data).reduce((sum, [k, v]) => sum + Number(k) * v, 0) / total
-  ).toFixed(2);
+  // data: [{answer: "5", count: 4}, ...]  → convert to map {5: 4, ...}
+  const dataMap = {};
+  (data || []).forEach((d) => {
+    dataMap[Number(d.answer)] = d.count;
+  });
+
+  const total = Object.values(dataMap).reduce((a, b) => a + b, 0);
+  const avg =
+    total > 0
+      ? (
+          Object.entries(dataMap).reduce(
+            (sum, [k, v]) => sum + Number(k) * v,
+            0,
+          ) / total
+        ).toFixed(2)
+      : "0.00";
 
   return (
     <Card
@@ -425,7 +390,7 @@ export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
           <SatisfactionBar
             key={lvl}
             level={lvl}
-            count={data[lvl]}
+            count={dataMap[lvl] || 0}
             total={total}
             color={color}
           />
@@ -439,24 +404,33 @@ export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
 };
 
 // ─── ANSWER RATIO WIDGET ──────────────────────────────────────────────────────
-
-export const AnswerRatioChart = ({ palette }) => {
+// data: [{question, answered, total}]  — wire up when endpoint available
+export const AnswerRatioChart = ({ palette, data }) => {
   const p = getPalette(palette);
-  const data = QUESTION_ANSWER_RATIO.map((q) => ({
-    question: q.question,
-    value: q.answered,
-    type: "ตอบแล้ว",
-  })).concat(
-    QUESTION_ANSWER_RATIO.map((q) => ({
+
+  if (!data || !data.length) {
+    return (
+      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+    );
+  }
+
+  const chartData = data
+    .map((q) => ({
       question: q.question,
-      value: q.total - q.answered,
-      type: "ยังไม่ตอบ",
-    })),
-  );
+      value: q.answered,
+      type: "ตอบแล้ว",
+    }))
+    .concat(
+      data.map((q) => ({
+        question: q.question,
+        value: q.total - q.answered,
+        type: "ยังไม่ตอบ",
+      })),
+    );
 
   return (
     <Column
-      data={data}
+      data={chartData}
       xField="question"
       yField="value"
       seriesField="type"
@@ -471,7 +445,9 @@ export const AnswerRatioChart = ({ palette }) => {
   );
 };
 
-// ─── SUGGESTION TABLE ────────────────────────────────────────────────────────
+// ─── SUGGESTION TABLE ─────────────────────────────────────────────────────────
+// data: [{responderRole, answer, surveysType, keyword, sentiment}]
+// from API: dashboard/events/${id}/surveys/text-responses
 
 const sentimentColor = { POSITIVE: "green", NEUTRAL: "blue", NEGATIVE: "red" };
 
@@ -479,15 +455,17 @@ const suggestionColumns = [
   { title: "No.", dataIndex: "no", key: "no", width: 55 },
   {
     title: "Role",
-    dataIndex: "role",
-    key: "role",
-    render: (r) => <Tag color={r === "VISITOR" ? "blue" : "purple"}>{r}</Tag>,
+    dataIndex: "responderRole",
+    key: "responderRole",
+    render: (r) => (
+      <Tag color={r === "VISITOR" ? "blue" : "purple"}>{r}</Tag>
+    ),
   },
-  { title: "Feedback", dataIndex: "feedback", key: "feedback" },
+  { title: "Feedback", dataIndex: "answer", key: "answer" },
   {
     title: "Survey Type",
-    dataIndex: "type",
-    key: "type",
+    dataIndex: "surveysType",
+    key: "surveysType",
     render: (t) => (
       <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">
         {t}
@@ -514,29 +492,37 @@ const suggestionColumns = [
   },
 ];
 
-export const SuggestionTable = () => (
-  <Card
-    variant="borderless"
-    title={
-      <span className="text-lg font-extrabold text-slate-800">
-        ตารางแสดงคำตอบข้อเสนอแนะ
-      </span>
-    }
-    className="rounded-2xl border border-slate-200 bg-white/95 shadow-sm"
-    styles={{ body: { padding: "24px" } }}
-  >
-    <Table
-      columns={suggestionColumns}
-      dataSource={SUGGESTION_DATA}
-      pagination={{ pageSize: 10 }}
-      bordered
-      rowKey="key"
-      size="small"
-    />
-  </Card>
-);
+export const SuggestionTable = ({ data }) => {
+  const tableData = (data || []).map((item, idx) => ({
+    ...item,
+    key: idx,
+    no: idx + 1,
+  }));
 
-// ─── SECTION WRAPPER ────────────────────────────────────────────────────────
+  return (
+    <Card
+      variant="borderless"
+      title={
+        <span className="text-lg font-extrabold text-slate-800">
+          ตารางแสดงคำตอบข้อเสนอแนะ
+        </span>
+      }
+      className="rounded-2xl border border-slate-200 bg-white/95 shadow-sm"
+      styles={{ body: { padding: "24px" } }}
+    >
+      <Table
+        columns={suggestionColumns}
+        dataSource={tableData}
+        pagination={{ pageSize: 10 }}
+        bordered
+        rowKey="key"
+        size="small"
+      />
+    </Card>
+  );
+};
+
+// ─── SECTION WRAPPER ──────────────────────────────────────────────────────────
 
 export const ChartCard = ({ title, children, className = "" }) => (
   <Card

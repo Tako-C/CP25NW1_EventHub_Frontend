@@ -149,42 +149,95 @@ export default function ExhibitionDashboard() {
   const [participants, setParticipant] = useState([]);
   const [title, setTitle] = useState("");
   const [searchText, setSearchText] = useState("");
-  const [surveyVisitor, setSurveyVisitor] = useState([]);
-  const [surveyExhibitor, setSurveyExhibitor] = useState([]);
   const [eventMeta, setEventMeta] = useState({
     eventType: "",
     eventDetail: "",
     eventName: "",
   });
 
-  const totalCheckedIn = participants.filter(
-    (item) => String(item.status || "").toUpperCase() === "CHECK_IN",
-  ).length;
+  // ─── Dashboard API state ───────────────────────────────────────────────────
+  const [registrationData, setRegistrationData] = useState(null);   // dashboard/events/${id}/registrations
+  const [checkinData, setCheckinData] = useState(null);             // dashboard/events/${id}/check-ins
+  const [visitorSurveyStats, setVisitorSurveyStats] = useState(null); // dashboard/events/${id}/surveys/visitor/stats
+  const [exhibitorSurveyStats, setExhibitorSurveyStats] = useState(null); // dashboard/events/${id}/surveys/exhibitor/stats
+  const [visitorSurveyStatus, setVisitorSurveyStatus] = useState([]); // dashboard/events/${id}/surveys/visitor/status
+  const [exhibitorSurveyStatus, setExhibitorSurveyStatus] = useState([]); // dashboard/events/${id}/surveys/exhibitor/status
+  const [visitorSatisfaction, setVisitorSatisfaction] = useState([]); // dashboard/events/${id}/surveys/visitor/satisfaction
+  const [exhibitorSatisfaction, setExhibitorSatisfaction] = useState([]); // dashboard/events/${id}/surveys/exhibitor/satisfaction
+  const [textResponses, setTextResponses] = useState([]);           // dashboard/events/${id}/surveys/text-responses
+  const [jobData, setJobData] = useState([]);                       // dashboard/events/${id}/jobs
+  const [genderData, setGenderData] = useState([]);                 // dashboard/events/${id}/genders
+  const [cityData, setCityData] = useState([]);                     // dashboard/events/${id}/cities
+  const [ageData, setAgeData] = useState([]);                       // dashboard/events/${id}/ages
+  const [roleData, setRoleData] = useState([]);                     // dashboard/events/${id}/roles
+
+  // ─── Derived stats ────────────────────────────────────────────────────────
+  const totalParticipants = registrationData?.totalParticipants ?? participants.length;
+  const totalCheckedIn = checkinData?.totalCheckin ?? 0;
+  const totalRegistration = registrationData?.totalRegistration ?? 0;
+  const noShow = Math.max(totalParticipants - totalCheckedIn, 0);
+
+  // Visitor survey counts from stats API
+  const totalVisitorSurvey = visitorSurveyStats?.totalPreSurvey ?? visitorSurveyStatus.length;
+  const visitorSubmitted =
+    visitorSurveyStats?.totalBothSurveys ??
+    visitorSurveyStatus.filter((s) => s.postSurveyDone).length;
+
+  // Exhibitor survey counts from stats API
+  const totalExhibitorSurvey = exhibitorSurveyStats?.totalPreSurvey ?? exhibitorSurveyStatus.length;
+  const exhibitorSubmitted =
+    exhibitorSurveyStats?.totalBothSurveys ??
+    exhibitorSurveyStatus.filter((s) => s.postSurveyDone).length;
+
+  const checkInRate = totalParticipants
+    ? (totalCheckedIn / totalParticipants) * 100
+    : 0;
+  const visitorSubmitRate = totalVisitorSurvey
+    ? (visitorSubmitted / totalVisitorSurvey) * 100
+    : 0;
+  const exhibitorSubmitRate = totalExhibitorSurvey
+    ? (exhibitorSubmitted / totalExhibitorSurvey) * 100
+    : 0;
+  const totalSurvey = totalVisitorSurvey + totalExhibitorSurvey;
+  const totalSubmitted = visitorSubmitted + exhibitorSubmitted;
+  const overallSurveyRate = totalSurvey
+    ? (totalSubmitted / totalSurvey) * 100
+    : 0;
+
+  // Survey status table data (transform to match existing table format)
+  const surveyVisitorTable = useMemo(
+    () =>
+      visitorSurveyStatus.map((item, index) => ({
+        ...item,
+        key: `vis-${index}`,
+        no: index + 1,
+        firstName: item.firstName,
+        lastName: item.lastName,
+        surveyType: "Post-Survey",
+        status: item.postSurveyDone ? "SUBMITTED" : "PENDING",
+      })),
+    [visitorSurveyStatus],
+  );
+
+  const surveyExhibitorTable = useMemo(
+    () =>
+      exhibitorSurveyStatus.map((item, index) => ({
+        ...item,
+        key: `ex-${index}`,
+        no: index + 1,
+        firstName: item.firstName,
+        lastName: item.lastName,
+        surveyType: "Post-Survey",
+        status: item.postSurveyDone ? "SUBMITTED" : "PENDING",
+      })),
+    [exhibitorSurveyStatus],
+  );
+
   const filteredParticipants = participants.filter((item) =>
     String(item.name || "")
       .toLowerCase()
       .includes(searchText.toLowerCase()),
   );
-  const visitorSubmitted = surveyVisitor.filter(
-    (s) => s.status === "SUBMITTED",
-  ).length;
-  const exhibitorSubmitted = surveyExhibitor.filter(
-    (s) => s.status === "SUBMITTED",
-  ).length;
-  const checkInRate = participants.length
-    ? (totalCheckedIn / participants.length) * 100
-    : 0;
-  const visitorSubmitRate = surveyVisitor.length
-    ? (visitorSubmitted / surveyVisitor.length) * 100
-    : 0;
-  const exhibitorSubmitRate = surveyExhibitor.length
-    ? (exhibitorSubmitted / surveyExhibitor.length) * 100
-    : 0;
-  const totalSurvey = surveyVisitor.length + surveyExhibitor.length;
-  const totalSubmitted = visitorSubmitted + exhibitorSubmitted;
-  const overallSurveyRate = totalSurvey
-    ? (totalSubmitted / totalSurvey) * 100
-    : 0;
 
   const activeTheme = useMemo(() => {
     const source =
@@ -206,7 +259,7 @@ export default function ExhibitionDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [resProfile, eventRes] = await Promise.all([
+      const [, eventRes] = await Promise.all([
         getData("users/me/profile"),
         getData(`events/${id}`),
       ]);
@@ -228,73 +281,91 @@ export default function ExhibitionDashboard() {
         eventDetail: eventDetailText,
       });
 
-      const getSurveyData = async (type) => {
-        const isPre = type === "Pre";
-        if (!eventRes?.data?.[isPre ? "hasPreSurvey" : "hasPostSurvey"])
-          return [];
-        const endpoint = isPre ? "pre" : "post";
-        const surveyConfig = await getData(`events/${id}/surveys/${endpoint}`);
-        const activeVisitor = surveyConfig.data?.visitor?.find(
-          (v) => v.status === "ACTIVE",
-        );
-        const activeExhibitor = surveyConfig.data?.exhibitor?.find(
-          (e) => e.status === "ACTIVE",
-        );
-        const visitorId = activeVisitor?.id;
-        const exhibitorId = activeExhibitor?.id;
-        const [visRes, exRes] = await Promise.all([
-          visitorId
-            ? getData(
-                `events/${id}/surveys/${visitorId}/submission-status/visitor`,
-              )
-            : Promise.resolve(null),
-          exhibitorId
-            ? getData(
-                `events/${id}/surveys/${exhibitorId}/submission-status/exhibitor`,
-              )
-            : Promise.resolve(null),
-        ]);
-        let results = [];
-        if (Array.isArray(visRes))
-          results.push(
-            ...visRes.map((item, idx) => ({
-              ...item,
-              key: `${type.toLowerCase()}-vis-${item.memberEventId || idx}`,
-              surveyType: `${type}-Survey`,
-              role: "VISITOR",
-            })),
-          );
-        if (Array.isArray(exRes))
-          results.push(
-            ...exRes.map((item, idx) => ({
-              ...item,
-              key: `${type.toLowerCase()}-ex-${idx}`,
-              surveyType: `${type}-Survey`,
-              role: "EXHIBITOR",
-            })),
-          );
-        return results;
-      };
-
-      const checkInPromise = postUserCheckInDashboard("list/check-in", id);
-      const [resListUser, preSurveyData, postSurveyData] = await Promise.all([
-        checkInPromise,
-        getSurveyData("Pre"),
-        getSurveyData("Post"),
+      // ─── Fetch all dashboard APIs in parallel ───────────────────────────
+      const [
+        regRes,
+        checkinRes,
+        visitorStatsRes,
+        exhibitorStatsRes,
+        visitorStatusRes,
+        exhibitorStatusRes,
+        visitorSatisfactionRes,
+        exhibitorSatisfactionRes,
+        textRes,
+        jobRes,
+        genderRes,
+        cityRes,
+        ageRes,
+        roleRes,
+        checkInListRes,
+      ] = await Promise.allSettled([
+        getData(`dashboard/events/${id}/registrations`),
+        getData(`dashboard/events/${id}/check-ins`),
+        getData(`dashboard/events/${id}/surveys/visitor/stats`),
+        getData(`dashboard/events/${id}/surveys/exhibitor/stats`),
+        getData(`dashboard/events/${id}/surveys/visitor/status`),
+        getData(`dashboard/events/${id}/surveys/exhibitor/status`),
+        getData(`dashboard/events/${id}/surveys/visitor/satisfaction`),
+        getData(`dashboard/events/${id}/surveys/exhibitor/satisfaction`),
+        getData(`dashboard/events/${id}/surveys/text-responses`),
+        getData(`dashboard/events/${id}/jobs`),
+        getData(`dashboard/events/${id}/genders`),
+        getData(`dashboard/events/${id}/cities`),
+        getData(`dashboard/events/${id}/ages`),
+        getData(`dashboard/events/${id}/roles`),
+        postUserCheckInDashboard("list/check-in", id),
       ]);
 
-      const allSurveys = [...preSurveyData, ...postSurveyData];
-      const allVisitors = allSurveys.filter((s) => s.role === "VISITOR");
-      const allExhibitors = allSurveys.filter((s) => s.role === "EXHIBITOR");
-      setSurveyVisitor(
-        allVisitors.map((item, index) => ({ ...item, no: index + 1 })),
-      );
-      setSurveyExhibitor(
-        allExhibitors.map((item, index) => ({ ...item, no: index + 1 })),
-      );
-      if (Array.isArray(resListUser?.data)) {
+      // ─── Set state from settled results ──────────────────────────────────
+      if (regRes.status === "fulfilled")
+        setRegistrationData(regRes.value?.data ?? null);
+
+      if (checkinRes.status === "fulfilled")
+        setCheckinData(checkinRes.value?.data ?? null);
+
+      if (visitorStatsRes.status === "fulfilled")
+        setVisitorSurveyStats(visitorStatsRes.value?.data ?? null);
+
+      if (exhibitorStatsRes.status === "fulfilled")
+        setExhibitorSurveyStats(exhibitorStatsRes.value?.data ?? null);
+
+      if (visitorStatusRes.status === "fulfilled")
+        setVisitorSurveyStatus(visitorStatusRes.value?.data ?? []);
+
+      if (exhibitorStatusRes.status === "fulfilled")
+        setExhibitorSurveyStatus(exhibitorStatusRes.value?.data ?? []);
+
+      if (visitorSatisfactionRes.status === "fulfilled")
+        setVisitorSatisfaction(visitorSatisfactionRes.value?.data ?? []);
+
+      if (exhibitorSatisfactionRes.status === "fulfilled")
+        setExhibitorSatisfaction(exhibitorSatisfactionRes.value?.data ?? []);
+
+      if (textRes.status === "fulfilled")
+        setTextResponses(textRes.value?.data ?? []);
+
+      if (jobRes.status === "fulfilled")
+        setJobData(jobRes.value?.data ?? []);
+
+      if (genderRes.status === "fulfilled")
+        setGenderData(genderRes.value?.data ?? []);
+
+      if (cityRes.status === "fulfilled")
+        setCityData(cityRes.value?.data ?? []);
+
+      if (ageRes.status === "fulfilled")
+        setAgeData(ageRes.value?.data ?? []);
+
+      if (roleRes.status === "fulfilled")
+        setRoleData(roleRes.value?.data ?? []);
+
+      // ─── Participant list (check-in list) ─────────────────────────────
+      if (
+        checkInListRes.status === "fulfilled" &&
+        Array.isArray(checkInListRes.value?.data)
+      ) {
         setParticipant(
-          resListUser.data.map((item, index) => ({
+          checkInListRes.value.data.map((item, index) => ({
             ...item,
             key: index,
             no: index + 1,
@@ -403,7 +474,7 @@ export default function ExhibitionDashboard() {
               </div>
 
               <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:min-w-[260px]">
-                <BadgePill label="Participants" value={participants.length} />
+                <BadgePill label="Participants" value={totalParticipants} />
                 <BadgePill label="Checked-in" value={totalCheckedIn} />
                 <BadgePill label="Visitor Submit" value={visitorSubmitted} />
                 <BadgePill
@@ -453,7 +524,7 @@ export default function ExhibitionDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
             <StatCard
               title="Total Registration"
-              value={participants.length}
+              value={totalParticipants}
               valueColor="text-[#2563EB]"
             />
             <StatCard
@@ -463,7 +534,7 @@ export default function ExhibitionDashboard() {
             />
             <StatCard
               title="No-show"
-              value={Math.max(participants.length - totalCheckedIn, 0)}
+              value={noShow}
               valueColor="text-[#DC2626]"
             />
           </div>
@@ -472,10 +543,16 @@ export default function ExhibitionDashboard() {
         <RevealSection order={4}>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 md:gap-4">
             <ChartCard title="Total Registration — แบ่งตามช่วงเวลา">
-              <RegistrationByTimeChart palette={activeTheme.chartPalette} />
+              <RegistrationByTimeChart
+                palette={activeTheme.chartPalette}
+                data={registrationData}
+              />
             </ChartCard>
             <ChartCard title="Total Checked-in — แบ่งตามช่วงเวลา">
-              <CheckinByTimeChart palette={activeTheme.chartPalette} />
+              <CheckinByTimeChart
+                palette={activeTheme.chartPalette}
+                data={checkinData}
+              />
             </ChartCard>
           </div>
         </RevealSection>
@@ -497,16 +574,25 @@ export default function ExhibitionDashboard() {
         <RevealSection order={6}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4 items-start">
             <ChartCard title="ช่วงอาชีพที่เข้าร่วม" className="self-start">
-              <OccupationChart palette={activeTheme.chartPalette} />
+              <OccupationChart
+                palette={activeTheme.chartPalette}
+                data={jobData}
+              />
             </ChartCard>
             <ChartCard title="กลุ่มจังหวัดที่เข้าร่วม" className="self-start">
-              <ProvinceChart palette={activeTheme.chartPalette} />
+              <ProvinceChart
+                palette={activeTheme.chartPalette}
+                data={cityData}
+              />
             </ChartCard>
             <ChartCard
               title="สัดส่วน Staff / Visitor / Exhibitor"
               className="self-start"
             >
-              <RolePieChart palette={activeTheme.chartPalette} />
+              <RolePieChart
+                palette={activeTheme.chartPalette}
+                data={roleData}
+              />
             </ChartCard>
           </div>
         </RevealSection>
@@ -514,10 +600,13 @@ export default function ExhibitionDashboard() {
         <RevealSection order={7}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4 items-start">
             <ChartCard title="ช่วงอายุ" className="self-start">
-              <AgeChart palette={activeTheme.chartPalette} />
+              <AgeChart palette={activeTheme.chartPalette} data={ageData} />
             </ChartCard>
             <ChartCard title="ช่วงเพศ" className="self-start">
-              <GenderPieChart palette={activeTheme.chartPalette} />
+              <GenderPieChart
+                palette={activeTheme.chartPalette}
+                data={genderData}
+              />
             </ChartCard>
           </div>
         </RevealSection>
@@ -533,11 +622,12 @@ export default function ExhibitionDashboard() {
 
         <RevealSection order={9}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
+            {/* Visitor side */}
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <StatCard
                   title="Total Survey Visitor"
-                  value={surveyVisitor.length}
+                  value={totalVisitorSurvey}
                   valueColor="text-[#2563EB]"
                 />
                 <StatCard
@@ -547,14 +637,17 @@ export default function ExhibitionDashboard() {
                 />
               </div>
 
-              <ChartCard title="Visitor Submitted — แบ่งตามประเภทและช่วงเวลา">
-                <VisitorSubmittedChart palette={activeTheme.chartPalette} />
+              <ChartCard title="Visitor Submitted — แบ่งตามช่วงเวลา">
+                <VisitorSubmittedChart
+                  palette={activeTheme.chartPalette}
+                  data={visitorSurveyStats}
+                />
               </ChartCard>
 
               <div className="pt-4 md:pt-4">
                 <ResponsiveTable
                   title="Visitor Survey Status"
-                  data={surveyVisitor}
+                  data={surveyVisitorTable}
                   columns={createSurveyColumns("blue")}
                   loading={loading}
                   renderMobileItem={renderSurveyMobile}
@@ -563,11 +656,12 @@ export default function ExhibitionDashboard() {
               </div>
             </div>
 
+            {/* Exhibitor side */}
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <StatCard
                   title="Total Survey Exhibitor"
-                  value={surveyExhibitor.length}
+                  value={totalExhibitorSurvey}
                   valueColor="text-[#7C3AED]"
                 />
                 <StatCard
@@ -577,14 +671,17 @@ export default function ExhibitionDashboard() {
                 />
               </div>
 
-              <ChartCard title="Exhibitor Submitted — แบ่งตามประเภทและช่วงเวลา">
-                <ExhibitorSubmittedChart palette={activeTheme.chartPalette} />
+              <ChartCard title="Exhibitor Submitted — แบ่งตามช่วงเวลา">
+                <ExhibitorSubmittedChart
+                  palette={activeTheme.chartPalette}
+                  data={exhibitorSurveyStats}
+                />
               </ChartCard>
 
               <div className="pt-4 md:pt-4">
                 <ResponsiveTable
                   title="Exhibitor Survey Status"
-                  data={surveyExhibitor}
+                  data={surveyExhibitorTable}
                   columns={createSurveyColumns("purple")}
                   loading={loading}
                   renderMobileItem={renderSurveyMobile}
@@ -608,22 +705,25 @@ export default function ExhibitionDashboard() {
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 md:gap-4">
             <SatisfactionWidget
               title="ความพึงพอใจ Visitor"
-              data={{ 5: 142, 4: 98, 3: 41, 2: 18, 1: 9 }}
+              data={visitorSatisfaction}
               color={activeTheme.satisfaction.visitor}
             />
             <SatisfactionWidget
               title="ความพึงพอใจ Exhibitor"
-              data={{ 5: 54, 4: 43, 3: 19, 2: 8, 1: 3 }}
+              data={exhibitorSatisfaction}
               color={activeTheme.satisfaction.exhibitor}
             />
           </div>
         </RevealSection>
 
-        <RevealSection order={12}>
+        {/* <RevealSection order={12}>
           <ChartCard title="สัดส่วนคำตอบที่ตอบมาในแต่ละคำถาม">
-            <AnswerRatioChart palette={activeTheme.chartPalette} />
+            <AnswerRatioChart
+              palette={activeTheme.chartPalette}
+              data={null}
+            />
           </ChartCard>
-        </RevealSection>
+        </RevealSection> */}
 
         <RevealSection order={13}>
           <SectionHeading
@@ -635,7 +735,7 @@ export default function ExhibitionDashboard() {
         </RevealSection>
 
         <RevealSection order={14}>
-          <SuggestionTable />
+          <SuggestionTable data={textResponses} />
         </RevealSection>
 
         <RevealSection order={15}>

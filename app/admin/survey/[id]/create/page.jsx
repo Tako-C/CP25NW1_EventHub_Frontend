@@ -13,7 +13,11 @@ import {
   Lock,
 } from "lucide-react";
 import { Tabs } from "antd";
-import { createSurvey, getDataNoToken, createSurveyByAdmin } from "@/libs/fetch";
+import {
+  createSurvey,
+  getDataNoToken,
+  createSurveyByAdmin,
+} from "@/libs/fetch";
 
 import QuestionEditor from "../../components/QuestionEditor";
 import SurveyPreview from "../../components/SurveyPreview";
@@ -37,18 +41,36 @@ export default function CreateAdminSurveyPage() {
   const role = searchParams.get("role") || "visitor";
 
   const [surveyData, setSurveyData] = useState(() => {
-    const initialQuestion =
-      surveyType === "post"
-        ? { question: "ความพึงพอใจโดยรวม", questionType: "SINGLE", choices: ['1','2','3','4','5'] }
-        : { question: "", questionType: "TEXT", choices: [] };
+    if (surveyType === "post") {
+      return {
+        name: "",
+        description: "",
+        // points: 0,
+        questions: [
+          {
+            question: "ความพึงพอใจโดยรวม",
+            questionType: "SINGLE",
+            choices: ["1", "2", "3", "4", "5"],
+            kpiType: "satisfaction",
+            required: true,
+          },
+          {
+            question: "ท่านเคยเข้าร่วมงานนี้มาก่อนหรือไม่?",
+            questionType: "SINGLE",
+            choices: ["มากกว่า 2 ครั้ง", "1 ครั้ง", "ไม่เคย"],
+            kpiType: "returning",
+            required: true,
+          },
+        ],
+      };
+    }
     return {
       name: "",
       description: "",
-      points: 0,
-      questions: [initialQuestion],
+      // points: 0,
+      questions: [{ question: "", questionType: "TEXT", choices: [] }],
     };
   });
-
   const [activeTab, setActiveTab] = useState("edit");
   const [loading, setLoading] = useState(false);
   const [eventLoading, setEventLoading] = useState(true);
@@ -78,7 +100,10 @@ export default function CreateAdminSurveyPage() {
   const handleUpdateQuestion = (index, field, value) => {
     const newQuestions = [...surveyData.questions];
     newQuestions[index] = { ...newQuestions[index], [field]: value };
-    if (field === "questionType" && (value === "SINGLE" || value === "MULTIPLE")) {
+    if (
+      field === "questionType" &&
+      (value === "SINGLE" || value === "MULTIPLE")
+    ) {
       newQuestions[index].choices = ["", ""];
     }
     setSurveyData({ ...surveyData, questions: newQuestions });
@@ -104,15 +129,15 @@ export default function CreateAdminSurveyPage() {
     setSurveyData({ ...surveyData, questions: newQuestions });
   };
 
-  const handleIncrementPoints = () => {
-    const current = parseInt(surveyData.points) || 0;
-    setSurveyData({ ...surveyData, points: current + 1 });
-  };
+  // const handleIncrementPoints = () => {
+  //   const current = parseInt(surveyData.points) || 0;
+  //   setSurveyData({ ...surveyData, points: current + 1 });
+  // };
 
-  const handleDecrementPoints = () => {
-    const current = parseInt(surveyData.points) || 0;
-    if (current > 0) setSurveyData({ ...surveyData, points: current - 1 });
-  };
+  // const handleDecrementPoints = () => {
+  //   const current = parseInt(surveyData.points) || 0;
+  //   if (current > 0) setSurveyData({ ...surveyData, points: current - 1 });
+  // };
 
   const surveyTypeFunction = () => {
     if (surveyType === "pre" && role === "visitor") return "PRE_VISITOR";
@@ -130,9 +155,12 @@ export default function CreateAdminSurveyPage() {
     if (!surveyData.description.trim())
       return showNotification("กรุณากรอกรายละเอียดของแบบสำรวจ", true);
 
-    const point = parseInt(surveyData.points);
-    if (isNaN(point) || point < 0)
-      return showNotification("คะแนนสะสมต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0", true);
+    // const point = parseInt(surveyData.points);
+    // if (isNaN(point) || point < 0)
+    //   return showNotification(
+    //     "คะแนนสะสมต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0",
+    //     true,
+    //   );
 
     if (surveyData.questions.length === 0)
       return showNotification("ต้องมีคำถามอย่างน้อย 1 ข้อ", true);
@@ -143,12 +171,12 @@ export default function CreateAdminSurveyPage() {
       const hasSuggestion = surveyData.questions.some(
         (q) =>
           q.question.includes("ข้อเสนอแนะ") ||
-          q.question.toLowerCase().includes("suggestion")
+          q.question.toLowerCase().includes("suggestion"),
       );
       if (!hasSuggestion)
         return showNotification(
           "กรุณาเพิ่มคำถามสำหรับ 'ข้อเสนอแนะ' (แบบข้อความสั้น) ก่อนบันทึก",
-          true
+          true,
         );
     }
 
@@ -156,22 +184,25 @@ export default function CreateAdminSurveyPage() {
       const q = surveyData.questions[i];
       const questionNumber = i + 1;
       if (!q.question.trim())
-        return showNotification(`กรุณาระบุหัวข้อคำถามที่ ${questionNumber}`, true);
+        return showNotification(
+          `กรุณาระบุหัวข้อคำถามที่ ${questionNumber}`,
+          true,
+        );
       if (q.questionType === "SINGLE" || q.questionType === "MULTIPLE") {
         if (!q.choices || q.choices.length < 3)
           return showNotification(
             `คำถามที่ ${questionNumber} ต้องมีอย่างน้อย 3 ตัวเลือก`,
-            true
+            true,
           );
         if (q.choices.length > 10)
           return showNotification(
             `คำถามที่ ${questionNumber} มีตัวเลือกได้ไม่เกิน 10 ข้อ`,
-            true
+            true,
           );
         if (q.choices.some((c) => !c.trim()))
           return showNotification(
             `กรุณากรอกข้อความในทุกตัวเลือกของคำถามที่ ${questionNumber}`,
-            true
+            true,
           );
       }
     }
@@ -187,14 +218,14 @@ export default function CreateAdminSurveyPage() {
       const eventDetail = {
         name: surveyData.name || "",
         description: surveyData.description || "",
-        points: parseInt(surveyData.points) || 0,
+        // points: parseInt(surveyData.points) || 0,
         type: surveyTypeFunction() || "",
       };
 
       const res = await createSurveyByAdmin(
         eventDetail,
         id,
-        surveyData.questions
+        surveyData.questions,
       );
 
       if (res) {
@@ -274,12 +305,12 @@ export default function CreateAdminSurveyPage() {
                   {surveyData.questions.length} ข้อ
                 </span>
               </div>
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-gray-500">คะแนนที่ได้รับ</span>
                 <span className="font-semibold text-purple-600">
                   {surveyData.points || 0} แต้ม
                 </span>
-              </div>
+              </div> */}
             </div>
             <div className="flex gap-3">
               <button
@@ -351,24 +382,23 @@ export default function CreateAdminSurveyPage() {
                     : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100"
                 }`}
               >
-                {isCreateDisabled ? (
-                  <Lock size={18} />
-                ) : (
-                  <Send size={18} />
-                )}
+                {isCreateDisabled ? <Lock size={18} /> : <Send size={18} />}
                 {loading ? "CREATING..." : "CREATE SURVEY"}
               </button>
 
               {!eventLoading && isCreateDisabled && (
                 <div className="absolute right-0 top-full mt-2 w-64 bg-gray-800 text-white text-xs rounded-xl px-3 py-2.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
                   <div className="absolute -top-1.5 right-6 w-3 h-3 bg-gray-800 rotate-45" />
-                  <p className="font-semibold mb-1">ไม่สามารถสร้างแบบสำรวจได้</p>
+                  <p className="font-semibold mb-1">
+                    ไม่สามารถสร้างแบบสำรวจได้
+                  </p>
                   <p className="text-gray-300 leading-relaxed">
                     อีเว้นท์มีสถานะ{" "}
                     <span className="text-yellow-300 font-semibold">
                       {STATUS_LABEL[eventStatus] ?? eventStatus}
                     </span>{" "}
-                    — สามารถสร้างได้เฉพาะเมื่ออีเว้นท์ยังไม่ Active หรือ Inactive เท่านั้น
+                    — สามารถสร้างได้เฉพาะเมื่ออีเว้นท์ยังไม่ Active หรือ
+                    Inactive เท่านั้น
                   </p>
                 </div>
               )}
@@ -388,7 +418,8 @@ export default function CreateAdminSurveyPage() {
                 <span className="font-bold">
                   {STATUS_LABEL[eventStatus] ?? eventStatus}
                 </span>{" "}
-                — การสร้างหรือแก้ไขแบบสำรวจจะถูกล็อกในระหว่างที่อีเว้นท์ Active หรือ Inactive
+                — การสร้างหรือแก้ไขแบบสำรวจจะถูกล็อกในระหว่างที่อีเว้นท์ Active
+                หรือ Inactive
               </p>
             </div>
           </div>
@@ -413,7 +444,7 @@ export default function CreateAdminSurveyPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                     Reward Points
                   </label>
@@ -449,7 +480,7 @@ export default function CreateAdminSurveyPage() {
                   <p className="mt-1 text-xs text-gray-400">
                     * ระบุแต้มที่ผู้ใช้จะได้รับเมื่อทำแบบสำรวจสำเร็จ
                   </p>
-                </div>
+                </div> */}
               </div>
 
               <div className="space-y-2">
@@ -462,7 +493,10 @@ export default function CreateAdminSurveyPage() {
                   value={surveyData.description}
                   disabled={isCreateDisabled}
                   onChange={(e) =>
-                    setSurveyData({ ...surveyData, description: e.target.value })
+                    setSurveyData({
+                      ...surveyData,
+                      description: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -477,7 +511,12 @@ export default function CreateAdminSurveyPage() {
                   key={idx}
                   index={idx}
                   questions={q}
-                  surveyType={surveyType}
+                  // surveyType={surveyType}
+                  surveyType={
+                    surveyData?.type?.toLowerCase().includes("post")
+                      ? "post"
+                      : "pre"
+                  }
                   onUpdate={handleUpdateQuestion}
                   onDelete={handleDeleteQuestion}
                 />
@@ -498,7 +537,9 @@ export default function CreateAdminSurveyPage() {
           <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-100 animate-in zoom-in-95 duration-300">
             <SurveyPreview
               surveyTitle={surveyData.name || "ชื่อแบบสำรวจ"}
-              surveyDescription={surveyData.description || "คำอธิบายจะปรากฏที่นี่..."}
+              surveyDescription={
+                surveyData.description || "คำอธิบายจะปรากฏที่นี่..."
+              }
               questions={surveyData.questions}
               surveyType={surveyType}
             />

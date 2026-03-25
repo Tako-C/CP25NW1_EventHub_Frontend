@@ -41,9 +41,22 @@ export default function CreateSurveyPage() {
 
   const [questions, setQuestions] = useState(() => {
     if (searchParams.get("type") === "post") {
-      return [{ questionType: "multiple_choice", question: "ความพึงพอใจโดยรวม", choices: ["1","2","3","4","5"] }];
+      return [
+        {
+          questionType: "multiple_choice",
+          question: "ความพึงพอใจโดยรวม",
+          choices: ["1", "2", "3", "4", "5"],
+          kpiType: "satisfaction",
+        },
+        {
+          question: "ท่านเคยเข้าร่วมงานนี้มาก่อนหรือไม่?",
+          questionType: "multiple_choice",
+          choices: ["มากกว่า 2 ครั้ง", "1 ครั้ง", "ไม่เคย"],
+          kpiType: "returning",
+        },
+      ];
     }
-    return [{ questionType: "text", question: "", choices: [] }];
+    return [{ questionType: "text", question: "", choices: [], kpiType: null }];
   });
 
   const [showPreview, setShowPreview] = useState(false);
@@ -127,12 +140,12 @@ export default function CreateSurveyPage() {
       return showNotification("กรุณาระบุชื่อแบบสำรวจ", true);
     if (!surveyDescription.trim())
       return showNotification("กรุณากรอกรายละเอียดของแบบสำรวจ", true);
-    const point = parseInt(surveyPoint);
-    if (isNaN(point) || point < 0)
-      return showNotification(
-        "คะแนนสะสมต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0",
-        true,
-      );
+    // const point = parseInt(surveyPoint);
+    // if (isNaN(point) || point < 0)
+    //   return showNotification(
+    //     "คะแนนสะสมต้องเป็นตัวเลขที่มากกว่าหรือเท่ากับ 0",
+    //     true,
+    //   );
     if (questions.length === 0)
       return showNotification("ต้องมีคำถามอย่างน้อย 1 ข้อ", true);
     if (questions.length > 10)
@@ -192,7 +205,7 @@ export default function CreateSurveyPage() {
     const eventDetail = {
       name: surveyTitle || "",
       description: surveyDescription || "",
-      points: parseInt(surveyPoint) || 0,
+      // points: parseInt(surveyPoint) || 0,
       type: surveyTypeFunction() || "",
     };
 
@@ -204,6 +217,7 @@ export default function CreateSurveyPage() {
         question: q.question,
         questionType: apiType,
         choices: q.choices || [],
+        kpiType: q.kpiType || null,
       };
     });
 
@@ -218,15 +232,15 @@ export default function CreateSurveyPage() {
     }
   };
 
-  const handleIncrementPoints = () => {
-    const current = parseInt(surveyPoint) || 0;
-    setSurveyPoint((current + 1).toString());
-  };
+  // const handleIncrementPoints = () => {
+  //   const current = parseInt(surveyPoint) || 0;
+  //   setSurveyPoint((current + 1).toString());
+  // };
 
-  const handleDecrementPoints = () => {
-    const current = parseInt(surveyPoint) || 0;
-    if (current > 0) setSurveyPoint((current - 1).toString());
-  };
+  // const handleDecrementPoints = () => {
+  //   const current = parseInt(surveyPoint) || 0;
+  //   if (current > 0) setSurveyPoint((current - 1).toString());
+  // };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -276,12 +290,12 @@ export default function CreateSurveyPage() {
                   {questions.length} ข้อ
                 </span>
               </div>
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-gray-500">คะแนนที่ได้รับ</span>
                 <span className="font-semibold text-purple-600">
                   {surveyPoint || 0} แต้ม
                 </span>
-              </div>
+              </div> */}
             </div>
             <div className="flex gap-3">
               <button
@@ -434,7 +448,7 @@ export default function CreateSurveyPage() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                   />
                 </div>
-                <div>
+                {/* <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     คะแนนที่ได้รับ (Points)
                   </label>
@@ -470,7 +484,7 @@ export default function CreateSurveyPage() {
                   <p className="mt-2 text-xs text-gray-400">
                     * ระบุแต้มที่ผู้ใช้จะได้รับเมื่อทำแบบสำรวจสำเร็จ
                   </p>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -480,7 +494,7 @@ export default function CreateSurveyPage() {
                   key={index}
                   questions={question}
                   index={index}
-                  surveyType={surveyType} 
+                  surveyType={surveyType}
                   onUpdate={handleUpdateQuestion}
                   onDelete={handleDeleteQuestion}
                   disabled={isCreateDisabled}
