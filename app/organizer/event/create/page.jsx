@@ -1,34 +1,31 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { Typography } from 'antd';
-import { useRouter } from 'next/navigation';
-import EventForm from '../../components/EventForm';
-import dayjs from 'dayjs';
-import { createEvent, getData } from '@/libs/fetch';
-import Notification from '@/components/Notification/Notification';
-import utc from 'dayjs/plugin/utc';
+"use client";
 
-const { Title, Text } = Typography;
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+// เรียกใช้ API ปกติสำหรับ Organizer
+import { getData, createEvent } from "@/libs/fetch";
+import EventForm from "@/components/Event/EventForm"; 
+import Notification from "@/components/Notification/Notification";
+
 dayjs.extend(utc);
 
-export default function CreateEventPage() {
+export default function OrganizerCreateEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [country, setCountry] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [country, setCountry] = useState([])
 
   const [notification, setNotification] = useState({
     isVisible: false,
     isError: false,
-    message: '',
+    message: "",
   });
 
   const showNotification = (msg, isError = false) => {
-    setNotification({
-      isVisible: true,
-      isError: isError,
-      message: msg,
-    });
+    setNotification({ isVisible: true, isError, message: msg });
     setTimeout(() => {
       setNotification((prev) => ({ ...prev, isVisible: false }));
     }, 3000);
@@ -37,6 +34,23 @@ export default function CreateEventPage() {
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
+
+  const fetchLocationData = async () => {
+    try {
+      const res = await getData('users/countrys');
+      if (res?.data?.length > 0) {
+        const resCity = await getData(`users/country/${res.data[0].id}/citys`);
+        setCountry(resCity?.data || []);
+      }
+    } catch (err) {
+      console.error("Fetch location failed", err);
+      showNotification("ไม่สามารถดึงข้อมูลสถานที่ได้", true);
+    }
+  };
+
+  useEffect(() => {
+    fetchLocationData();
+  }, []);
 
   useEffect(() => {
     const getCookie = (name) => {
@@ -50,55 +64,26 @@ export default function CreateEventPage() {
         const base64Url = token.split('.')[1];
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split('')
-            .map(function (c) {
-              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            })
-            .join('')
+          atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
         );
         return JSON.parse(jsonPayload);
-      } catch (e) {
-        return null;
-      }
+      } catch (e) { return null; }
     };
 
     const token = getCookie('token');
     if (token) {
       const decoded = parseJwt(token);
       if (decoded) {
-        setCurrentUserId(decoded.id || decoded.userId);
+        setCurrentUserId(decoded.id || decoded.userId); 
       }
     } else {
-      showNotification('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง', true);
       router.push('/login');
     }
   }, [router]);
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
-    try {
-      const res = await getData('users/countrys');
-      if (res?.data?.length > 0) {
-        const resCity = await getData(`users/country/${res?.data[0].id}/citys`)
-        setCountry(resCity?.data || [])
-      }
-    } catch (error) {
-      console.error("Fetch location failed", error);
-    }
-  }
-
   const handleCreate = async (values) => {
     if (!currentUserId) {
-      showNotification('ไม่พบข้อมูลผู้ใช้งาน', true);
-      return;
-    }
-
-    if (values.eventSlideShow && values.eventSlideShow.length > 3) {
-      showNotification('รูปภาพสไลด์โชว์ห้ามเกิน 3 ไฟล์', true);
+      showNotification('ไม่พบข้อมูลผู้ใช้งาน กรุณาล็อกอินใหม่', true);
       return;
     }
 
@@ -107,10 +92,11 @@ export default function CreateEventPage() {
       const formData = new FormData();
 
       formData.append('eventName', values.eventName);
-      formData.append('eventDesc', values.eventDescription);
+      formData.append('eventDesc', values.eventDescription); 
       formData.append('eventTypeId', values.eventType);
       formData.append('location', values.location);
-      formData.append('createdBy', currentUserId);
+      formData.append('createdBy', currentUserId); 
+      formData.append('hostOrganisation', values.hostOrganization || '');
 
       const startDateStr = values.startDate
         ? dayjs(values.startDate).utc().format('YYYY-MM-DDTHH:mm:ss')
@@ -121,6 +107,7 @@ export default function CreateEventPage() {
 
       formData.append('startDate', startDateStr);
       formData.append('endDate', endDateStr);
+      
       formData.append('contactEmail', values.contactEmail || '');
       formData.append('contactPhone', values.contactPhone || '');
       formData.append('contactLine', values.contactLine || '');
@@ -136,28 +123,26 @@ export default function CreateEventPage() {
         formData.append('eventMap', values.eventMap[0].originFileObj);
       }
 
-      const slides = [];
-      if (values.slideshowSlot1?.[0]?.originFileObj)
-        slides.push(values.slideshowSlot1[0].originFileObj);
-      if (values.slideshowSlot2?.[0]?.originFileObj)
-        slides.push(values.slideshowSlot2[0].originFileObj);
-      if (values.slideshowSlot3?.[0]?.originFileObj)
-        slides.push(values.slideshowSlot3[0].originFileObj);
-
-      slides.forEach((file) => {
-        formData.append('eventSlideshow', file);
+      const slideFields = ['slideshowSlot1', 'slideshowSlot2', 'slideshowSlot3'];
+      slideFields.forEach(field => {
+        if (values[field]?.[0]?.originFileObj) {
+          formData.append('eventSlideshow', values[field][0].originFileObj);
+        }
       });
 
+      // เรียกฟังก์ชันสำหรับ Organizer โดยเฉพาะ
       await createEvent(formData);
-
-      showNotification('สร้างกิจกรรมสำเร็จ!', false);
+      showNotification('สร้างกิจกรรมสำเร็จแล้ว!', false);
+      
       setTimeout(() => {
-        router.push('/home#organizer-section');
-      }, 1500);
+        router.push('/organizer/event'); 
+      }, 2000);
+
     } catch (error) {
-      console.error('Error creating event:', error);
-      // showNotification(error.message || 'สร้างกิจกรรมไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', true);
-      showNotification('สร้างกิจกรรมไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', true);
+      console.error('Error:', error);
+      const errMsg = error.response?.data?.message || error.message || 'เกิดข้อผิดพลาดในการสร้างกิจกรรม';
+      showNotification(errMsg, true);
+    } finally {
       setLoading(false);
     }
   };
@@ -170,20 +155,17 @@ export default function CreateEventPage() {
         isError={notification.isError}
         message={notification.message}
       />
-
+      
       <div className="max-w-4xl mx-auto mb-6">
-        <Title level={2}>สร้างกิจกรรมใหม่</Title>
-        <Text type="secondary">กรุณากรอกข้อมูลด้านล่างให้ครบถ้วนเพื่อเปิดกิจกรรมใหม่</Text>
+        <h1 className="text-3xl font-bold text-gray-900">Create New Event</h1>
+        <p className="text-gray-500">สร้างกิจกรรมใหม่และจัดการได้อย่างอิสระ</p>
       </div>
 
       <EventForm
         onFinish={handleCreate}
-        isLoading={loading}
-        isEditMode={false}
         locationOptions={country}
-        onValidationFailed={() =>
-          showNotification('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน', true)
-        }
+        isLoading={loading}
+        isEditMode={false} 
       />
     </div>
   );

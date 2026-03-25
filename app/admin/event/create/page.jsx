@@ -5,17 +5,13 @@ import { useRouter } from "next/navigation";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 
-import {
-  getData,
-  createEventAdmin
-} from "@/libs/fetch";
-
-import EventForm from "../components/EventForm";
+import { getData, createEventAdmin } from "@/libs/fetch";
+import EventForm from "@/components/Event/EventForm"; // <-- ชี้ไปที่ Shared Component
 import Notification from "@/components/Notification/Notification";
 
 dayjs.extend(utc);
 
-export default function CreateEventPage() {
+export default function AdminCreateEventPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState([]);
@@ -28,12 +24,7 @@ export default function CreateEventPage() {
   });
 
   const showNotification = (msg, isError = false) => {
-    setNotification({ 
-      isVisible: true, 
-      isError, 
-      message: msg 
-    });
-    
+    setNotification({ isVisible: true, isError, message: msg });
     setTimeout(() => {
       setNotification((prev) => ({ ...prev, isVisible: false }));
     }, 3000);
@@ -142,11 +133,10 @@ export default function CreateEventPage() {
       });
 
       await createEventAdmin(formData);
-
       showNotification('สร้างกิจกรรมสำเร็จแล้ว!', false);
       
       setTimeout(() => {
-        router.push('/admin/event');
+        router.push('/admin/event'); // Redirect ไปหน้า Admin Event
       }, 2000);
 
     } catch (error) {

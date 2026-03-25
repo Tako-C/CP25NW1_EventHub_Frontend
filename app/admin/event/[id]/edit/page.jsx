@@ -4,16 +4,15 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-import EventForm from "@/app/admin/event/components/EventForm";
+import EventForm from "@/components/Event/EventForm"; // <-- ชี้ไปที่ Shared Component
 import { 
   getEventByIdAdmin, 
   hardDeleteEvent, 
   deleteEventImage, 
   getUpdateImage, 
-  getData ,
+  getData,
   updateEventAdmin
 } from "@/libs/fetch";
-
 import Notification from "@/components/Notification/Notification";
 
 dayjs.extend(utc);
@@ -34,11 +33,7 @@ export default function AdminEditEventPage() {
   });
 
   const showNotification = (msg, isErr = false) => {
-    setNotification({
-      isVisible: true,
-      message: msg,
-      isError: isErr,
-    });
+    setNotification({ isVisible: true, message: msg, isError: isErr });
     setTimeout(() => {
       closeNotification();
     }, 3000);
@@ -47,7 +42,6 @@ export default function AdminEditEventPage() {
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
-  // --------------------------
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -161,8 +155,8 @@ export default function AdminEditEventPage() {
       indices.forEach(idx => formData.append("slideshowIndices", idx));
 
       await updateEventAdmin(id, formData);
-      showNotification("อัปเดตกองกิจกรรมสำเร็จ!", false);
-      setTimeout(() => router.push("/admin/event"), 1500);
+      showNotification("อัปเดตกิจกรรมสำเร็จ!", false);
+      setTimeout(() => router.push("/admin/event"), 1500); // Redirect กลับหน้า Admin
     } catch (error) {
       const msg = error.data?.message || "อัปเดตไม่สำเร็จ";
       showNotification(msg, true);
@@ -176,7 +170,7 @@ export default function AdminEditEventPage() {
     try {
       await hardDeleteEvent(id);
       showNotification("ลบกิจกรรมถาวรสำเร็จ", false);
-      setTimeout(() => router.push("/admin/event"), 1500);
+      setTimeout(() => router.push("/admin/event"), 1500); // Redirect กลับหน้า Admin
     } catch (error) {
       showNotification("ลบไม่สำเร็จ: " + error.message, true);
     } finally {
