@@ -96,20 +96,7 @@ export default function RewardCard({ reward, onEdit, onDelete, onToggleStatus, o
 
       {/* Actions */}
       <div className="border-t border-gray-100 px-4 py-3 flex items-center gap-2 bg-gray-50">
-        {/* <button
-          onClick={() => onToggleStatus(reward.id, reward.status)}
-          className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          {isActive ? (
-            <ToggleRight className="w-5 h-5 text-green-500" />
-          ) : (
-            <ToggleLeft className="w-5 h-5 text-gray-400" />
-          )}
-          {isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"}
-        </button> */}
-
         <div className="flex-1" />
-
         <button
           onClick={() => onEdit(reward.id)}
           className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
