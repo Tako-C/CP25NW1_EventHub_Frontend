@@ -20,85 +20,99 @@ const PALETTE = {
 
 const getPalette = (palette) => ({ ...PALETTE, ...(palette || {}) });
 
+// ─── HELPER: กรอง hourly slots ที่ว่างออก ────────────────────────────────────
+// เก็บเฉพาะ slot ที่มีค่า > 0 และ slot ติดกัน ±1 เพื่อให้เห็น context
+function filterHourlyData(hourlyStats) {
+  if (!hourlyStats || !hourlyStats.length) return [];
+  const allZero = hourlyStats.every((h) => h.total === 0);
+  if (allZero) return hourlyStats;
+
+  const activeIndices = new Set();
+  hourlyStats.forEach((h, i) => {
+    if (h.total > 0) {
+      if (i > 0) activeIndices.add(i - 1);
+      activeIndices.add(i);
+      if (i < hourlyStats.length - 1) activeIndices.add(i + 1);
+    }
+  });
+  return hourlyStats.filter((_, i) => activeIndices.has(i));
+}
+
 // ─── CHART COMPONENTS ─────────────────────────────────────────────────────────
 
 // RegistrationByTimeChart
-// data: { hourlyStats: [{hourRange, total}] }
-// from API: dashboard/events/${id}/registrations
 export const RegistrationByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
 
-  const chartData = (data?.hourlyStats || []).map((h) => ({
+  const filtered = filterHourlyData(data?.hourlyStats);
+  const chartData = filtered.map((h) => ({
     time: h.hourRange,
     value: h.total,
-    type: "ทั้งหมด",
   }));
 
   if (!chartData.length)
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
   return (
     <Column
       data={chartData}
       xField="time"
       yField="value"
-      seriesField="type"
-      color={p.primary}
-      isGroup
+      color={p.primary[0]}
       label={false}
-      legend={{ position: "top-right" }}
-      height={260}
+      legend={false}
+      height={240}
       xAxis={{
-        label: { autoRotate: true, style: { fontSize: 10 } },
+        label: { autoRotate: true, style: { fontSize: 11 } },
         title: { text: "ช่วงเวลา" },
       }}
-      yAxis={{ title: { text: "จำนวนคน" } }}
+      yAxis={{ title: { text: "จำนวนคน" }, minLimit: 0 }}
+      tooltip={(datum) => ({
+        name: datum.time,
+        value: `${datum.value} คน`,
+      })}
     />
   );
 };
 
 // CheckinByTimeChart
-// data: { hourlyStats: [{hourRange, total}] }
-// from API: dashboard/events/${id}/check-ins
 export const CheckinByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
 
-  const chartData = (data?.hourlyStats || []).map((h) => ({
+  const filtered = filterHourlyData(data?.hourlyStats);
+  const chartData = filtered.map((h) => ({
     time: h.hourRange,
     value: h.total,
-    type: "ทั้งหมด",
   }));
 
   if (!chartData.length)
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
+
+  const checkinColor = (p.checkin || ["#0F766E"])[0];
 
   return (
     <Column
       data={chartData}
       xField="time"
       yField="value"
-      seriesField="type"
-      color={p.checkin || ["#0F766E", "#14B8A6", "#2DD4BF"]}
-      isGroup
+      color={checkinColor}
       label={false}
-      legend={{ position: "top-right" }}
-      height={260}
+      legend={false}
+      height={240}
       xAxis={{
-        label: { autoRotate: true, style: { fontSize: 10 } },
+        label: { autoRotate: true, style: { fontSize: 11 } },
         title: { text: "ช่วงเวลา" },
       }}
-      yAxis={{ title: { text: "จำนวนคน" } }}
+      yAxis={{ title: { text: "จำนวนคน" }, minLimit: 0 }}
+      tooltip={(datum) => ({
+        name: datum.time,
+        value: `${datum.value} คน`,
+      })}
     />
   );
 };
 
 // OccupationChart
-// data: [{jobName, total}]
-// from API: dashboard/events/${id}/jobs
 export const OccupationChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -107,9 +121,7 @@ export const OccupationChart = ({ palette, data }) => {
   }));
 
   if (!chartData.length)
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
   return (
     <Column
@@ -126,13 +138,15 @@ export const OccupationChart = ({ palette, data }) => {
         title: { text: "อาชีพ" },
       }}
       yAxis={{ title: { text: "จำนวนคน" } }}
+      tooltip={(datum) => ({
+        name: datum.occupation,
+        value: `${datum.count} คน`, 
+      })}
     />
   );
 };
 
 // ProvinceChart
-// data: [{cityName, total}]
-// from API: dashboard/events/${id}/cities
 export const ProvinceChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -141,9 +155,7 @@ export const ProvinceChart = ({ palette, data }) => {
   }));
 
   if (!chartData.length)
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
   return (
     <Column
@@ -160,13 +172,15 @@ export const ProvinceChart = ({ palette, data }) => {
         title: { text: "จังหวัด" },
       }}
       yAxis={{ title: { text: "จำนวนคน" } }}
+      tooltip={(datum) => ({
+        name: datum.province,
+        value: `${datum.count} คน`, 
+      })}
     />
   );
 };
 
 // RolePieChart
-// data: [{roleName, total, percentage}]
-// from API: dashboard/events/${id}/roles
 export const RolePieChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -176,9 +190,7 @@ export const RolePieChart = ({ palette, data }) => {
   const total = chartData.reduce((s, d) => s + d.value, 0);
 
   if (!chartData.length)
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
   return (
     <Pie
@@ -194,13 +206,15 @@ export const RolePieChart = ({ palette, data }) => {
       }}
       legend={{ position: "bottom" }}
       height={280}
+      tooltip={(datum) => ({
+        name: datum.type,
+        value: `${datum.value} คน (${((datum.value / total) * 100).toFixed(1)}%)`, 
+      })}
     />
   );
 };
 
 // AgeChart
-// data: [{ageRange, total}]
-// from API: dashboard/events/${id}/ages
 export const AgeChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -209,9 +223,7 @@ export const AgeChart = ({ palette, data }) => {
   }));
 
   if (!chartData.length)
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
   return (
     <Column
@@ -225,13 +237,15 @@ export const AgeChart = ({ palette, data }) => {
       height={240}
       xAxis={{ title: { text: "ช่วงอายุ" } }}
       yAxis={{ title: { text: "จำนวนคน" } }}
+      tooltip={(datum) => ({
+        name: datum.age,
+        value: `${datum.value} คน`, 
+      })}
     />
   );
 };
 
 // GenderPieChart
-// data: [{genderName, total}]
-// from API: dashboard/events/${id}/genders
 export const GenderPieChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -241,9 +255,7 @@ export const GenderPieChart = ({ palette, data }) => {
   const total = chartData.reduce((s, d) => s + d.value, 0);
 
   if (!chartData.length)
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
   return (
     <Pie
@@ -259,77 +271,81 @@ export const GenderPieChart = ({ palette, data }) => {
       }}
       legend={{ position: "bottom" }}
       height={240}
+      tooltip={(datum) => ({
+        name: datum.type,
+        value: `${datum.value} คน (${((datum.value / total) * 100).toFixed(1)}%)`, 
+      })}
     />
   );
 };
 
 // VisitorSubmittedChart
-// data: { hourlyPostSurveyStats: [{hourRange, total}] }
-// from API: dashboard/events/${id}/surveys/visitor/stats
 export const VisitorSubmittedChart = ({ palette, data }) => {
   const p = getPalette(palette);
-  const chartData = (data?.hourlyPostSurveyStats || []).map((h) => ({
+
+  const filtered = filterHourlyData(data?.hourlyPostSurveyStats);
+  const chartData = filtered.map((h) => ({
     time: h.hourRange,
     value: h.total,
-    type: "Post Survey",
   }));
 
   if (!chartData.length)
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
   return (
     <Column
       data={chartData}
       xField="time"
       yField="value"
-      seriesField="type"
-      color={p.survey}
-      isGroup
+      color={(p.survey || [])[0] || "#14B8A6"}
       label={false}
-      legend={{ position: "top-right" }}
-      height={240}
-      xAxis={{ label: { autoRotate: true, style: { fontSize: 10 } } }}
+      legend={false}
+      height={220}
+      xAxis={{ label: { autoRotate: true, style: { fontSize: 11 } } }}
+      yAxis={{ minLimit: 0 }}
+      tooltip={(datum) => ({
+        name: datum.time,
+        value: `${datum.value} คน`, 
+      })}
     />
   );
 };
 
 // ExhibitorSubmittedChart
-// data: { hourlyPostSurveyStats: [{hourRange, total}] }
-// from API: dashboard/events/${id}/surveys/exhibitor/stats
 export const ExhibitorSubmittedChart = ({ palette, data }) => {
   const p = getPalette(palette);
-  const chartData = (data?.hourlyPostSurveyStats || []).map((h) => ({
+
+  const filtered = filterHourlyData(data?.hourlyPostSurveyStats);
+  const chartData = filtered.map((h) => ({
     time: h.hourRange,
     value: h.total,
-    type: "Post Survey",
   }));
 
   if (!chartData.length)
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
+
+  const exhibitorColor = (p.surveyExhibitor || ["#F97316"])[0];
 
   return (
     <Column
       data={chartData}
       xField="time"
       yField="value"
-      seriesField="type"
-      color={p.surveyExhibitor || ["#F97316", "#6366F1", "#14B8A6"]}
-      isGroup
+      color={exhibitorColor}
       label={false}
-      legend={{ position: "top-right" }}
-      height={240}
-      xAxis={{ label: { autoRotate: true, style: { fontSize: 10 } } }}
+      legend={false}
+      height={220}
+      xAxis={{ label: { autoRotate: true, style: { fontSize: 11 } } }}
+      yAxis={{ minLimit: 0 }}
+      tooltip={(datum) => ({
+        name: datum.time,
+        value: `${datum.value} คน`, 
+      })}
     />
   );
 };
 
 // ─── SATISFACTION WIDGET ──────────────────────────────────────────────────────
-// data: [{answer, count, percentage}]  (answer = "1".."5")
-// from API: dashboard/events/${id}/surveys/visitor/satisfaction  (or /exhibitor/satisfaction)
 
 const SatisfactionBar = ({ level, count, total, color }) => {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
@@ -357,7 +373,6 @@ const SatisfactionBar = ({ level, count, total, color }) => {
 };
 
 export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
-  // data: [{answer: "5", count: 4}, ...]  → convert to map {5: 4, ...}
   const dataMap = {};
   (data || []).forEach((d) => {
     dataMap[Number(d.answer)] = d.count;
@@ -404,14 +419,12 @@ export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
 };
 
 // ─── ANSWER RATIO WIDGET ──────────────────────────────────────────────────────
-// data: [{question, answered, total}]  — wire up when endpoint available
+
 export const AnswerRatioChart = ({ palette, data }) => {
   const p = getPalette(palette);
 
   if (!data || !data.length) {
-    return (
-      <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
   }
 
   const chartData = data
@@ -446,8 +459,6 @@ export const AnswerRatioChart = ({ palette, data }) => {
 };
 
 // ─── SUGGESTION TABLE ─────────────────────────────────────────────────────────
-// data: [{responderRole, answer, surveysType, keyword, sentiment}]
-// from API: dashboard/events/${id}/surveys/text-responses
 
 const sentimentColor = { POSITIVE: "green", NEUTRAL: "blue", NEGATIVE: "red" };
 
@@ -457,9 +468,7 @@ const suggestionColumns = [
     title: "Role",
     dataIndex: "responderRole",
     key: "responderRole",
-    render: (r) => (
-      <Tag color={r === "VISITOR" ? "blue" : "purple"}>{r}</Tag>
-    ),
+    render: (r) => <Tag color={r === "VISITOR" ? "blue" : "purple"}>{r}</Tag>,
   },
   { title: "Feedback", dataIndex: "answer", key: "answer" },
   {

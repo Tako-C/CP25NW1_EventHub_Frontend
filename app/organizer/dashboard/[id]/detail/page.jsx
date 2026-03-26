@@ -16,12 +16,12 @@ import { getData, postUserCheckInDashboard } from "@/libs/fetch";
 import { FormatDate } from "@/utils/format";
 
 // Components & Columns
-import StatCard from "./components/StatCard";
-import ResponsiveTable from "./components/ResponsiveTable";
-import { participantColumns, createSurveyColumns } from "./libs/columns";
+import StatCard from "@/components/Dashboard/components/StatCard";
+import ResponsiveTable from "@/components/Dashboard/components/ResponsiveTable";
+import { participantColumns, createSurveyColumns } from "@/components/Dashboard/libs/columns";
 
 // Analysis
-import AnalysisPanel from "./components/AnalysisPanel";
+import AnalysisPanel from "@/components/Dashboard/components/AnalysisPanel";
 
 // Charts
 import {
@@ -38,7 +38,7 @@ import {
   AnswerRatioChart,
   SuggestionTable,
   ChartCard,
-} from "./components/DashboardCharts";
+} from "../../../../../components/Dashboard/components/DashboardCharts";
 
 const EVENT_THEMES = {
   tech: {
