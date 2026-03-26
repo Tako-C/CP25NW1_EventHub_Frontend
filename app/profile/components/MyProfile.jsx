@@ -30,6 +30,16 @@ export default function ProfilePage({
     message: "",
   });
 
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false);
+
+  const getMissingFields = (p) => {
+    const missing = [];
+    if (!p?.job?.id) missing.push("อาชีพ");
+    if (!p?.country?.id) missing.push("ประเทศ");
+    if (!p?.city?.id) missing.push("จังหวัด / เมือง");
+    return missing;
+  };
+
   const showNotification = (msg, isError = false) => {
     setNotification({
       isVisible: true,
@@ -88,6 +98,11 @@ export default function ProfilePage({
   };
 
   const handleSave = async () => {
+    const missing = getMissingFields(updateProfile);
+    if (missing.length > 0) {
+      setShowIncompleteModal(true);
+      return;
+    }
 const cleanPayload = {
     firstName: updateProfile.firstName,
     lastName: updateProfile.lastName,
@@ -181,6 +196,52 @@ const cleanPayload = {
         isError={notification.isError}
         message={notification.message}
       />
+
+      {/* Incomplete Profile Modal */}
+      {showIncompleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <h3 className="text-base font-bold text-gray-800">กรุณากรอกข้อมูลให้ครบถ้วน</h3>
+            </div>
+            <p className="text-sm text-gray-500 mb-3 ml-[52px]">
+              ยังไม่ได้ระบุข้อมูลต่อไปนี้:
+            </p>
+            <ul className="ml-[52px] mb-5 space-y-1">
+              {getMissingFields(updateProfile).map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm text-red-500 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => setShowIncompleteModal(false)}
+              className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-all text-sm"
+            >
+              กลับไปแก้ไข
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Incomplete profile banner (view mode) */}
+      {!isEditing && getMissingFields(profile).length > 0 && (
+        <div className="mb-5 flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p className="text-sm text-red-600">
+            กรุณากรอกข้อมูลให้ครบถ้วน:{" "}
+            <span className="font-semibold">{getMissingFields(profile).join(", ")}</span>
+          </p>
+        </div>
+      )}
       
       <div className="mb-6 md:mb-8 border-b border-gray-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -319,40 +380,55 @@ const cleanPayload = {
               </div>
             </div>
 
-            <SelectField
-              label="อาชีพ"
-              value={updateProfile?.job?.id}
-              options={jobs}
-              onChange={(id) => {
-                const selected = jobs.find((j) => j.id == id);
-                handleChange("job", selected);
-              }}
-              isEditing={isEditing}
-              icon={<Briefcase size={18} />}
-              placeholder="เลือกอาชีพ"
-            />
+            <div>
+              <SelectField
+                label="อาชีพ"
+                value={updateProfile?.job?.id}
+                options={jobs}
+                onChange={(id) => {
+                  const selected = jobs.find((j) => j.id == id);
+                  handleChange("job", selected);
+                }}
+                isEditing={isEditing}
+                icon={<Briefcase size={18} />}
+                placeholder="เลือกอาชีพ"
+              />
+              {!isEditing && !profile?.job?.id && (
+                <p className="mt-1 ml-1 text-xs text-red-500">กรุณาระบุอาชีพของคุณ</p>
+              )}
+            </div>
 
-            <SelectField
-              label="ประเทศ"
-              value={updateProfile?.country?.id}
-              options={countries}
-              onChange={handleCountryChange}
-              isEditing={isEditing}
-              icon={<Flag size={18} />}
-              placeholder="เลือกประเทศ"
-            />
-            <SelectField
-              label="จังหวัด / เมือง"
-              value={updateProfile?.city?.id}
-              options={cities}
-              onChange={(id) => {
-                const selected = cities.find((c) => c.id == id);
-                handleChange("city", selected);
-              }}
-              isEditing={isEditing}
-              icon={<MapPin size={18} />}
-              placeholder="เลือกจังหวัด / เมือง"
-            />
+            <div>
+              <SelectField
+                label="ประเทศ"
+                value={updateProfile?.country?.id}
+                options={countries}
+                onChange={handleCountryChange}
+                isEditing={isEditing}
+                icon={<Flag size={18} />}
+                placeholder="เลือกประเทศ"
+              />
+              {!isEditing && !profile?.country?.id && (
+                <p className="mt-1 ml-1 text-xs text-red-500">กรุณาระบุประเทศของคุณ</p>
+              )}
+            </div>
+            <div>
+              <SelectField
+                label="จังหวัด / เมือง"
+                value={updateProfile?.city?.id}
+                options={cities}
+                onChange={(id) => {
+                  const selected = cities.find((c) => c.id == id);
+                  handleChange("city", selected);
+                }}
+                isEditing={isEditing}
+                icon={<MapPin size={18} />}
+                placeholder="เลือกจังหวัด / เมือง"
+              />
+              {!isEditing && !profile?.city?.id && (
+                <p className="mt-1 ml-1 text-xs text-red-500">กรุณาระบุจังหวัด / เมืองของคุณ</p>
+              )}
+            </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1.5 ml-1">
