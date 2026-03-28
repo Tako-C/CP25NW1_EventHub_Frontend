@@ -208,7 +208,7 @@ export default function RewardDetailPage() {
   const isNotStarted = startDate > now;
   const daysLeft = Math.ceil((endDate - now) / (1000 * 60 * 60 * 24));
   const isOutOfStock = reward.quantity <= 0;
-  const isNotEligible = eligible === false;
+  const isNotEligible = eligible === false || eligible === null || eligible === undefined;
   const canRedeem =
     !isExpired &&
     !isNotStarted &&
@@ -256,7 +256,7 @@ export default function RewardDetailPage() {
           </p>
         </div>
 
-        {eligible !== null &&
+        {eligible !== null && eligible !== undefined &&
           (redeemed ? (
             <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
               <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
@@ -361,10 +361,9 @@ export default function RewardDetailPage() {
             </p>
           </div>
         </div>
-
         <button
           onClick={handleRedeem}
-          disabled={!canRedeem || redeeming}
+          disabled={true}
           className={`w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-all duration-200
             ${
               redeemed
@@ -398,7 +397,7 @@ export default function RewardDetailPage() {
             <>
               <Gift className="w-5 h-5" /> กรุณาเข้าสู่ระบบถึงจะรับรางวัลได้
             </>
-          ) : eventUserCheck ? (
+          ) : eventUserCheck || !canRedeem ? (
             <>
               <Gift className="w-5 h-5" /> ไม่สามารถรับรางวัลได้
             </>
@@ -409,7 +408,7 @@ export default function RewardDetailPage() {
           )}
         </button>
 
-        {eligible === false &&
+        {eligible === false || eligible === undefined &&
           reward.requirementType !== "FREE" &&
           !redeemed &&
           !isExpired && (
