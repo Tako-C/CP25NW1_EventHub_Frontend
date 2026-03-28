@@ -1,6 +1,7 @@
 "use client";
 import { Pie, Column } from "@ant-design/plots";
-import { Card, Table, Tag, Rate } from "antd";
+import { Card, Table, Tag, Rate, Select } from "antd";
+import { useState } from "react";
 
 const PALETTE = {
   primary: ["#2563EB", "#0EA5E9", "#8B5CF6"],
@@ -17,6 +18,40 @@ const PALETTE = {
   pieGender: ["#0EA5E9", "#F43F5E", "#14B8A6"],
   survey: ["#14B8A6", "#6366F1", "#F97316"],
 };
+
+// ─── STANDARD KEYWORDS ────────────────────────────────────────────────────────
+export const STANDARD_KEYWORDS = [
+  // Venue & Facilities
+  "สถานที่ (Venue)",
+  "การเดินทาง (Accessibility)",
+  "ที่จอดรถ (Parking)",
+  "ห้องน้ำ (Restroom)",
+  "แอร์/อุณหภูมิ (Temperature)",
+  "ความสะอาด (Cleanliness)",
+  "ป้ายบอกทาง (Signage)",
+  // Technology & Infrastructure
+  "อินเทอร์เน็ต (WiFi)",
+  "ระบบลงทะเบียน (Registration)",
+  "แอปพลิเคชัน (Mobile App)",
+  "ระบบจองคิว (Queue System)",
+  "ระบบเสียง/ภาพ (AV System)",
+  // Staff & Service
+  "เจ้าหน้าที่ (Staff)",
+  "วิทยากร (Speaker)",
+  "พิธีกร (MC)",
+  "การบริการ (Service)",
+  "ความรวดเร็ว (Efficiency)",
+  // Content & Activities
+  "เนื้อหา (Content)",
+  "เวิร์กชอป (Workshop)",
+  "บูธแสดงสินค้า (Exhibitor)",
+  "ของสมนาคุณ (Giveaway)",
+  "ระยะเวลา (Timing)",
+  // Catering
+  "อาหาร (Food)",
+  "เครื่องดื่ม (Beverage)",
+  "ความหลากหลาย (Variety)",
+];
 
 const getPalette = (palette) => ({ ...PALETTE, ...(palette || {}) });
 
@@ -40,7 +75,7 @@ function filterHourlyData(hourlyStats) {
 
 // ─── CHART COMPONENTS ─────────────────────────────────────────────────────────
 
-// RegistrationByTimeChart
+// RegistrationByTimeChart — สีฟ้า (Registration)
 export const RegistrationByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
 
@@ -54,28 +89,44 @@ export const RegistrationByTimeChart = ({ palette, data }) => {
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
   return (
-    <Column
-      data={chartData}
-      xField="time"
-      yField="value"
-      color={p.primary[0]}
-      label={false}
-      legend={false}
-      height={240}
-      xAxis={{
-        label: { autoRotate: true, style: { fontSize: 11 } },
-        title: { text: "ช่วงเวลา" },
-      }}
-      yAxis={{ title: { text: "จำนวนคน" }, minLimit: 0 }}
-      tooltip={(datum) => ({
-        name: datum.time,
-        value: `${datum.value} คน`,
-      })}
-    />
+    <>
+      <div className="flex items-center gap-2 mb-3">
+        <span
+          className="inline-block w-3 h-3 rounded-sm"
+          style={{ background: "#BFD3F2" }}
+        />
+        <span className="text-sm font-semibold text-slate-600">
+          จำนวนคนลงทะเบียน (คน)
+        </span>
+      </div>
+      <Column
+        data={chartData}
+        xField="time"
+        yField="value"
+        style={{
+          fill: "#BFD3F2",
+        }}
+        label={{
+          position: "inside",
+          style: { fill: "#1E40AF", fontSize: 13, fontWeight: 600 },
+        }}
+        legend={false}
+        height={240}
+        xAxis={{
+          label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } },
+          title: { text: "ช่วงเวลา", style: { fontSize: 13, fontWeight: 600 } },
+        }}
+        yAxis={{
+          title: { text: "จำนวนคน", style: { fontSize: 13, fontWeight: 600 } },
+          minLimit: 0,
+        }}
+        tooltip={(datum) => ({ name: "ลงทะเบียน", value: `${datum.value} คน` })}
+      />
+    </>
   );
 };
 
-// CheckinByTimeChart
+// CheckinByTimeChart — สีเขียวน้ำทะเล (Check-in) แตกต่างจาก Registration
 export const CheckinByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
 
@@ -88,31 +139,54 @@ export const CheckinByTimeChart = ({ palette, data }) => {
   if (!chartData.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
-  const checkinColor = (p.checkin || ["#0F766E"])[0];
+  const checkinColor = "#B2E3DF"; 
+  const darkTeal = "#0F766E"; 
 
   return (
-    <Column
-      data={chartData}
-      xField="time"
-      yField="value"
-      color={checkinColor}
-      label={false}
-      legend={false}
-      height={240}
-      xAxis={{
-        label: { autoRotate: true, style: { fontSize: 11 } },
-        title: { text: "ช่วงเวลา" },
-      }}
-      yAxis={{ title: { text: "จำนวนคน" }, minLimit: 0 }}
-      tooltip={(datum) => ({
-        name: datum.time,
-        value: `${datum.value} คน`,
-      })}
-    />
+    <>
+      <div className="flex items-center gap-2 mb-3">
+        <span
+          className="inline-block w-3 h-3 rounded-sm"
+          style={{ background: checkinColor }}
+        />
+        <span className="text-sm font-semibold text-slate-600">
+          จำนวนคน Check-in (คน)
+        </span>
+      </div>
+      <Column
+        data={chartData}
+        xField="time"
+        yField="value"
+        color={checkinColor}
+        style={{
+          fill: checkinColor,
+          stroke: checkinColor,
+        }}
+        label={{
+          position: "inside", 
+          style: { 
+            fill: darkTeal, 
+            fontSize: 12, 
+            fontWeight: 700 
+          },
+        }}
+        legend={false}
+        height={240}
+        xAxis={{
+          label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } },
+          title: { text: "ช่วงเวลา", style: { fontSize: 13, fontWeight: 600 } },
+        }}
+        yAxis={{
+          title: { text: "จำนวนคน", style: { fontSize: 13, fontWeight: 600 } },
+          minLimit: 0,
+        }}
+        tooltip={(datum) => ({ name: "Check-in", value: `${datum.value} คน` })}
+      />
+    </>
   );
 };
 
-// OccupationChart
+// OccupationChart — เลขสีขาวในแท่ง
 export const OccupationChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -123,6 +197,8 @@ export const OccupationChart = ({ palette, data }) => {
   if (!chartData.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
+  const maxVal = Math.max(...chartData.map((d) => d.count), 1);
+
   return (
     <Column
       data={chartData}
@@ -131,7 +207,14 @@ export const OccupationChart = ({ palette, data }) => {
       colorField="occupation"
       color={p.accent}
       legend={false}
-      label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
+      label={{
+        position: "inside",
+        style: (datum) => ({
+          fill: datum.count / maxVal >= 0.15 ? "#fff" : "#475569",
+          fontSize: 12,
+          fontWeight: 700,
+        }),
+      }}
       height={260}
       xAxis={{
         label: { autoRotate: true, style: { fontSize: 10 } },
@@ -140,13 +223,13 @@ export const OccupationChart = ({ palette, data }) => {
       yAxis={{ title: { text: "จำนวนคน" } }}
       tooltip={(datum) => ({
         name: datum.occupation,
-        value: `${datum.count} คน`, 
+        value: `${datum.count} คน`,
       })}
     />
   );
 };
 
-// ProvinceChart
+// ProvinceChart — เลขสีขาวในแท่ง
 export const ProvinceChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -157,6 +240,8 @@ export const ProvinceChart = ({ palette, data }) => {
   if (!chartData.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
+  const maxVal = Math.max(...chartData.map((d) => d.count), 1);
+
   return (
     <Column
       data={chartData}
@@ -165,7 +250,14 @@ export const ProvinceChart = ({ palette, data }) => {
       colorField="province"
       color={p.accent}
       legend={false}
-      label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
+      label={{
+        position: "inside",
+        style: (datum) => ({
+          fill: datum.count / maxVal >= 0.15 ? "#fff" : "#475569",
+          fontSize: 12,
+          fontWeight: 700,
+        }),
+      }}
       height={260}
       xAxis={{
         label: { autoRotate: true, style: { fontSize: 10 } },
@@ -174,13 +266,13 @@ export const ProvinceChart = ({ palette, data }) => {
       yAxis={{ title: { text: "จำนวนคน" } }}
       tooltip={(datum) => ({
         name: datum.province,
-        value: `${datum.count} คน`, 
+        value: `${datum.count} คน`,
       })}
     />
   );
 };
 
-// RolePieChart
+// RolePieChart — Donut + custom legend ข้างข้าง ไม่มีปัญหา label ชนกัน
 export const RolePieChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -192,29 +284,76 @@ export const RolePieChart = ({ palette, data }) => {
   if (!chartData.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
+  const colors = p.pieRole || ["#2563EB", "#9333EA", "#F97316", "#14B8A6"];
+
   return (
-    <Pie
-      data={chartData}
-      angleField="value"
-      colorField="type"
-      color={p.pieRole}
-      radius={0.8}
-      label={{
-        position: "outside",
-        text: (item) =>
-          `${item.type}: ${((item.value / total) * 100).toFixed(1)}%`,
-      }}
-      legend={{ position: "bottom" }}
-      height={280}
-      tooltip={(datum) => ({
-        name: datum.type,
-        value: `${datum.value} คน (${((datum.value / total) * 100).toFixed(1)}%)`, 
-      })}
-    />
+    <div className="flex flex-col gap-4">
+      <Pie
+        data={chartData}
+        angleField="value"
+        colorField="type"
+        color={colors}
+        innerRadius={0.6}
+        radius={0.85}
+        label={{
+          position: "inside",
+          text: (item) =>
+            item.value / total >= 0.06
+              ? `${((item.value / total) * 100).toFixed(1)}%`
+              : "",
+          style: { fontSize: 13, fontWeight: 700, fill: "#fff" },
+        }}
+        legend={false}
+        statistic={{
+          title: {
+            content: "ทั้งหมด",
+            style: { fontSize: 12, color: "#94A3B8" },
+          },
+          content: {
+            content: `${total}`,
+            style: { fontSize: 26, fontWeight: 900, color: "#1E293B" },
+          },
+        }}
+        height={260}
+        tooltip={(datum) => ({
+          name: datum.type,
+          value: `${datum.value} คน (${((datum.value / total) * 100).toFixed(1)}%)`,
+        })}
+      />
+      {/* Custom legend แทน built-in เพื่อหลีกเลี่ยง label ชนกัน */}
+      <div className="flex flex-col gap-2 px-2">
+        {chartData.map((item, i) => (
+          <div
+            key={item.type}
+            className="flex items-center justify-between text-sm"
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block w-3 h-3 rounded-sm flex-shrink-0"
+                style={{ backgroundColor: colors[i % colors.length] }}
+              />
+              <span className="font-medium text-slate-700">{item.type}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-800">{item.value} คน</span>
+              <span
+                className="text-xs font-semibold px-1.5 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: colors[i % colors.length] + "20",
+                  color: colors[i % colors.length],
+                }}
+              >
+                {((item.value / total) * 100).toFixed(1)}%
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
-// AgeChart
+// AgeChart — เลขสีขาวในแท่ง
 export const AgeChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -225,6 +364,8 @@ export const AgeChart = ({ palette, data }) => {
   if (!chartData.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
+  const maxVal = Math.max(...chartData.map((d) => d.value), 1);
+
   return (
     <Column
       data={chartData}
@@ -233,19 +374,23 @@ export const AgeChart = ({ palette, data }) => {
       colorField="age"
       color={p.accent}
       legend={false}
-      label={{ position: "top", style: { fill: "#555", fontSize: 11 } }}
+      label={{
+        position: "inside",
+        style: (datum) => ({
+          fill: datum.value / maxVal >= 0.15 ? "#fff" : "#475569",
+          fontSize: 12,
+          fontWeight: 700,
+        }),
+      }}
       height={240}
       xAxis={{ title: { text: "ช่วงอายุ" } }}
       yAxis={{ title: { text: "จำนวนคน" } }}
-      tooltip={(datum) => ({
-        name: datum.age,
-        value: `${datum.value} คน`, 
-      })}
+      tooltip={(datum) => ({ name: datum.age, value: `${datum.value} คน` })}
     />
   );
 };
 
-// GenderPieChart
+// GenderPieChart — Donut + custom legend ด้านล่าง
 export const GenderPieChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -257,32 +402,76 @@ export const GenderPieChart = ({ palette, data }) => {
   if (!chartData.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
+  const colors = p.pieGender || ["#0EA5E9", "#F43F5E", "#14B8A6", "#A855F7"];
+
   return (
-    <Pie
-      data={chartData}
-      angleField="value"
-      colorField="type"
-      color={p.pieGender}
-      radius={0.8}
-      label={{
-        position: "inside",
-        text: (item) => `${((item.value / total) * 100).toFixed(1)}%`,
-        style: { fontSize: 16, fontWeight: "bold", fill: "#fff" },
-      }}
-      legend={{ position: "bottom" }}
-      height={240}
-      tooltip={(datum) => ({
-        name: datum.type,
-        value: `${datum.value} คน (${((datum.value / total) * 100).toFixed(1)}%)`, 
-      })}
-    />
+    <div className="flex flex-col gap-4">
+      <Pie
+        data={chartData}
+        angleField="value"
+        colorField="type"
+        color={colors}
+        innerRadius={0.6}
+        radius={0.85}
+        label={{
+          position: "inside",
+          text: (item) =>
+            item.value / total >= 0.06
+              ? `${((item.value / total) * 100).toFixed(1)}%`
+              : "",
+          style: { fontSize: 13, fontWeight: 700, fill: "#fff" },
+        }}
+        legend={false}
+        statistic={{
+          title: {
+            content: "ทั้งหมด",
+            style: { fontSize: 12, color: "#94A3B8" },
+          },
+          content: {
+            content: `${total}`,
+            style: { fontSize: 26, fontWeight: 900, color: "#1E293B" },
+          },
+        }}
+        height={240}
+        tooltip={(datum) => ({
+          name: datum.type,
+          value: `${datum.value} คน (${((datum.value / total) * 100).toFixed(1)}%)`,
+        })}
+      />
+      <div className="flex flex-col gap-2 px-2">
+        {chartData.map((item, i) => (
+          <div
+            key={item.type}
+            className="flex items-center justify-between text-sm"
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block w-3 h-3 rounded-full flex-shrink-0"
+                style={{ backgroundColor: colors[i % colors.length] }}
+              />
+              <span className="font-medium text-slate-700">{item.type}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-800">{item.value} คน</span>
+              <span
+                className="text-xs font-semibold px-1.5 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: colors[i % colors.length] + "20",
+                  color: colors[i % colors.length],
+                }}
+              >
+                {((item.value / total) * 100).toFixed(1)}%
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
-// VisitorSubmittedChart
+// VisitorSubmittedChart — สีฟ้าเข้ม (Visitor)
 export const VisitorSubmittedChart = ({ palette, data }) => {
-  const p = getPalette(palette);
-
   const filtered = filterHourlyData(data?.hourlyPostSurveyStats);
   const chartData = filtered.map((h) => ({
     time: h.hourRange,
@@ -292,29 +481,48 @@ export const VisitorSubmittedChart = ({ palette, data }) => {
   if (!chartData.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
+  const color = "#2563EB";
+
   return (
-    <Column
-      data={chartData}
-      xField="time"
-      yField="value"
-      color={(p.survey || [])[0] || "#14B8A6"}
-      label={false}
-      legend={false}
-      height={220}
-      xAxis={{ label: { autoRotate: true, style: { fontSize: 11 } } }}
-      yAxis={{ minLimit: 0 }}
-      tooltip={(datum) => ({
-        name: datum.time,
-        value: `${datum.value} คน`, 
-      })}
-    />
+    <>
+      <div className="flex items-center gap-2 mb-3">
+        <span
+          className="inline-block w-3 h-3 rounded-sm"
+          style={{ background: color }}
+        />
+        <span className="text-sm font-semibold text-slate-600">
+          Visitor ส่งแบบสอบถาม (คน)
+        </span>
+      </div>
+      <Column
+        data={chartData}
+        xField="time"
+        yField="value"
+        color={color}
+        label={{
+          position: "inside",
+          style: { fill: "#fff", fontSize: 12, fontWeight: 600 },
+        }}
+        legend={false}
+        height={220}
+        xAxis={{
+          label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } },
+        }}
+        yAxis={{
+          minLimit: 0,
+          title: { text: "จำนวนคน", style: { fontSize: 12 } },
+        }}
+        tooltip={(datum) => ({
+          name: "Visitor ส่ง Survey",
+          value: `${datum.value} คน`,
+        })}
+      />
+    </>
   );
 };
 
-// ExhibitorSubmittedChart
+// ExhibitorSubmittedChart — สีส้ม (Exhibitor) แตกต่างจาก Visitor ชัดเจน
 export const ExhibitorSubmittedChart = ({ palette, data }) => {
-  const p = getPalette(palette);
-
   const filtered = filterHourlyData(data?.hourlyPostSurveyStats);
   const chartData = filtered.map((h) => ({
     time: h.hourRange,
@@ -324,24 +532,43 @@ export const ExhibitorSubmittedChart = ({ palette, data }) => {
   if (!chartData.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
-  const exhibitorColor = (p.surveyExhibitor || ["#F97316"])[0];
+  const color = "#EA580C";
 
   return (
-    <Column
-      data={chartData}
-      xField="time"
-      yField="value"
-      color={exhibitorColor}
-      label={false}
-      legend={false}
-      height={220}
-      xAxis={{ label: { autoRotate: true, style: { fontSize: 11 } } }}
-      yAxis={{ minLimit: 0 }}
-      tooltip={(datum) => ({
-        name: datum.time,
-        value: `${datum.value} คน`, 
-      })}
-    />
+    <>
+      <div className="flex items-center gap-2 mb-3">
+        <span
+          className="inline-block w-3 h-3 rounded-sm"
+          style={{ background: color }}
+        />
+        <span className="text-sm font-semibold text-slate-600">
+          Exhibitor ส่งแบบสอบถาม (คน)
+        </span>
+      </div>
+      <Column
+        data={chartData}
+        xField="time"
+        yField="value"
+        color={color}
+        label={{
+          position: "inside",
+          style: { fill: color, fontSize: 12, fontWeight: 600 },
+        }}
+        legend={false}
+        height={220}
+        xAxis={{
+          label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } },
+        }}
+        yAxis={{
+          minLimit: 0,
+          title: { text: "จำนวนคน", style: { fontSize: 12 } },
+        }}
+        tooltip={(datum) => ({
+          name: "Exhibitor ส่ง Survey",
+          value: `${datum.value} คน`,
+        })}
+      />
+    </>
   );
 };
 
@@ -458,9 +685,112 @@ export const AnswerRatioChart = ({ palette, data }) => {
   );
 };
 
-// ─── SUGGESTION TABLE ─────────────────────────────────────────────────────────
+// ─── SENTIMENT DONUT CHART ────────────────────────────────────────────────────
 
-const sentimentColor = { POSITIVE: "green", NEUTRAL: "blue", NEGATIVE: "red" };
+export const SentimentDonutChart = ({ data }) => {
+  const counts = { POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0 };
+  (data || []).forEach((item) => {
+    if (item.sentiment && counts[item.sentiment] !== undefined) {
+      counts[item.sentiment]++;
+    }
+  });
+
+  const total = counts.POSITIVE + counts.NEUTRAL + counts.NEGATIVE;
+
+  const chartData = [
+    { type: "Positive 😊", value: counts.POSITIVE },
+    { type: "Neutral 😐", value: counts.NEUTRAL },
+    { type: "Negative 😞", value: counts.NEGATIVE },
+  ].filter((d) => d.value > 0);
+
+  if (!total)
+    return (
+      <div className="text-center py-10 text-gray-400">
+        ไม่มีข้อมูล Sentiment
+      </div>
+    );
+
+  const SENTIMENT_COLORS = ["#22C55E", "#F59E0B", "#EF4444"];
+
+  return (
+    <div>
+      {/* Summary pill badges */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
+          <span className="text-xl">😊</span>
+          <div>
+            <div className="text-xs font-bold text-green-600 uppercase tracking-wide">
+              Positive
+            </div>
+            <div className="text-2xl font-black text-green-700">
+              {counts.POSITIVE}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2">
+          <span className="text-xl">😐</span>
+          <div>
+            <div className="text-xs font-bold text-amber-600 uppercase tracking-wide">
+              Neutral
+            </div>
+            <div className="text-2xl font-black text-amber-700">
+              {counts.NEUTRAL}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
+          <span className="text-xl">😞</span>
+          <div>
+            <div className="text-xs font-bold text-red-600 uppercase tracking-wide">
+              Negative
+            </div>
+            <div className="text-2xl font-black text-red-700">
+              {counts.NEGATIVE}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Pie
+        data={chartData}
+        angleField="value"
+        colorField="type"
+        color={SENTIMENT_COLORS}
+        innerRadius={0.62}
+        radius={0.88}
+        label={{
+          position: "outside",
+          text: (item) =>
+            `${item.type}: ${item.value} (${((item.value / total) * 100).toFixed(1)}%)`,
+          style: { fontSize: 13, fontWeight: 600 },
+        }}
+        legend={{
+          position: "bottom",
+          itemName: { style: { fontSize: 14, fontWeight: 600 } },
+        }}
+        statistic={{
+          title: {
+            content: "ทั้งหมด",
+            style: { fontSize: 13, color: "#64748B" },
+          },
+          content: {
+            content: `${total}`,
+            style: { fontSize: 28, fontWeight: 900, color: "#1E293B" },
+          },
+        }}
+        height={300}
+        tooltip={(datum) => ({
+          name: datum.type,
+          value: `${datum.value} รายการ (${((datum.value / total) * 100).toFixed(1)}%)`,
+        })}
+      />
+    </div>
+  );
+};
+
+// ─── SUGGESTION TABLE WITH KEYWORD FILTER ────────────────────────────────────
+
+const sentimentColor = { POSITIVE: "green", NEUTRAL: "gold", NEGATIVE: "red" };
 
 const suggestionColumns = [
   { title: "No.", dataIndex: "no", key: "no", width: 55 },
@@ -486,7 +816,11 @@ const suggestionColumns = [
     dataIndex: "keyword",
     key: "keyword",
     render: (k) =>
-      k ? <Tag>{k}</Tag> : <span className="text-gray-300">-</span>,
+      k ? (
+        <Tag color="geekblue">{k}</Tag>
+      ) : (
+        <span className="text-gray-300">-</span>
+      ),
   },
   {
     title: "Sentiment",
@@ -494,7 +828,10 @@ const suggestionColumns = [
     key: "sentiment",
     render: (s) =>
       s ? (
-        <Tag color={sentimentColor[s]}>{s}</Tag>
+        <Tag color={sentimentColor[s]}>
+          {s === "POSITIVE" ? "😊 " : s === "NEUTRAL" ? "😐 " : "😞 "}
+          {s}
+        </Tag>
       ) : (
         <span className="text-gray-300">-</span>
       ),
@@ -502,7 +839,17 @@ const suggestionColumns = [
 ];
 
 export const SuggestionTable = ({ data }) => {
-  const tableData = (data || []).map((item, idx) => ({
+  const [selectedKeyword, setSelectedKeyword] = useState(null);
+  const [selectedSentiment, setSelectedSentiment] = useState(null);
+
+  const filteredData = (data || []).filter((item) => {
+    const keywordMatch = !selectedKeyword || item.keyword === selectedKeyword;
+    const sentimentMatch =
+      !selectedSentiment || item.sentiment === selectedSentiment;
+    return keywordMatch && sentimentMatch;
+  });
+
+  const tableData = filteredData.map((item, idx) => ({
     ...item,
     key: idx,
     no: idx + 1,
@@ -519,6 +866,58 @@ export const SuggestionTable = ({ data }) => {
       className="rounded-2xl border border-slate-200 bg-white/95 shadow-sm"
       styles={{ body: { padding: "24px" } }}
     >
+      {/* ─── Filters ─── */}
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            กรองตาม Keyword
+          </label>
+          <Select
+            allowClear
+            placeholder="ทั้งหมด"
+            value={selectedKeyword}
+            onChange={setSelectedKeyword}
+            style={{ width: 240 }}
+            options={STANDARD_KEYWORDS.map((kw) => ({ label: kw, value: kw }))}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            กรองตาม Sentiment
+          </label>
+          <Select
+            allowClear
+            placeholder="ทั้งหมด"
+            value={selectedSentiment}
+            onChange={setSelectedSentiment}
+            style={{ width: 180 }}
+            options={[
+              { label: "😊 Positive", value: "POSITIVE" },
+              { label: "😐 Neutral", value: "NEUTRAL" },
+              { label: "😞 Negative", value: "NEGATIVE" },
+            ]}
+          />
+        </div>
+        {(selectedKeyword || selectedSentiment) && (
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setSelectedKeyword(null);
+                setSelectedSentiment(null);
+              }}
+              className="text-xs text-slate-400 hover:text-slate-700 underline pb-1"
+            >
+              ล้างตัวกรอง
+            </button>
+          </div>
+        )}
+        <div className="flex items-end ml-auto">
+          <span className="text-xs text-slate-400 pb-1">
+            แสดง {tableData.length} / {(data || []).length} รายการ
+          </span>
+        </div>
+      </div>
+
       <Table
         columns={suggestionColumns}
         dataSource={tableData}
