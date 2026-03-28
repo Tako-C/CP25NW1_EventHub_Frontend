@@ -262,10 +262,7 @@ export default function PostSurveyForm() {
             {surveyData?.questions?.map((q, index) => (
               <div
                 key={q.id}
-                // className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all"
-                className={`bg-white rounded-xl border p-6 transition-all ${
-                  !isAnswered ? "border-red-200" : "border-gray-200"
-                }`}
+                className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all"
               >
                 <div className="flex items-start gap-3 mb-4">
                   <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-sm">
