@@ -113,7 +113,8 @@ export default function RewardDetailPage() {
             const resData = await getData(
               `events/${found?.eventId}/rewards/visitor`,
             );
-            const foundEligible = resData?.data || [];
+            const foundEligible = resData?.data.find((r) => r.id) || [];
+            console.log(foundEligible)
             setEligible(foundEligible?.eligible);
             // } else {
             //   setEligible();
@@ -150,7 +151,7 @@ export default function RewardDetailPage() {
       }
     };
     fetchAll();
-  }, [id]);
+  }, []);
 
   const handleRedeem = async () => {
     if (!reward || redeemed) return;
@@ -363,7 +364,7 @@ export default function RewardDetailPage() {
         </div>
         <button
           onClick={handleRedeem}
-          disabled={true}
+          disabled={!canRedeem || redeeming}
           className={`w-full py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-all duration-200
             ${
               redeemed
@@ -373,6 +374,7 @@ export default function RewardDetailPage() {
                   : "bg-gray-100 text-gray-400 cursor-not-allowed font-black"
             }`}
         >
+          {console.log(canRedeem)}
           {redeeming ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" /> กำลังดำเนินการ...
