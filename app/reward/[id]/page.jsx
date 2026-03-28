@@ -374,7 +374,6 @@ export default function RewardDetailPage() {
                   : "bg-gray-100 text-gray-400 cursor-not-allowed font-black"
             }`}
         >
-          {console.log(canRedeem)}
           {redeeming ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" /> กำลังดำเนินการ...
