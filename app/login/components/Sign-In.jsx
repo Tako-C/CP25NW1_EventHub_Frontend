@@ -40,7 +40,9 @@ export default function SignInPage({
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+
     if (!validateForm()) {
       return;
     }
@@ -51,7 +53,7 @@ export default function SignInPage({
       if (res.statusCode === 200) {
         Cookie.set("token", res?.data.token, { path: "/" });
         window.dispatchEvent(new Event("user-logged-in"));
-        
+
         showNotification("เข้าสู่ระบบสำเร็จ กำลังนำท่านไปหน้าหลัก...");
 
         if (Cookie.get("surveyPost")) {
@@ -69,9 +71,15 @@ export default function SignInPage({
       }
     } catch (error) {
       if (error.status === 401) {
-        showNotification("อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง", true);
+        showNotification(
+          "อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง",
+          true,
+        );
       } else {
-        showNotification("เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง", true);
+        showNotification(
+          "เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง",
+          true,
+        );
       }
     }
   };
@@ -137,7 +145,10 @@ export default function SignInPage({
           <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
             เข้าสู่ระบบ
           </h1>
-          <div className="bg-white rounded-3xl shadow-lg p-8">
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white rounded-3xl shadow-lg p-8"
+          >
             <div className="mb-6">
               <label
                 htmlFor="email"
@@ -187,6 +198,7 @@ export default function SignInPage({
                 <span className="text-sm text-gray-600">จดจำฉันไว้</span>
               </label>
               <button
+                type="button"
                 onClick={handleForgotPassword}
                 className="text-sm text-blue-500 hover:text-blue-600 underline bg-transparent border-none cursor-pointer"
               >
@@ -194,7 +206,8 @@ export default function SignInPage({
               </button>
             </div>
             <button
-              onClick={handleSubmit}
+              type="submit"
+              // onClick={handleSubmit}
               className="w-full bg-blue-900 text-white py-3 rounded-full font-semibold hover:bg-blue-800 transition mb-6"
             >
               เข้าสู่ระบบ
@@ -210,12 +223,13 @@ export default function SignInPage({
               </div>
             </div>
             <button
+              type="button"
               onClick={handleOTPLogin}
               className="w-full bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-full font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-2"
             >
               เข้าสู่ระบบด้วย OTP
             </button>
-          </div>
+          </form>
 
           <p className="text-center mt-6 text-gray-700">
             ยังไม่มีบัญชีผู้ใช้?{" "}

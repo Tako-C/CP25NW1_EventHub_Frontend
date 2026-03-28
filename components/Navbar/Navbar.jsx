@@ -293,6 +293,7 @@ export default function Navbar({ token }) {
           { label: "Home", path: "#home" },
           { label: "Events", path: "/organizer", hasDropdown: true },
           { label: "Admin", path: "/admin", hasDropdown: true },
+          { label: "Dashboard", path: "/admin/dashboard" },
         ];
       case "organizer":
         return [

@@ -256,59 +256,62 @@ export default function RewardDetailPage() {
           </p>
         </div>
 
-        {redeemed ? (
-          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
-            <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-green-800">รับรางวัลแล้ว</p>
-              <p className="text-sm text-green-600">
-                คุณได้ทำการแลกรับของรางวัลนี้เรียบร้อยแล้ว
-              </p>
+        {eligible !== null &&
+          (redeemed ? (
+            <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
+              <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-green-800">รับรางวัลแล้ว</p>
+                <p className="text-sm text-green-600">
+                  คุณได้ทำการแลกรับของรางวัลนี้เรียบร้อยแล้ว
+                </p>
+              </div>
             </div>
-          </div>
-        ) : isExpired ? (
-          <div className="flex items-center gap-3 bg-gray-100 border border-gray-200 rounded-2xl p-4">
-            <XCircle className="w-6 h-6 text-gray-400 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-gray-600">หมดระยะเวลาการแลก</p>
-              <p className="text-sm text-gray-400">
-                ของรางวัลนี้สิ้นสุดระยะเวลาการแลกรับแล้ว
-              </p>
+          ) : isExpired ? (
+            <div className="flex items-center gap-3 bg-gray-100 border border-gray-200 rounded-2xl p-4">
+              <XCircle className="w-6 h-6 text-gray-400 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-gray-600">หมดระยะเวลาการแลก</p>
+                <p className="text-sm text-gray-400">
+                  ของรางวัลนี้สิ้นสุดระยะเวลาการแลกรับแล้ว
+                </p>
+              </div>
             </div>
-          </div>
-        ) : isNotStarted ? (
-          <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
-            <Clock className="w-6 h-6 text-yellow-500 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-yellow-800">ยังไม่เปิดให้แลก</p>
-              <p className="text-sm text-yellow-600">
-                จะเปิดให้แลกในวันที่ {FormatDateTime(reward.startRedeemAt)}
-              </p>
+          ) : isNotStarted ? (
+            <div className="flex items-center gap-3 bg-yellow-50 border border-yellow-200 rounded-2xl p-4">
+              <Clock className="w-6 h-6 text-yellow-500 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-yellow-800">
+                  ยังไม่เปิดให้แลก
+                </p>
+                <p className="text-sm text-yellow-600">
+                  จะเปิดให้แลกในวันที่ {FormatDateTime(reward.startRedeemAt)}
+                </p>
+              </div>
             </div>
-          </div>
-        ) : isOutOfStock ? (
-          <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl p-4">
-            <Package className="w-6 h-6 text-red-400 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-red-700">ของรางวัลหมดแล้ว</p>
-              <p className="text-sm text-red-500">
-                ขออภัย รางวัลนี้ถูกแลกครบตามจำนวนที่กำหนดแล้ว
-              </p>
+          ) : isOutOfStock ? (
+            <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl p-4">
+              <Package className="w-6 h-6 text-red-400 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-red-700">ของรางวัลหมดแล้ว</p>
+                <p className="text-sm text-red-500">
+                  ขออภัย รางวัลนี้ถูกแลกครบตามจำนวนที่กำหนดแล้ว
+                </p>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
-            <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
-            <div>
-              <p className="font-semibold text-green-800">สามารถแลกรับได้!</p>
-              <p className="text-sm text-green-600">
-                {daysLeft <= 3
-                  ? `⚠️ เหลือเวลาอีกเพียง ${daysLeft} วันเท่านั้น`
-                  : `หมดเขตวันที่ ${FormatDateTime(reward.endRedeemAt)}`}
-              </p>
+          ) : (
+            <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
+              <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-green-800">สามารถแลกรับได้!</p>
+                <p className="text-sm text-green-600">
+                  {daysLeft <= 3
+                    ? `⚠️ เหลือเวลาอีกเพียง ${daysLeft} วันเท่านั้น`
+                    : `หมดเขตวันที่ ${FormatDateTime(reward.endRedeemAt)}`}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          ))}
 
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
@@ -466,17 +469,16 @@ export default function RewardDetailPage() {
                 ยังไม่สามารถแลกรับรางวัลได้
               </p>
               <p className="text-red-700 text-sm opacity-80">
-                เนื่องจากคุณยังไม่ได้ลงทะเบียนอีเว้นท์นี้ จึงไม่สามารถรับรางวัลนี้ได้
+                เนื่องจากคุณยังไม่ได้ลงทะเบียนอีเว้นท์นี้
+                จึงไม่สามารถรับรางวัลนี้ได้
               </p>
               (
-                <button
-                  onClick={() =>
-                    router.push(`/event/${reward.eventId}`)
-                  }
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-full transition-colors"
-                >
-                  ลงทะเบียนอีเว้นท์ เพื่อรับรางวัล →
-                </button>
+              <button
+                onClick={() => router.push(`/event/${reward.eventId}`)}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-full transition-colors"
+              >
+                ลงทะเบียนอีเว้นท์ เพื่อรับรางวัล →
+              </button>
               )
             </div>
           </div>

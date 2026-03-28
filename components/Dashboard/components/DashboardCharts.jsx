@@ -572,6 +572,48 @@ export const ExhibitorSubmittedChart = ({ palette, data }) => {
   );
 };
 
+// PreSurveySubmittedChart — สีเขียว (Pre-Survey = ส่งพร้อม Registration)
+// รับ hourlyPreSurveyStats ที่คำนวณมาจาก checkInList ใน EventDashboard
+export const PreSurveySubmittedChart = ({ data }) => {
+  const filtered = filterHourlyData(data || []);
+  const chartData = filtered.map((h) => ({
+    time: h.hourRange,
+    value: h.total,
+  }));
+
+  if (!chartData.length)
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
+
+  const color = "#16A34A";
+
+  return (
+    <>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="inline-block w-3 h-3 rounded-sm" style={{ background: color }} />
+        <span className="text-sm font-semibold text-slate-600">
+          Pre-Survey ที่ส่งแล้ว — แบ่งตามช่วงเวลา (คน)
+        </span>
+      </div>
+      <Column
+        data={chartData}
+        xField="time"
+        yField="value"
+        color={color}
+        label={{
+          position: "top",
+          style: { fill: "#16A34A", fontSize: 12, fontWeight: 600 },
+          formatter: (d) => d.value,
+        }}
+        legend={false}
+        height={220}
+        xAxis={{ label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } } }}
+        yAxis={{ minLimit: 0, title: { text: "จำนวนคน", style: { fontSize: 12 } } }}
+        tooltip={(datum) => ({ name: "Pre-Survey ส่งแล้ว", value: `${datum.value} คน` })}
+      />
+    </>
+  );
+};
+
 // ─── SATISFACTION WIDGET ──────────────────────────────────────────────────────
 
 const SatisfactionBar = ({ level, count, total, color }) => {
@@ -601,20 +643,12 @@ const SatisfactionBar = ({ level, count, total, color }) => {
 
 export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
   const dataMap = {};
-  (data || []).forEach((d) => {
+  (data.kpi || []).forEach((d) => {
     dataMap[Number(d.answer)] = d.count;
   });
 
   const total = Object.values(dataMap).reduce((a, b) => a + b, 0);
-  const avg =
-    total > 0
-      ? (
-          Object.entries(dataMap).reduce(
-            (sum, [k, v]) => sum + Number(k) * v,
-            0,
-          ) / total
-        ).toFixed(2)
-      : "0.00";
+  const avg = data.avgScore
 
   return (
     <Card

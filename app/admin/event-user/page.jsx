@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react"; 
 import {
   Table,
   Button,
@@ -12,12 +12,14 @@ import {
   Popconfirm,
   Typography,
   Breadcrumb,
+  Input, 
 } from "antd";
 import {
   TeamOutlined,
   UserAddOutlined,
   DeleteOutlined,
   ArrowLeftOutlined,
+  SearchOutlined, 
 } from "@ant-design/icons";
 import {
   getData,
@@ -30,6 +32,13 @@ import Notification from "@/components/Notification/Notification";
 
 const { Title } = Typography;
 
+const ROLE_PRIORITY = {
+  ORGANIZER: 1,
+  STAFF: 2,
+  EXHIBITOR: 3,
+  VISITOR: 4,
+};
+
 export default function UserEventPage() {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -37,6 +46,7 @@ export default function UserEventPage() {
   const [allUsers, setAllUsers] = useState([]);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState(""); 
   const [form] = Form.useForm();
 
   const [notification, setNotification] = useState({
@@ -46,14 +56,8 @@ export default function UserEventPage() {
   });
 
   const showNotification = (msg, isErr = false) => {
-    setNotification({
-      isVisible: true,
-      message: msg,
-      isError: isErr,
-    });
-    setTimeout(() => {
-      closeNotification();
-    }, 3000);
+    setNotification({ isVisible: true, message: msg, isError: isErr });
+    setTimeout(() => closeNotification(), 3000);
   };
 
   const closeNotification = () => {
@@ -95,9 +99,7 @@ export default function UserEventPage() {
   const fetchAllUsers = async () => {
     try {
       const res = await getData("admin/users");
-      if (res?.data) {
-        setAllUsers(res.data);
-      }
+      if (res?.data) setAllUsers(res.data);
     } catch (error) {
       console.error("ดึงข้อมูล User ทั้งหมดไม่สำเร็จ", error);
     }
@@ -105,6 +107,7 @@ export default function UserEventPage() {
 
   const handleManageUsers = async (eventRecord) => {
     setSelectedEvent(eventRecord);
+    setSearchText(""); 
     setLoading(true);
     try {
       const res = await getData(`admin/events/${eventRecord.id}/users`);
@@ -118,6 +121,23 @@ export default function UserEventPage() {
     }
   };
 
+  const filteredAndSortedUsers = useMemo(() => {
+    if (!eventUsers) return [];
+
+    return eventUsers
+      .filter((user) => {
+        const fullName = `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase();
+        const email = (user.email || "").toLowerCase();
+        const search = searchText.toLowerCase();
+        return fullName.includes(search) || email.includes(search);
+      })
+      .sort((a, b) => {
+        const priorityA = ROLE_PRIORITY[a.eventRole] || 99;
+        const priorityB = ROLE_PRIORITY[b.eventRole] || 99;
+        return priorityA - priorityB;
+      });
+  }, [eventUsers, searchText]);
+
   const handleAddUser = async (values) => {
     try {
       await postAddUserToEvent(selectedEvent.id, values.userId);
@@ -127,7 +147,6 @@ export default function UserEventPage() {
       handleManageUsers(selectedEvent);
       fetchData();
     } catch (error) {
-      // showNotification(error.message || "เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน", true);
       showNotification("เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน", true);
     }
   };
@@ -139,7 +158,6 @@ export default function UserEventPage() {
       handleManageUsers(selectedEvent);
       fetchData();
     } catch (error) {
-      // showNotification(error.message || "เกิดข้อผิดพลาดในการเอาผู้ใช้งานออก", true);
       showNotification("เกิดข้อผิดพลาดในการเอาผู้ใช้งานออก", true);
     }
   };
@@ -150,7 +168,6 @@ export default function UserEventPage() {
       showNotification("อัปเดตบทบาทสำเร็จ");
       handleManageUsers(selectedEvent);
     } catch (error) {
-      // showNotification(error.message || "เกิดข้อผิดพลาดในการอัปเดตบทบาท", true);
       showNotification("เกิดข้อผิดพลาดในการอัปเดตบทบาท", true);
     }
   };
@@ -169,12 +186,13 @@ export default function UserEventPage() {
       key: "eventRole",
       render: (role, record) => (
         <Select
-          defaultValue={role}
+          value={role}
           style={{ width: 140 }}
           onChange={(value) => handleChangeRole(record.userId, value)}
         >
-          <Select.Option value="EXHIBITOR">Exhibitor</Select.Option>
+          <Select.Option value="ORGANIZER">Organizer</Select.Option>
           <Select.Option value="STAFF">Staff</Select.Option>
+          <Select.Option value="EXHIBITOR">Exhibitor</Select.Option>
           <Select.Option value="VISITOR">Visitor</Select.Option>
         </Select>
       ),
@@ -185,7 +203,6 @@ export default function UserEventPage() {
       render: (_, record) => (
         <Popconfirm
           title="ยืนยันการนำออก"
-          description="คุณแน่ใจหรือไม่ที่จะเอาผู้ใช้งานคนนี้ออกจากอีเว้นท์?"
           onConfirm={() => handleRemoveUser(record.userId)}
           okText="ยืนยัน"
           cancelText="ยกเลิก"
@@ -199,12 +216,7 @@ export default function UserEventPage() {
   ];
 
   const eventColumns = [
-    {
-      title: "ชื่ออีเว้นท์",
-      dataIndex: "name",
-      key: "name",
-      className: "font-medium",
-    },
+    { title: "ชื่ออีเว้นท์", dataIndex: "name", key: "name", className: "font-medium" },
     { title: "วันที่จัดงาน", dataIndex: "date", key: "date" },
     {
       title: "ผู้เข้าร่วม",
@@ -220,7 +232,6 @@ export default function UserEventPage() {
           type="primary"
           icon={<TeamOutlined />}
           onClick={() => handleManageUsers(record)}
-          className="rounded-lg shadow-sm"
         >
           Manage Users
         </Button>
@@ -249,25 +260,19 @@ export default function UserEventPage() {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <Title level={2} className="!m-0 text-gray-800">
-            {selectedEvent
-              ? `จัดการผู้ใช้งาน: ${selectedEvent.name}`
-              : "รายการอีเว้นท์ทั้งหมด"}
+            {selectedEvent ? `จัดการผู้ใช้งาน: ${selectedEvent.name}` : "รายการอีเว้นท์ทั้งหมด"}
           </Title>
 
           {selectedEvent && (
             <Space>
-              <Button
-                icon={<ArrowLeftOutlined />}
-                onClick={() => setSelectedEvent(null)}
-                className="hover:border-blue-500 hover:text-blue-500"
-              >
+              <Button icon={<ArrowLeftOutlined />} onClick={() => setSelectedEvent(null)}>
                 กลับหน้าหลัก
               </Button>
               <Button
                 type="primary"
                 icon={<UserAddOutlined />}
                 onClick={() => setIsAddUserModalOpen(true)}
-                className="bg-green-600 hover:!bg-green-500 border-none shadow-md"
+                className="bg-green-600"
               >
                 เพิ่มคนเข้าอีเว้นท์
               </Button>
@@ -276,18 +281,31 @@ export default function UserEventPage() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        {/* 4. ส่วนของช่องค้นหา (จะแสดงเมื่อเลือก Event แล้ว) */}
+        {selectedEvent && (
+          <div className="mb-4">
+            <Input
+              placeholder="ค้นหาชื่อ หรือ อีเมล..."
+              prefix={<SearchOutlined className="text-gray-400" />}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              className="max-w-md rounded-lg"
+              allowClear
+            />
+          </div>
+        )}
+
         {!selectedEvent ? (
           <Table 
             dataSource={events} 
             columns={eventColumns} 
             rowKey="id" 
             loading={loading}
-            pagination={{ pageSize: 8 }}
           />
         ) : (
           <Table
-            dataSource={eventUsers}
+            dataSource={filteredAndSortedUsers} 
             columns={userColumns}
             rowKey={(record) => record.userId || record.id}
             loading={loading}
@@ -297,12 +315,7 @@ export default function UserEventPage() {
       </div>
 
       <Modal
-        title={
-          <div className="flex items-center gap-2">
-            <UserAddOutlined className="text-green-600" />
-            <span>เพิ่มผู้ใช้งานเข้าอีเว้นท์</span>
-          </div>
-        }
+        title="เพิ่มผู้ใช้งานเข้าอีเว้นท์"
         open={isAddUserModalOpen}
         onOk={() => form.submit()}
         onCancel={() => {
@@ -310,28 +323,23 @@ export default function UserEventPage() {
           form.resetFields();
         }}
         okText="Add Member"
-        okButtonProps={{ className: "bg-green-600 hover:!bg-green-500" }}
         centered
       >
-        <Form form={form} layout="vertical" onFinish={handleAddUser} className="mt-4">
+        <Form form={form} layout="vertical" onFinish={handleAddUser}>
           <Form.Item
-            label={<span className="font-semibold text-gray-700">เลือกผู้ใช้งาน</span>}
+            label="เลือกผู้ใช้งาน"
             name="userId"
             rules={[{ required: true, message: "กรุณาเลือกผู้ใช้งาน" }]}
           >
             <Select
               showSearch
               placeholder="ค้นหาชื่อ, นามสกุล หรืออีเมล"
-              optionFilterProp="label"
-              className="w-full"
               options={allUsers.map((user) => ({
                 value: user.id || user.userId,
                 label: `${user.firstName || ""} ${user.lastName || ""} (${user.email})`,
               }))}
               filterOption={(input, option) =>
-                (option?.label ?? "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
+                (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
               }
             />
           </Form.Item>
