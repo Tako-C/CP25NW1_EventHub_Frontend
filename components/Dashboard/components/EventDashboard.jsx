@@ -23,6 +23,7 @@ import {
   createSurveyColumns,
 } from "@/components/Dashboard/libs/columns";
 import AnalysisPanel from "@/components/Dashboard/components/AnalysisPanel";
+import SurveyQuestionDashboard from "@/components/Dashboard/components/SurveyQuestionDashboard";
 
 import {
   RegistrationByTimeChart,
@@ -167,6 +168,8 @@ export default function EventDashboard({ mode = "organizer" }) {
   const [ageData, setAgeData] = useState([]);
   const [roleData, setRoleData] = useState([]);
   const [preSurveyHourly, setPreSurveyHourly] = useState([]);
+  const [visitorQuestions, setVisitorQuestions] = useState([]);
+  const [exhibitorQuestions, setExhibitorQuestions] = useState([]);
 
   // ─── Derived stats ─────────────────────────────────────────────────────────
   const totalParticipants =
@@ -325,6 +328,11 @@ export default function EventDashboard({ mode = "organizer" }) {
 
     //   const testData = await getData(`ai/kpi/events/${id}`);
     //   console.log(testData)
+
+      const testSurveyVisitor = await getData(`dashboard/events/${id}/surveys/visitor/questions`);
+      const testSurveyExhibitor = await getData(`dashboard/events/${id}/surveys/exhibitor/questions`);
+      if (testSurveyVisitor?.data) setVisitorQuestions(testSurveyVisitor.data);
+      if (testSurveyExhibitor?.data) setExhibitorQuestions(testSurveyExhibitor.data);
 
       if (regRes.status === "fulfilled")
         setRegistrationData(regRes.value?.data ?? null);
@@ -721,6 +729,21 @@ export default function EventDashboard({ mode = "organizer" }) {
               </div>
             </div>
           </div>
+        </RevealSection>
+
+        {/* ─── Survey Question Breakdown ─── */}
+        <RevealSection order={9}>
+          <SurveyQuestionDashboard
+            visitorPreData={visitorQuestions.filter(
+              (q) => q.surveyType === "PRE_VISITOR",
+            )}
+            visitorPostData={visitorQuestions.filter(
+              (q) => q.surveyType === "POST_VISITOR",
+            )}
+            exhibitorPostData={exhibitorQuestions.filter(
+              (q) => q.surveyType === "POST_EXHIBITOR",
+            )}
+          />
         </RevealSection>
 
         {/* ─── Satisfaction ─── */}
