@@ -12,7 +12,7 @@ import {
 import { useRouter, useParams } from "next/navigation";
 import { getDataNoToken, getData, deleteReward, patchRewardStatus } from "@/libs/fetch";
 import { EventCardImage } from "@/utils/getImage";
-import RewardCard from "../components/RewardCard";
+import RewardCard from "@/components/Reward/RewardCard";
 import Notification from "@/components/Notification/Notification";
 
 function FormatDate(dateString) {

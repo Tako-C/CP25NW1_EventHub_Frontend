@@ -6,7 +6,7 @@ import { getDataNoToken } from "@/libs/fetch";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
-import RewardEventCard from "@/components/RewardEventCard";
+import RewardEventCard from "@/components/Reward/RewardEventCard";
 import Notification from "@/components/Notification/Notification";
 
 export default function Page() {

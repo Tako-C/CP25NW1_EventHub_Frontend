@@ -20,12 +20,30 @@ const REQUIREMENT_LABELS = {
   CHECK_IN: { label: "Check-in แล้ว", color: "bg-purple-100 text-purple-700" },
 };
 
-function FormatDateTime(dateString) {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
+// function FormatDateTime(dateString) {
+//   if (!dateString) return "-";
+//   const date = new Date(dateString);
+//   return date.toLocaleDateString("th-TH", {
+//     day: "2-digit",
+//     month: "short",
+//     year: "numeric",
+//     hour: "2-digit",
+//     minute: "2-digit",
+//   });
+// }
+console.log("yoo")
+function FormatDateTime(dateStr) {
+  console.log("Original date string:", dateStr);
+  if (!dateStr) return "-";
+  
+  const date = new Date(dateStr);
+  // บวกเพิ่ม 7 ชั่วโมง (7 * 60 * 60 * 1000 มิลลิวินาที)
+  date.setHours(date.getHours() + 7);
+  console.log("date SET:", date.setHours(date.getHours() + 7));
+
   return date.toLocaleDateString("th-TH", {
     day: "2-digit",
-    month: "short",
+    month: "long",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",

@@ -13,7 +13,17 @@ const REQUIREMENT_TYPES = [
 
 function toDatetimeLocal(dateStr) {
   if (!dateStr) return "";
-  return new Date(dateStr).toISOString().slice(0, 16);
+  const date = new Date(dateStr);
+  // ชดเชย timezone offset ของ browser เพื่อให้แสดงเป็น local time ที่ถูกต้อง
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date - offset).toISOString().slice(0, 16);
+}
+
+function toISOWithTimezone(localStr) {
+  if (!localStr) return "";
+  // browser จะอ่าน datetime-local string เป็น local time อยู่แล้ว
+  // แล้ว toISOString() จะแปลงเป็น UTC ที่ถูกต้อง
+  return new Date(localStr).toISOString();
 }
 
 export default function RewardForm({
@@ -73,8 +83,9 @@ export default function RewardForm({
     data.append("description", formData.description);
     data.append("requirementType", formData.requirementType);
     data.append("quantity", formData.quantity);
-    data.append("startRedeemAt", formData.startRedeemAt);
-    data.append("endRedeemAt", formData.endRedeemAt);
+    // แปลงเป็น ISO string พร้อม UTC offset ที่ถูกต้องก่อนส่ง
+    data.append("startRedeemAt", toISOWithTimezone(formData.startRedeemAt));
+    data.append("endRedeemAt", toISOWithTimezone(formData.endRedeemAt));
 
     if (imageFile) {
       data.append("image", imageFile);
