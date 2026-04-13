@@ -6,6 +6,8 @@ import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+export const now = () => dayjs();
+
 export const FormatDate = (value, type = "date", pattern = "DD/MM/YYYY") => {
   if (!value) return "-";
 

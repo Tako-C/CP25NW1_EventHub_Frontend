@@ -12,6 +12,7 @@ import { getDataNoToken, deleteSurvey, patchSurvey } from "@/libs/fetch";
 import { EventCardImage } from "@/utils/getImage";
 import SurveyCard from "@/components/Survey/SurveyCard"; 
 import Notification from "@/components/Notification/Notification";
+import { FormatDate } from "@/utils/format";
 
 function FormatDate(dateString) {
   if (!dateString) return "-";
@@ -186,7 +187,7 @@ export default function EventSurveysDetailPage() {
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase">Date</p>
                   <p className="font-medium text-gray-800">
-                    {FormatDate(event?.startDate)} - {FormatDate(event?.endDate)}
+                    {FormatDate(event?.startDate, "thaiShort")} - {FormatDate(event?.endDate, "thaiShort")}
                   </p>
                 </div>
               </div>

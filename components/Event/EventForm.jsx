@@ -24,10 +24,10 @@ import {
   Popconfirm,
   Input,
 } from "antd";
-import { FormatDate } from "@/libs/format";
+import { FormatDate, now } from "@/utils/format";
 import { useRouter } from "next/navigation";
 import { getEventTypes } from "@/libs/fetch";
-import EventPreview from "./EventPreview"; // เรียกใช้จากโฟลเดอร์เดียวกัน
+import EventPreview from "./EventPreview"; 
 
 function CustomInputField({
   label,
@@ -95,19 +95,15 @@ export default function EventForm({
 
   const formValues = Form.useWatch([], form);
 
-const disabledDate = (current) => {
-  return current && current < FormatDate(new Date(), "default").startOf("day");
-};
+  const disabledDate = (current) => {
+    return current && current < now().startOf("day");
+  };
 
-const disabledEndDate = (current) => {
-  if (current && current < FormatDate(new Date(), "default").startOf("day")) {
-    return true;
-  }
-  if (startDate) {
-    return current && current < FormatDate(startDate, "default").startOf("day");
-  }
-  return false;
-};
+  const disabledEndDate = (current) => {
+    if (current && current < now().startOf("day")) return true;
+    if (startDate) return current && current < FormatDate(startDate, "default").startOf("day");
+    return false;
+  };
 
   const [eventTypes, setEventTypes] = useState([]);
   const [isTypeLoading, setIsTypesLoading] = useState(true);

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { formatToISO } from "@/libs/format";
+import { formatToISO } from "@/utils/format";
 import { getData, createEventAdmin } from "@/libs/fetch";
 import EventForm from "@/components/Event/EventForm";
 import Notification from "@/components/Notification/Notification";

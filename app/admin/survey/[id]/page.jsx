@@ -6,7 +6,7 @@ import {
   CalendarClock, CalendarCheck, Plus, Loader2,
 } from "lucide-react";
 import { Table, Select, Space, Modal } from "antd"; 
-import { FormatDate } from "@/libs/format";
+import { FormatDate } from "@/utils/format";
 import {
   getData,
   hardDeleteSurveyByAdmin,

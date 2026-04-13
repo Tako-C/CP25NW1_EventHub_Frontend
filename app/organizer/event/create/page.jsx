@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { formatToISO } from "@/libs/format";
+import { formatToISO } from "@/utils/format";
 
 // เรียกใช้ API ปกติสำหรับ Organizer
 import { getData, createEvent } from "@/libs/fetch";

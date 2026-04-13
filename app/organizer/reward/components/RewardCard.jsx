@@ -12,6 +12,7 @@ import {
   ToggleRight,
 } from "lucide-react";
 import { EventCardImage, RewardImage } from "@/utils/getImage";
+import { FormatDate } from "@/utils/format";
 
 const REQUIREMENT_LABELS = {
   NONE: { label: "ไม่มีเงื่อนไข", color: "bg-gray-100 text-gray-700" },
@@ -19,18 +20,6 @@ const REQUIREMENT_LABELS = {
   POST_SURVEY_DONE: { label: "ทำ Post-Survey", color: "bg-green-100 text-green-700" },
   CHECK_IN: { label: "Check-in แล้ว", color: "bg-purple-100 text-purple-700" },
 };
-
-function FormatDateTime(dateString) {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("th-TH", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function RewardCard({ reward, onEdit, onDelete, onToggleStatus, onCreate }) {
   const req = REQUIREMENT_LABELS[reward?.requirementType] || REQUIREMENT_LABELS.NONE;
@@ -89,7 +78,7 @@ export default function RewardCard({ reward, onEdit, onDelete, onToggleStatus, o
 
           <div className="mt-2 text-xs text-gray-400 flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            {FormatDateTime(reward.startRedeemAt)} – {FormatDateTime(reward.endRedeemAt)}
+            {FormatDate(reward.startRedeemAt, "thaiFull")} – {FormatDate(reward.endRedeemAt, "thaiFull")}
           </div>
         </div>
       </div>

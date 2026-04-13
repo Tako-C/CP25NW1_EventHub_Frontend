@@ -16,7 +16,7 @@ import {
   ExclamationCircleFilled,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { FormatDate } from "@/libs/format";
+import { FormatDate } from "@/utils/format";
 import {
   getData,
   getImage,

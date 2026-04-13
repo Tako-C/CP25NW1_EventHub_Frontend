@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { FormatDate, formatToISO } from "@/libs/format";
+import { FormatDate, formatToISO } from "@/utils/format";
 import EventForm from "@/components/Event/EventForm"; // <-- ชี้ไปที่ Shared Component
 import { 
   getEventByIdAdmin, 

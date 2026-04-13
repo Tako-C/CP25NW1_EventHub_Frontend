@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Search, BarChart2, Calendar, MapPin, TrendingUp, Activity } from "lucide-react";
 import { Table, Button, Input, Card, Tag } from "antd";
 import { getData } from "@/libs/fetch";
-import { FormatDate } from "@/libs/format";
+import { FormatDate } from "@/utils/format";
 import Notification from "@/components/Notification/Notification";
 
 export default function AdminDashboardList() {

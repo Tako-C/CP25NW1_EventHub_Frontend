@@ -1,10 +1,5 @@
 import { Plus, Edit3, Trash2, Calendar, FileText, User, Store, ToggleLeft, ToggleRight } from "lucide-react";
-
-function FormatDate(dateString) {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
-}
+import { FormatDate } from "@/utils/format";
 
 export default function SurveyCard({ survey, type, userType, onCreate, onEdit, onView, onDelete, onToggleStatus, isEditDisabled = false }) {
   const typeColors = {
@@ -72,7 +67,7 @@ export default function SurveyCard({ survey, type, userType, onCreate, onEdit, o
               <div className="bg-white rounded-lg p-1.5 shadow-sm"><Calendar className="w-4 h-4 text-blue-600" /></div>
               <div>
                 <div className="text-xs text-gray-600">สร้างเมื่อ</div>
-                <div className="text-sm font-bold text-gray-900">{FormatDate(survey.createdAt)}</div>
+                <div className="text-sm font-bold text-gray-900">{FormatDate(survey.createdAt, "thaiShort")}</div>
               </div>
             </div>
           </div>
@@ -80,7 +75,7 @@ export default function SurveyCard({ survey, type, userType, onCreate, onEdit, o
       </div>
 
       <div className="text-xs text-gray-500 mb-3 space-y-1">
-        <div>แก้ไขล่าสุด: {FormatDate(survey.updatedAt || survey.createdAt)}</div>
+        <div>แก้ไขล่าสุด: {FormatDate(survey.updatedAt || survey.createdAt, "thaiShort")}</div>
       </div>
 
       <div className="flex gap-2 pt-3 border-t border-gray-200">

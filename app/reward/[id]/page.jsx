@@ -19,6 +19,7 @@ import { getDataNoToken, getData, redeemReward } from "@/libs/fetch";
 import { RewardImage } from "@/utils/getImage";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import { FormatDate } from "@/utils/format";
 
 const REQUIREMENT_CONFIG = {
   FREE: {
@@ -53,17 +54,6 @@ const REQUIREMENT_CONFIG = {
     Icon: AlertCircle,
   },
 };
-
-function FormatDateTime(dateStr) {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString("th-TH", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 export default function RewardDetailPage() {
   const router = useRouter();
@@ -286,7 +276,7 @@ export default function RewardDetailPage() {
                   ยังไม่เปิดให้แลก
                 </p>
                 <p className="text-sm text-yellow-600">
-                  จะเปิดให้แลกในวันที่ {FormatDateTime(reward.startRedeemAt)}
+                  จะเปิดให้แลกในวันที่ {FormatDate(reward.startRedeemAt, "thaiFull")}
                 </p>
               </div>
             </div>
@@ -308,7 +298,7 @@ export default function RewardDetailPage() {
                 <p className="text-sm text-green-600">
                   {daysLeft <= 3
                     ? `⚠️ เหลือเวลาอีกเพียง ${daysLeft} วันเท่านั้น`
-                    : `หมดเขตวันที่ ${FormatDateTime(reward.endRedeemAt)}`}
+                    : `หมดเขตวันที่ ${FormatDate(reward.endRedeemAt, "thaiFull")}`}
                 </p>
               </div>
             </div>

@@ -9,7 +9,7 @@ import {
   Calendar,
   ChevronDown,
 } from 'lucide-react';
-import { FormatDate } from '@/libs/format';
+import { FormatDate } from '@/utils/format';
 import EventCard from '@/components/Card/EventCard';
 
 const formatDatePreview = (date) => {
