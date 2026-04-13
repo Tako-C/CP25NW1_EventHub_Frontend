@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Search, BarChart2, Calendar, MapPin, TrendingUp, Activity } from "lucide-react";
 import { Table, Button, Input, Card, Tag } from "antd";
 import { getData } from "@/libs/fetch";
-import dayjs from "dayjs";
+import { FormatDate } from "@/libs/format";
 import Notification from "@/components/Notification/Notification";
 
 export default function AdminDashboardList() {
@@ -69,7 +69,7 @@ export default function AdminDashboardList() {
       render: (_, record) => (
         <div className="flex items-center gap-2 text-slate-600 text-sm font-semibold">
           <Calendar size={14} className="text-indigo-400 flex-shrink-0" />
-          {dayjs(record.startDate).format("DD MMM YYYY")}
+          {FormatDate(record.startDate, "custom", "DD MMM YYYY")}
         </div>
       ),
     },

@@ -9,12 +9,12 @@ import {
   Calendar,
   ChevronDown,
 } from 'lucide-react';
-import dayjs from 'dayjs';
+import { FormatDate } from '@/libs/format';
 import EventCard from '@/components/Card/EventCard';
 
 const formatDatePreview = (date) => {
   if (!date) return 'Date Unavailable';
-  return dayjs(date).format('D MMM YYYY');
+  return FormatDate(date, 'custom', 'D MMM YYYY');
 };
 
 export default function EventPreview({ formValues }) {

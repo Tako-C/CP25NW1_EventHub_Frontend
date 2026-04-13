@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
+import { FormatDate, formatToISO } from "@/libs/format";
 import EventForm from "@/components/Event/EventForm"; // <-- ชี้ไปที่ Shared Component
 import { 
   getEventByIdAdmin, 
@@ -14,8 +13,6 @@ import {
   updateEventAdmin
 } from "@/libs/fetch";
 import Notification from "@/components/Notification/Notification";
-
-dayjs.extend(utc);
 
 export default function AdminEditEventPage() {
   const { id } = useParams();
@@ -94,8 +91,8 @@ export default function AdminEditEventPage() {
           hostOrganization: eventData.hostOrganisation, 
           eventDescription: eventData.eventDesc,    
           eventType: eventData.eventTypeId?.id,
-          startDate: eventData.startDate ? dayjs.utc(eventData.startDate).local() : null,
-          endDate: eventData.endDate ? dayjs.utc(eventData.endDate).local() : null,
+          startDate: eventData.startDate ? FormatDate(eventData.startDate, "default") : null,
+          endDate: eventData.endDate ? FormatDate(eventData.endDate, "default") : null,
           eventCard: fileCard,
           eventDetail: fileDetail,
           eventMap: fileMap,
@@ -132,8 +129,8 @@ export default function AdminEditEventPage() {
       const creatorId = initialData.createdBy?.id || initialData.createdBy;
       if (creatorId) formData.append("createdBy", creatorId);
 
-      if (values.startDate) formData.append("startDate", values.startDate.utc().format("YYYY-MM-DDTHH:mm:ss"));
-      if (values.endDate) formData.append("endDate", values.endDate.utc().format("YYYY-MM-DDTHH:mm:ss"));
+      if (values.startDate) formData.append("startDate", formatToISO(values.startDate));
+      if (values.endDate) formData.append("endDate", formatToISO(values.endDate));
 
       if (values.eventCard?.[0]?.originFileObj) formData.append("eventCard", values.eventCard[0].originFileObj);
       if (values.eventDetail?.[0]?.originFileObj) formData.append("eventDetail", values.eventDetail[0].originFileObj);

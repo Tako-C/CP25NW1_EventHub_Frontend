@@ -8,10 +8,9 @@ import {
   Calendar,
   Package,
   Tag,
-  ToggleLeft,
-  ToggleRight,
 } from "lucide-react";
-import { EventCardImage, RewardImage } from "@/utils/getImage";
+import { RewardImage } from "@/utils/getImage";
+import { FormatDate } from "@/utils/format"; 
 
 const REQUIREMENT_LABELS = {
   NONE: { label: "ไม่มีเงื่อนไข", color: "bg-gray-100 text-gray-700" },
@@ -20,37 +19,7 @@ const REQUIREMENT_LABELS = {
   CHECK_IN: { label: "Check-in แล้ว", color: "bg-purple-100 text-purple-700" },
 };
 
-// function FormatDateTime(dateString) {
-//   if (!dateString) return "-";
-//   const date = new Date(dateString);
-//   return date.toLocaleDateString("th-TH", {
-//     day: "2-digit",
-//     month: "short",
-//     year: "numeric",
-//     hour: "2-digit",
-//     minute: "2-digit",
-//   });
-// }
-console.log("yoo")
-function FormatDateTime(dateStr) {
-  console.log("Original date string:", dateStr);
-  if (!dateStr) return "-";
-  
-  const date = new Date(dateStr);
-  // บวกเพิ่ม 7 ชั่วโมง (7 * 60 * 60 * 1000 มิลลิวินาที)
-  date.setHours(date.getHours() + 7);
-  console.log("date SET:", date.setHours(date.getHours() + 7));
-
-  return date.toLocaleDateString("th-TH", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-export default function RewardCard({ reward, onEdit, onDelete, onToggleStatus, onCreate }) {
+export default function RewardCard({ reward, onEdit, onDelete, onCreate }) {
   const req = REQUIREMENT_LABELS[reward?.requirementType] || REQUIREMENT_LABELS.NONE;
 
   if (!reward) {
@@ -107,7 +76,7 @@ export default function RewardCard({ reward, onEdit, onDelete, onToggleStatus, o
 
           <div className="mt-2 text-xs text-gray-400 flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            {FormatDateTime(reward.startRedeemAt)} – {FormatDateTime(reward.endRedeemAt)}
+            {FormatDate(reward.startRedeemAt, "thaiFull")} – {FormatDate(reward.endRedeemAt, "thaiFull")}
           </div>
         </div>
       </div>

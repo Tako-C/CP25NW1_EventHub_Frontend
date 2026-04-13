@@ -16,7 +16,7 @@ import {
   ExclamationCircleFilled,
 } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import dayjs from "dayjs";
+import { FormatDate } from "@/libs/format";
 import {
   getData,
   getImage,
@@ -105,8 +105,8 @@ export default function EventsManagement() {
   }, []);
 
   const handleUpdateStatus = async (value, record) => {
-    const now = dayjs();
-    const endDate = dayjs(record.endDate);
+    const now = FormatDate(new Date(), "default");
+    const endDate = FormatDate(record.endDate, "default");
 
     if (now.isAfter(endDate) && (value === "UPCOMING" || value === "ONGOING")) {
       showNotification("ไม่สามารถเปลี่ยนสถานะได้: กิจกรรมสิ้นสุดแล้ว กรุณาแก้ไขวันสิ้นสุดก่อน", true);

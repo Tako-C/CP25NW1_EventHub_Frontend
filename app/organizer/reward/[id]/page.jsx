@@ -14,15 +14,7 @@ import { getDataNoToken, getData, deleteReward, patchRewardStatus } from "@/libs
 import { EventCardImage } from "@/utils/getImage";
 import RewardCard from "@/components/Reward/RewardCard";
 import Notification from "@/components/Notification/Notification";
-
-function FormatDate(dateString) {
-  if (!dateString) return "-";
-  return new Date(dateString).toLocaleDateString("th-TH", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { FormatDate } from "@/utils/format";
 
 export default function EventRewardsDetailPage() {
   const [event, setEvent] = useState(null);
@@ -146,7 +138,7 @@ export default function EventRewardsDetailPage() {
                 <div className="flex flex-wrap gap-4 text-gray-600 font-medium">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-indigo-500" />
-                    <span>{FormatDate(event.startDate)}</span>
+                    <span>{FormatDate(event.startDate, "thaiShort")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-rose-500" />

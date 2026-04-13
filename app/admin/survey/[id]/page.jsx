@@ -6,7 +6,7 @@ import {
   CalendarClock, CalendarCheck, Plus, Loader2,
 } from "lucide-react";
 import { Table, Select, Space, Modal } from "antd"; 
-import dayjs from "dayjs";
+import { FormatDate } from "@/libs/format";
 import {
   getData,
   hardDeleteSurveyByAdmin,
@@ -55,8 +55,8 @@ function SurveyTable({ surveys, surveyType, role, eventId, onStatusChange, onDel
       width: 160,
       render: (_, r) => (
         <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.8 }}>
-          <div>สร้าง: {dayjs(r.createdAt).format("DD/MM/YY")}</div>
-          <div style={{ color: "#818cf8" }}>แก้ไข: {dayjs(r.updatedAt).format("DD/MM/YY")}</div>
+          <div>สร้าง: {FormatDate(r.createdAt, "custom", "DD/MM/YY")}</div>
+          <div style={{ color: "#818cf8" }}>แก้ไข: {FormatDate(r.updatedAt, "custom", "DD/MM/YY")}</div>
         </div>
       ),
     },

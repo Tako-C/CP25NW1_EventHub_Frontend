@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Upload, X, Save, ArrowLeft } from "lucide-react";
 import { Spin } from "antd";
 import { RewardImage } from "@/utils/getImage";
+import { formatForInput, formatToISO } from "@/utils/format";
 
 const REQUIREMENT_TYPES = [
   { value: "FREE", label: "ไม่มีเงื่อนไข" },
@@ -10,21 +11,6 @@ const REQUIREMENT_TYPES = [
   { value: "POST_SURVEY_DONE", label: "ทำ Post-Survey แล้ว" },
   { value: "CHECK_IN", label: "Check-in แล้ว" },
 ];
-
-function toDatetimeLocal(dateStr) {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  // ชดเชย timezone offset ของ browser เพื่อให้แสดงเป็น local time ที่ถูกต้อง
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date - offset).toISOString().slice(0, 16);
-}
-
-function toISOWithTimezone(localStr) {
-  if (!localStr) return "";
-  // browser จะอ่าน datetime-local string เป็น local time อยู่แล้ว
-  // แล้ว toISOString() จะแปลงเป็น UTC ที่ถูกต้อง
-  return new Date(localStr).toISOString();
-}
 
 export default function RewardForm({
   initialData,
@@ -54,8 +40,8 @@ export default function RewardForm({
         name: initialData.name || "",
         description: initialData.description || "",
         requirementType: initialData.requirementType || "FREE",
-        startRedeemAt: toDatetimeLocal(initialData.startRedeemAt),
-        endRedeemAt: toDatetimeLocal(initialData.endRedeemAt),
+        startRedeemAt: formatForInput(initialData.startRedeemAt),
+        endRedeemAt: formatForInput(initialData.endRedeemAt),
         quantity: initialData.quantity?.toString() || "",
       });
       setCurrentImagePath(initialData.imagePath || null);
@@ -83,9 +69,8 @@ export default function RewardForm({
     data.append("description", formData.description);
     data.append("requirementType", formData.requirementType);
     data.append("quantity", formData.quantity);
-    // แปลงเป็น ISO string พร้อม UTC offset ที่ถูกต้องก่อนส่ง
-    data.append("startRedeemAt", toISOWithTimezone(formData.startRedeemAt));
-    data.append("endRedeemAt", toISOWithTimezone(formData.endRedeemAt));
+    data.append("startRedeemAt", formatToISO(formData.startRedeemAt));
+    data.append("endRedeemAt", formatToISO(formData.endRedeemAt));
 
     if (imageFile) {
       data.append("image", imageFile);

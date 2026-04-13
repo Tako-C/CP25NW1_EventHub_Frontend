@@ -24,7 +24,7 @@ import {
   Popconfirm,
   Input,
 } from "antd";
-import dayjs from "dayjs";
+import { FormatDate } from "@/libs/format";
 import { useRouter } from "next/navigation";
 import { getEventTypes } from "@/libs/fetch";
 import EventPreview from "./EventPreview"; // เรียกใช้จากโฟลเดอร์เดียวกัน
@@ -95,19 +95,19 @@ export default function EventForm({
 
   const formValues = Form.useWatch([], form);
 
-  const disabledDate = (current) => {
-    return current && current < dayjs().startOf("day");
-  };
+const disabledDate = (current) => {
+  return current && current < FormatDate(new Date(), "default").startOf("day");
+};
 
-  const disabledEndDate = (current) => {
-    if (current && current < dayjs().startOf("day")) {
-      return true;
-    }
-    if (startDate) {
-      return current && current < dayjs(startDate).startOf("day");
-    }
-    return false;
-  };
+const disabledEndDate = (current) => {
+  if (current && current < FormatDate(new Date(), "default").startOf("day")) {
+    return true;
+  }
+  if (startDate) {
+    return current && current < FormatDate(startDate, "default").startOf("day");
+  }
+  return false;
+};
 
   const [eventTypes, setEventTypes] = useState([]);
   const [isTypeLoading, setIsTypesLoading] = useState(true);

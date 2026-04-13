@@ -2,14 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-
+import { formatToISO } from "@/libs/format";
 import { getData, createEventAdmin } from "@/libs/fetch";
-import EventForm from "@/components/Event/EventForm"; // <-- ชี้ไปที่ Shared Component
+import EventForm from "@/components/Event/EventForm";
 import Notification from "@/components/Notification/Notification";
-
-dayjs.extend(utc);
 
 export default function AdminCreateEventPage() {
   const router = useRouter();
@@ -100,12 +96,8 @@ export default function AdminCreateEventPage() {
       formData.append('createdBy', currentUserId); 
       formData.append('hostOrganisation', values.hostOrganization || '');
 
-      const startDateStr = values.startDate
-        ? dayjs(values.startDate).utc().format('YYYY-MM-DDTHH:mm:ss')
-        : '';
-      const endDateStr = values.endDate
-        ? dayjs(values.endDate).utc().format('YYYY-MM-DDTHH:mm:ss')
-        : '';
+      const startDateStr = values.startDate ? formatToISO(values.startDate) : '';
+      const endDateStr = values.endDate ? formatToISO(values.endDate) : '';
 
       formData.append('startDate', startDateStr);
       formData.append('endDate', endDateStr);

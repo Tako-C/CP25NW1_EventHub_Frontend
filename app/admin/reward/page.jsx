@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Search, Gift, Calendar, MapPin } from "lucide-react";
 import { Table, Button, Input, Card, Tag } from "antd";
 import { getDataNoToken } from "@/libs/fetch"; 
-import dayjs from "dayjs";
+import { FormatDate } from "@/libs/format";
 
 import Notification from "@/components/Notification/Notification";
 
@@ -80,7 +80,7 @@ export default function SelectEventRewardPage() {
       render: (_, record) => (
         <div className="text-slate-600 font-bold text-sm">
           <Calendar size={14} className="inline mr-2 text-amber-500" />
-          {dayjs(record.startDate).format("DD MMM YYYY")}
+          {FormatDate(record.startDate, "custom", "DD MMM YYYY")}
         </div>
       ),
     },

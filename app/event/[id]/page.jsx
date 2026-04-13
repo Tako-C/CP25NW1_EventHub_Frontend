@@ -15,15 +15,6 @@ export default function Page() {
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(true);
   const [eventData, setEventData] = useState(null);
 
-  // const isPastEvent = () => {
-  //   console.log(eventData)
-  //   if (!eventData?.endDate) return false;
-  //   const endDate = new Date(eventData.endDate);
-  //   const today = new Date();
-  //   today.setHours(0, 0, 0, 0);
-  //   return endDate < today;
-  // };
-
 const isPastEvent = () => {
     if (eventData?.eventStatus !== "FINISHED") return false;
     return true;
