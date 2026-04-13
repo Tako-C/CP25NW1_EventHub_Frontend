@@ -71,17 +71,15 @@ export default function Page() {
     fetchData();
   }, []);
 
-  const toggleStatus = async (item) => {
-    try {
-      const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-      await updateStatusAccount(item.id, newStatus);
-      showNotification(`เปลี่ยนสถานะเป็น ${newStatus} สำเร็จ`);
-      await fetchData();
-    } catch (error) {
-      // showNotification(error.message || "ไม่สามารถเปลี่ยนสถานะได้", true);
-      showNotification("ไม่สามารถเปลี่ยนสถานะได้", true);
-    }
-  };
+const handleStatusChange = async (id, newStatus) => {
+  try {
+    await updateStatusAccount(id, newStatus);
+    showNotification(`เปลี่ยนสถานะเป็น ${newStatus} สำเร็จ`);
+    await fetchData();
+  } catch (error) {
+    showNotification("ไม่สามารถเปลี่ยนสถานะได้", true);
+  }
+};
 
   const handleDelete = async (id) => {
     try {
@@ -120,43 +118,47 @@ export default function Page() {
       dataIndex: "email",
       key: "email",
     },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => (
-        <Tag color={status === "ACTIVE" ? "green" : "grey"}>
-          {status?.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: "Action",
-      key: "action",
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            size="small"
-            icon={<SwapOutlined />}
-            onClick={() => toggleStatus(record)}
-          >
-            Toggle Status
+{
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
+    render: (status, record) => (
+      <Select
+        value={status}
+        style={{ width: 120 }}
+        onChange={(value) => handleStatusChange(record.id, value)}
+      >
+        <Select.Option value="ACTIVE">
+          <Tag color="green">ACTIVE</Tag>
+        </Select.Option>
+        <Select.Option value="INACTIVE">
+          <Tag color="grey">INACTIVE</Tag>
+        </Select.Option>
+        <Select.Option value="BAN">
+          <Tag color="red">BAN</Tag>
+        </Select.Option>
+      </Select>
+    ),
+  },
+  {
+    title: "Action",
+    key: "action",
+    render: (_, record) => (
+      <Space size="middle">
+        <Popconfirm
+          title="Delete the user"
+          description="Are you sure to delete this user?"
+          onConfirm={() => handleDelete(record.id)}
+          okText="Yes"
+          cancelText="No"
+        >
+          <Button size="small" danger icon={<DeleteOutlined />}>
+            Delete
           </Button>
-
-          <Popconfirm
-            title="Delete the user"
-            description="Are you sure to delete this user?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button size="small" danger icon={<DeleteOutlined />}>
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
-    },
+        </Popconfirm>
+      </Space>
+    ),
+  },
   ];
 
   return (
@@ -236,7 +238,7 @@ export default function Page() {
             <Input />
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             label="Password"
             name="password"
             rules={[
@@ -247,7 +249,7 @@ export default function Page() {
             ]}
           >
             <Input />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             label="Date Of Birth"
