@@ -19,6 +19,7 @@ export default function Page() {
     tab === 'events' ? 'events' : tab === 'rewards' ? 'rewards' : 'account'
   );
   const [isEditing, setIsEditing] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [profile, setProfile] = useState({
     role: '',
     status: '',
@@ -40,25 +41,29 @@ export default function Page() {
   });
 
   const fetchUserData = async () => {
-    const res = await getData('users/me/profile');
-    if (res?.statusCode === 200) {
-      const userData = res.data;
-      setProfile({
-        id: userData?.id || '',
-        firstName: userData?.firstName || '',
-        lastName: userData?.lastName || '',
-        email: userData?.email || '',
-        phone: userData?.phone || '',
-        role: userData?.role || '',
-        status: userData?.status || '',
-        city: userData?.city || '',
-        country: userData?.country || '',
-        postCode: userData?.postCode || '',
-        address: userData?.address || '',
-        job: userData?.job || '',
-        gender: userData?.gender || 'N',
-        dateOfBirth: userData?.dateOfBirth ? userData.dateOfBirth.split('T')[0] : '',
-      });
+    try {
+      const res = await getData('users/me/profile');
+      if (res?.statusCode === 200) {
+        const userData = res.data;
+        setProfile({
+          id: userData?.id || '',
+          firstName: userData?.firstName || '',
+          lastName: userData?.lastName || '',
+          email: userData?.email || '',
+          phone: userData?.phone || '',
+          role: userData?.role || '',
+          status: userData?.status || '',
+          city: userData?.city || '',
+          country: userData?.country || '',
+          postCode: userData?.postCode || '',
+          address: userData?.address || '',
+          job: userData?.job || '',
+          gender: userData?.gender || 'N',
+          dateOfBirth: userData?.dateOfBirth ? userData.dateOfBirth.split('T')[0] : '',
+        });
+      }
+    } finally {
+      setIsProfileLoading(false);
     }
   };
 
@@ -119,7 +124,7 @@ export default function Page() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-16 md:mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 
         {/* Mobile / Tablet (< lg): tab bar แนวนอนด้านบน */}
@@ -169,6 +174,7 @@ export default function Page() {
                 setIsEditing={setIsEditing}
                 profile={profile}
                 setProfile={setProfile}
+                isLoading={isProfileLoading}
               />
             )}
             {activePage === 'events' && <MyEventPage events={events} />}
@@ -184,6 +190,7 @@ export default function Page() {
               setIsEditing={setIsEditing}
               profile={profile}
               setProfile={setProfile}
+              isLoading={isProfileLoading}
             />
           )}
           {activePage === 'events' && <MyEventPage events={events} />}
