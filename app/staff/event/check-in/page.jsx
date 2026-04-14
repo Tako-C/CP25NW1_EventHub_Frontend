@@ -171,7 +171,7 @@ export default function CheckInStaff() {
   }, [events, paramEventId]);
 
   return (
-    <div className="min-h-screen pb-10 mt-20">
+    <div className="min-h-screen pb-10">
       <Notification
         isVisible={notification.isVisible}
         isError={notification.isError}

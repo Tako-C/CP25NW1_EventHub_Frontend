@@ -182,7 +182,7 @@ export default function Page() {
         message={notification.message}
         onClose={closeNotification}
       />
-      <div className="flex items-center justify-center py-20 px-4 mt-18">
+      <div className="flex items-center justify-center py-20 px-4">
         <div className="w-full max-w-md">
           <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
             สร้างบัญชีใหม่

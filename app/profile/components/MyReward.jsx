@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { RewardImage } from "@/utils/getImage";
+import { FormatDate } from "@/utils/format";
 
 const REQUIREMENT_CONFIG = {
   NONE: {
@@ -89,7 +90,7 @@ export default function MyRewardPage({ rewards = [] }) {
       <div className="mb-6 border-b border-gray-100 pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
-            My Rewards
+            รางวัลของฉัน
           </h2>
           <p className="text-gray-500 text-sm mt-1">
             รางวัลที่คุณได้รับจาก Events ที่เข้าร่วม
@@ -146,7 +147,7 @@ export default function MyRewardPage({ rewards = [] }) {
             return (
               <div
                 key={reward.id}
-                className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-5 hover:shadow-md transition-shadow duration-300 relative overflow-hidden"
+                className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col sm:flex-row gap-4 hover:shadow-md transition-shadow duration-300 relative overflow-hidden"
               >
                 <div
                   className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl ${
@@ -158,50 +159,52 @@ export default function MyRewardPage({ rewards = [] }) {
                   }`}
                 />
 
-                <div className="flex-shrink-0 w-full md:w-36 h-36 md:h-auto bg-gradient-to-br from-amber-50 to-orange-100 rounded-xl overflow-hidden flex items-center justify-center shadow-inner">
+                {/* Reward image */}
+                <div className="flex-shrink-0 w-full sm:w-28 md:w-32 h-36 sm:h-28 md:h-32 bg-gradient-to-br from-amber-50 to-orange-100 rounded-xl overflow-hidden flex items-center justify-center">
                   <RewardImage
                     imagePath={reward.imagePath}
                     rewardName={reward.name}
                   />
                 </div>
 
-                <div className="flex-1 flex flex-col justify-between py-1 min-w-0">
+                {/* Reward info */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                   <div>
-                    <p className="text-xs text-amber-600 font-semibold mb-1 flex items-center gap-1">
-                      <Calendar size={11} />
-                      {reward.eventName}
+                    <p className="text-xs text-amber-600 font-semibold mb-1 flex items-center gap-1 truncate">
+                      <Calendar size={11} className="flex-shrink-0" />
+                      <span className="truncate">{reward.eventName}</span>
                     </p>
 
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
-                      <h3 className="text-base md:text-lg font-bold text-gray-900 line-clamp-1">
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                      <h3 className="text-sm md:text-base font-bold text-gray-900 line-clamp-2 min-w-0">
                         {reward.name}
                       </h3>
-                      {/* <span
-                        className={`self-start flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${statusConfig.color}`}
+                      <span
+                        className={`flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${statusConfig.color}`}
                       >
-                        <StatusIcon size={12} />
+                        <StatusIcon size={11} />
                         {statusConfig.label}
-                      </span> */}
+                      </span>
                     </div>
 
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-3">
+                    <p className="text-xs text-gray-500 line-clamp-2 mb-2">
                       {reward.description}
                     </p>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       <span
-                        className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${reqConfig.color}`}
+                        className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${reqConfig.color}`}
                       >
                         <ReqIcon size={11} />
                         {reqConfig.label}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-xs bg-gray-50 text-gray-500 px-2.5 py-1 rounded-full font-medium border border-gray-200">
+                      <span className="inline-flex items-center gap-1 text-xs bg-gray-50 text-gray-500 px-2 py-1 rounded-full font-medium border border-gray-200">
                         <Package size={11} />
                         เหลือ {reward.quantity} ชิ้น
                       </span>
                       {!isRedeemed && (
                         <span
-                          className={`inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium ${
+                          className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${
                             isExpired
                               ? "bg-gray-50 text-gray-400 border border-gray-200"
                               : daysLeft <= 3
@@ -214,46 +217,32 @@ export default function MyRewardPage({ rewards = [] }) {
                             ? "หมดเวลาแล้ว"
                             : daysLeft <= 3
                               ? `เหลือ ${daysLeft} วัน!`
-                              : `หมดเขต ${endDate.toLocaleDateString("th-TH", { day: "2-digit", month: "short" })}`}
+                              : `หมดเขต ${FormatDate(reward.endRedeemAt, "thaiShort")}`}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* <div className="mt-4">
+                  <div className="mt-3">
                     {isRedeemed ? (
-                      <div className="inline-flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg text-sm font-medium border border-green-100">
-                        <CheckCircle2 size={16} />
+                      <div className="inline-flex items-center gap-2 text-green-600 bg-green-50 px-3 py-2 rounded-lg text-sm font-medium border border-green-100">
+                        <CheckCircle2 size={14} />
                         รับรางวัลแล้ว
                       </div>
                     ) : canRedeem ? (
                       <button
                         onClick={() => router.push(`/reward/${reward.id}?eventId=${reward.eventId}`)}
-                        className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95"
+                        className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all active:scale-95"
                       >
-                        <Gift size={16} />
+                        <Gift size={14} />
                         รับรางวัล
                       </button>
                     ) : (
-                      <div className="inline-flex items-center gap-2 text-gray-400 bg-gray-50 px-4 py-2 rounded-lg text-sm border border-gray-100">
-                        <XCircle size={16} />
+                      <div className="inline-flex items-center gap-2 text-gray-400 bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
+                        <XCircle size={14} />
                         {reward.quantity <= 0 ? "ของหมดแล้ว" : "หมดเวลาแล้ว"}
                       </div>
                     )}
-                  </div> */}
-
-                  <div className="mt-4">
-                    <button
-                      onClick={() =>
-                        router.push(
-                          `/reward/${reward.id}?eventId=${reward.eventId}`,
-                        )
-                      }
-                      className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95"
-                    >
-                      <Gift size={16} />
-                      รายละเอียด
-                    </button>
                   </div>
                 </div>
               </div>

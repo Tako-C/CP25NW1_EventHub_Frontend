@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { postUpdateProfile, getData } from "@/libs/fetch";
+import { FormatDate } from "@/utils/format";
 import { useState, useEffect } from "react";
 import Notification from "@/components/Notification/Notification";
 
@@ -197,13 +198,12 @@ const cleanPayload = {
         message={notification.message}
       />
 
-      {/* Incomplete Profile Modal */}
       {showIncompleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
               </div>
@@ -214,8 +214,8 @@ const cleanPayload = {
             </p>
             <ul className="ml-[52px] mb-5 space-y-1">
               {getMissingFields(updateProfile).map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm text-red-500 font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />
+                <li key={f} className="flex items-center gap-2 text-sm text-yellow-500 font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 inline-block" />
                   {f}
                 </li>
               ))}
@@ -230,13 +230,12 @@ const cleanPayload = {
         </div>
       )}
 
-      {/* Incomplete profile banner (view mode) */}
       {!isEditing && getMissingFields(profile).length > 0 && (
-        <div className="mb-5 flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <div className="mb-5 flex items-start gap-2 bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
-          <p className="text-sm text-red-600">
+          <p className="text-sm text-yellow-600">
             กรุณากรอกข้อมูลให้ครบถ้วน:{" "}
             <span className="font-semibold">{getMissingFields(profile).join(", ")}</span>
           </p>
@@ -268,18 +267,13 @@ const cleanPayload = {
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-purple-50 border-4 border-white shadow-lg flex items-center justify-center overflow-hidden">
               <User size={60} className="md:w-20 md:h-20 text-purple-300" />
             </div>
-            {isEditing && (
-              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white text-xs font-medium">เปลี่ยนรูป</span>
-              </div>
-            )}
           </div>
           <div className="text-center">
             <h3 className="font-bold text-lg md:text-xl text-gray-900 break-words max-w-[200px]">
               {profile.firstName} {profile.lastName}
             </h3>
             <span className="inline-block mt-2 px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full uppercase tracking-wide">
-              {profile.role || "สมาชิกทั่วไป"}
+              {profile?.role == "ADMIN" ? "แอดมิน" : "สมาชิกทั่วไป"}
             </span>
           </div>
         </div>
@@ -347,8 +341,8 @@ const cleanPayload = {
                   </div>
                 </div>
               ) : (
-                <div className="w-full pl-10 pr-4 py-2.5 bg-white border-b border-gray-100 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px] relative">
-                  <div className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <div className="w-full pl-10 pr-4 py-2.5 bg-white border-b border-gray-200 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px] relative">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                     <Users size={18} />
                   </div>
                   {genderOptions.find((g) => g.id === updateProfile.gender)
@@ -360,6 +354,11 @@ const cleanPayload = {
             <InputField
               label="วันเดือนปีเกิด"
               value={updateProfile.dateOfBirth}
+              displayValue={
+                updateProfile.dateOfBirth
+                  ? FormatDate(updateProfile.dateOfBirth, "thaiShort")
+                  : "-"
+              }
               onChange={(v) => handleChange("dateOfBirth", v)}
               isEditing={isEditing}
               type="date"
@@ -414,6 +413,7 @@ const cleanPayload = {
             </div>
             <div>
               <SelectField
+                key={updateProfile?.country?.id ?? 'no-country'}
                 label="จังหวัด / เมือง"
                 value={updateProfile?.city?.id}
                 options={cities}
@@ -443,7 +443,7 @@ const cleanPayload = {
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base"
                 />
               ) : (
-                <div className="w-full px-4 py-3 bg-gray-50 rounded-xl text-gray-700 min-h-[50px] flex items-center border border-transparent text-sm md:text-base break-words shadow-sm">
+                <div className="w-full px-4 py-3 bg-white border-b border-gray-200 text-gray-800 font-medium min-h-[50px] flex items-center text-sm md:text-base break-words">
                   {updateProfile.address || "-"}
                 </div>
               )}
@@ -486,12 +486,14 @@ const cleanPayload = {
 function InputField({
   label,
   value,
+  displayValue,
   onChange,
   isEditing,
   type = "text",
   icon,
   disabled = false,
   placeholder = "",
+  maxLength,
 }) {
   return (
     <div className="flex flex-col">
@@ -512,6 +514,7 @@ function InputField({
               onChange={(e) => onChange(e.target.value)}
               disabled={disabled}
               placeholder={placeholder}
+              maxLength={maxLength}
               className={`w-full ${
                 icon ? "pl-10" : "pl-4"
               } pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-gray-700 text-sm md:text-base ${
@@ -523,14 +526,14 @@ function InputField({
           <div
             className={`w-full ${
               icon ? "pl-10" : "pl-4"
-            } pr-4 py-2.5 bg-white border-b border-gray-100 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px]`}
+            } pr-4 py-2.5 bg-white border-b border-gray-200 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px] relative`}
           >
             {icon && (
-              <div className="absolute left-0 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                 {icon}
               </div>
             )}
-            <span className="truncate w-full block">{value || "-"}</span>
+            <span className="truncate w-full block">{displayValue ?? value ?? "-"}</span>
           </div>
         )}
       </div>
@@ -597,10 +600,10 @@ function SelectField({
           <div
             className={`w-full ${
               icon ? "pl-10" : "pl-4"
-            } pr-4 py-2.5 bg-white border-b border-gray-200 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px]`}
+            } pr-4 py-2.5 bg-white border-b border-gray-200 text-gray-800 font-medium flex items-center text-sm md:text-base min-h-[44px] relative`}
           >
             {icon && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 text-gray-400">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                 {icon}
               </div>
             )}

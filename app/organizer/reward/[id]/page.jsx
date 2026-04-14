@@ -113,7 +113,7 @@ export default function EventRewardsDetailPage() {
         message={notification.message}
       />
 
-      <div className="bg-white border-b border-gray-200 mt-20">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
           <button
             onClick={() => router.back()}

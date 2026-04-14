@@ -102,7 +102,7 @@ export default function SelectEventSurveyPage() {
   ];
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen mt-20">
+    <div className="p-8 bg-slate-50 min-h-screen">
       <Notification
         isVisible={notification.isVisible}
         isError={notification.isError}

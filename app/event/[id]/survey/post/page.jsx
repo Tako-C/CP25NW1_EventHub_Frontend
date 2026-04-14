@@ -212,7 +212,7 @@ export default function PostSurveyForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 mt-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
       <Notification
         isVisible={notification.isVisible}
         isError={notification.isError}

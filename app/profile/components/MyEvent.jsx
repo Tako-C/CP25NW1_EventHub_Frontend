@@ -35,10 +35,10 @@ export default function MyEventPage({ events }) {
       <div className="mb-6 border-b border-gray-100 pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
-            Events History
+            ประวัติ Events
           </h2>
           <p className="text-gray-500 text-sm mt-1">
-            Events you have registered for
+            Events ที่คุณลงทะเบียนเข้าร่วม
           </p>
         </div>
 
@@ -62,13 +62,13 @@ export default function MyEventPage({ events }) {
       {filteredEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-center bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 p-4">
           <Calendar className="w-12 h-12 text-gray-300 mb-2" />
-          <p className="text-gray-500 text-lg font-medium">No events found.</p>
+          <p className="text-gray-500 text-lg font-medium">ยังไม่มี Events</p>
           <p className="text-gray-400 text-sm">
-            Try changing your filter or join an event.
+            ลองเปลี่ยนตัวกรอง หรือลงทะเบียนเข้าร่วม Event
           </p>
         </div>
       ) : (
-        <div className="space-y-4 md:space-y-6">
+        <div className="space-y-4">
           {filteredEvents.map((event, index) => {
             const isStaffOrOrganizer = ["STAFF", "ORGANIZER"].includes(
               event.eventRole?.toUpperCase(),
@@ -77,35 +77,37 @@ export default function MyEventPage({ events }) {
             return (
               <div
                 key={index}
-                className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 flex flex-col md:flex-row gap-4 md:gap-6 hover:shadow-md transition-shadow duration-300 relative overflow-hidden group"
+                className="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col sm:flex-row gap-4 hover:shadow-md transition-shadow duration-300 relative overflow-hidden"
               >
                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-purple-500 rounded-l-2xl"></div>
 
-                <div className="flex-shrink-0 w-full md:w-60 h-48 md:h-40 bg-gray-100 rounded-xl overflow-hidden relative shadow-inner">
+                {/* Event image */}
+                <div className="flex-shrink-0 w-full sm:w-40 md:w-48 h-44 sm:h-32 md:h-36 bg-gray-100 rounded-xl overflow-hidden relative">
                   <EventCardImage
                     imageCard={event.imageCard}
                     eventName={event.eventName}
                   />
                   {event.isEnded && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
-                      <span className="text-white font-bold tracking-wider uppercase border-2 border-white px-3 py-1 rounded text-sm md:text-base">
-                        Event Ended
+                      <span className="text-white font-bold uppercase border-2 border-white px-3 py-1 rounded text-xs">
+                        จบแล้ว
                       </span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex-1 flex flex-col justify-between py-1">
+                {/* Event info */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                   <div>
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                    <div className="flex items-start justify-between gap-2 mb-2">
                       <h3
-                        className="text-lg md:text-xl font-bold text-gray-900 line-clamp-2 sm:line-clamp-1 transition-colors cursor-default"
+                        className="text-base md:text-lg font-bold text-gray-900 line-clamp-2 min-w-0"
                         title={event.eventName}
                       >
                         {event.eventName}
                       </h3>
                       <span
-                        className={`self-start sm:self-auto flex-shrink-0 px-3 py-1 text-xs font-bold uppercase tracking-wide rounded-full ${
+                        className={`flex-shrink-0 px-2.5 py-1 text-xs font-bold uppercase rounded-full ${
                           isStaffOrOrganizer
                             ? "bg-indigo-100 text-indigo-700"
                             : "bg-purple-100 text-purple-700"
@@ -115,99 +117,85 @@ export default function MyEventPage({ events }) {
                       </span>
                     </div>
 
-                    <div className="space-y-2 mt-2 md:mt-3">
-                      <p className="text-gray-600 flex items-start gap-2 text-sm">
-                        <Calendar
-                          size={16}
-                          className="text-purple-500 mt-0.5 flex-shrink-0"
-                        />
-                        <span className="font-medium whitespace-nowrap">
-                          Date:
-                        </span>
-                        <span>{FormatDate(event.dateStart)}</span>
+                    <div className="space-y-1.5">
+                      <p className="text-gray-600 flex items-center gap-2 text-sm">
+                        <Calendar size={14} className="text-purple-500 flex-shrink-0" />
+                        <span>{FormatDate(event.startDate || event.dateStart, "thaiShort")}</span>
                       </p>
-
                       {event.location && (
                         <p className="text-gray-600 flex items-start gap-2 text-sm">
-                          <MapPin
-                            size={16}
-                            className="text-purple-500 mt-0.5 flex-shrink-0"
-                          />
-                          <span className="line-clamp-1">{event.location}</span>
+                          <MapPin size={14} className="text-purple-500 flex-shrink-0 mt-0.5" />
+                          <span className="line-clamp-1 min-w-0">{event.location}</span>
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 mt-4 md:mt-5">
+
+                  {/* Action buttons */}
+                  <div className="flex flex-wrap gap-2 mt-3">
                     {isStaffOrOrganizer ? (
                       <button
-                        onClick={() =>
-                          router.push(
-                            `/staff/event/check-in?eventId=${event.eventId}`,
-                          )
-                        }
-                        className="w-full sm:w-auto justify-center flex items-center gap-2 bg-purple-700 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95"
+                        onClick={() => router.push(`/staff/event/check-in?eventId=${event.eventId}`)}
+                        className="flex items-center gap-1.5 bg-purple-700 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all active:scale-95"
                       >
-                        <ClipboardCheck size={16} />
+                        <ClipboardCheck size={14} />
                         Manual Check-in
                       </button>
                     ) : !event.postSurveyCompleted && event.hasPostSurvey ? (
                       <button
-                        onClick={() =>
-                          router.push(`/event/${event?.eventId}/survey/post`)
-                        }
-                        className="w-full sm:w-auto justify-center flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95"
+                        onClick={() => router.push(`/event/${event?.eventId}/survey/post`)}
+                        className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all active:scale-95"
                       >
-                        <MessageSquare size={16} />
-                        Give Feedback
+                        <MessageSquare size={14} />
+                        ให้คะแนน Event
                       </button>
                     ) : event.postSurveyCompleted ? (
-                      <div className="w-full sm:w-auto justify-center flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg text-sm font-medium border border-green-100">
-                        <span className="text-lg">✓</span> Feedback Sent
+                      <div className="flex items-center gap-1.5 text-green-600 bg-green-50 px-3 py-2 rounded-lg text-sm font-medium border border-green-100">
+                        <span>✓</span> ส่งความคิดเห็นแล้ว
                       </div>
                     ) : (
-                      <div className="w-full sm:w-auto justify-center flex items-center gap-2 text-gray-400 bg-gray-50 px-4 py-2 rounded-lg text-sm border border-gray-100">
-                        Feedback not available
+                      <div className="flex items-center gap-1.5 text-gray-400 bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
+                        ยังไม่เปิดรับความคิดเห็น
+                      </div>
+                    )}
+
+                    {event.hasPreSurvey && !event.preSurveyCompleted && (
+                      <button
+                        onClick={() => router.push(`/event/${event?.eventId}/registration?mode=survey-only`)}
+                        className="flex items-center gap-1.5 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all active:scale-95"
+                      >
+                        <MessageSquare size={14} />
+                        Pre-Survey
+                      </button>
+                    )}
+                    {event.hasPreSurvey && event.preSurveyCompleted && (
+                      <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-3 py-2 rounded-lg text-sm font-medium border border-blue-100">
+                        <span>✓</span> ทำ Pre-Survey แล้ว
                       </div>
                     )}
                   </div>
+                </div>
 
-                  {/* Pre Survey */}
-                  {event.hasPreSurvey && !event.preSurveyCompleted  && (
-                    <button
-                      onClick={() =>
-                        router.push(
-                          `/event/${event?.eventId}/registration?mode=survey-only`,
-                        )
-                      }
-                      className="w-full sm:w-auto justify-center flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg font-medium text-sm transition-all shadow-sm hover:shadow active:scale-95"
-                    >
-                      <MessageSquare size={16} />
-                      Pre Survey
-                    </button>
-                  )}
-                  {event.hasPreSurvey && event.preSurveyCompleted && (
-                    <div className="w-full sm:w-auto justify-center flex items-center gap-2 text-blue-600 bg-blue-50 px-4 py-2 rounded-lg text-sm font-medium border border-blue-100">
-                      <span className="text-lg">✓</span> Pre Survey Done
+                {/* QR Code (ORGANIZER only) */}
+                {event.eventRole?.toUpperCase() === "ORGANIZER" && (
+                  <>
+                    <div className="sm:hidden w-full h-px bg-gray-100"></div>
+                    <div className="hidden sm:block w-px bg-gray-100 self-stretch"></div>
+                    <div className="flex-shrink-0 flex flex-col items-center justify-center gap-2 sm:pl-2">
+                      <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                        <Ticket size={12} />
+                        ตั๋วของคุณ
+                      </p>
+                      <div className="p-1.5 bg-white border border-gray-100 rounded-xl shadow-sm">
+                        <QrCodeImage
+                          qrCodeUrl={event.qrCodeUrl}
+                          isEnded={event.isEnded}
+                          status={event.status}
+                        />
+                      </div>
                     </div>
-                  )}
-                </div>
-
-                <div className="md:hidden w-full h-px bg-gray-100 my-2"></div>
-                <div className="hidden md:block w-px bg-gray-100 mx-2"></div>
-                <div className="flex-shrink-0 flex flex-col items-center justify-center gap-3 md:gap-2 min-w-[120px] pt-2 md:pt-0">
-                  <div className="flex items-center gap-2 md:hidden text-gray-500 text-sm font-medium">
-                    <Ticket size={16} />
-                    <span>Your Ticket</span>
-                  </div>
-                  <div className="p-2 bg-white border border-gray-100 rounded-xl shadow-sm">
-                    <QrCodeImage
-                      qrCodeUrl={event.qrCodeUrl}
-                      isEnded={event.isEnded}
-                      status={event.status}
-                    />
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
             );
           })}

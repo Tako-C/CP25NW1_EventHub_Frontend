@@ -204,30 +204,57 @@ export function QrCodeImage({ qrCodeUrl, isEnded, status }) {
 
   const currentImageSource = getImageUrl();
 
-  if (isCheckedIn) {
-    return (
-      <div className="relative w-24 h-24 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden flex items-center justify-center group select-none">
-        {currentImageSource ? (
-          <img
-            src={currentImageSource}
-            alt="Used QR"
-            className="absolute inset-0 w-full h-full object-contain opacity-10 blur-[1px] grayscale"
-          />
-        ) : (
-          <QrCode size={40} className="text-gray-300 opacity-20" />
-        )}
-        <div className="z-10 flex flex-col items-center justify-center">
-          <div className="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center mb-1 shadow-sm">
-            <CheckCircle size={20} className="text-green-600" />
-          </div>
-          <span className="text-[11px] text-green-700 uppercase tracking-wider">
-            Used
-          </span>
-        </div>
-      </div>
-    );
-  }
+  // if (isCheckedIn) {
+  //   return (
+  //     <div className="relative w-24 h-24 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden flex items-center justify-center group select-none">
+  //       {currentImageSource ? (
+  //         <img
+  //           src={currentImageSource}
+  //           alt="Used QR"
+  //           className="absolute inset-0 w-full h-full object-contain opacity-10 blur-[1px] grayscale"
+  //         />
+  //       ) : (
+  //         <QrCode size={40} className="text-gray-300 opacity-20" />
+  //       )}
+  //       <div className="z-10 flex flex-col items-center justify-center">
+  //         <div className="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center mb-1 shadow-sm">
+  //           <CheckCircle size={20} className="text-green-600" />
+  //         </div>
+  //         <span className="text-[11px] text-green-700 uppercase tracking-wider">
+  //           Used
+  //         </span>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+// utils/getImage.js
 
+if (isCheckedIn) {
+  return (
+    <div className="relative w-24 h-24 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden flex items-center justify-center group select-none">
+      {/* ส่วนรูปภาพ QR ให้ใส่ absolute inset-0 เพื่อให้เต็มพื้นที่ด้านหลัง */}
+      {currentImageSource ? (
+        <img
+          src={currentImageSource}
+          alt="Used QR"
+          className="absolute inset-0 w-full h-full object-contain opacity-10 blur-[1px] grayscale"
+        />
+      ) : (
+        <QrCode size={40} className="absolute text-gray-300 opacity-20" />
+      )}
+      
+      {/* ส่วนของ Overlay (Checkmark และคำว่า Used) */}
+      <div className="relative z-10 flex flex-col items-center justify-center pointer-events-none">
+        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-1 shadow-sm border border-white">
+          <CheckCircle size={22} className="text-green-600" />
+        </div>
+        <span className="text-[11px] font-bold text-green-700 uppercase tracking-wider bg-white/80 px-2 py-0.5 rounded-full">
+          Used
+        </span>
+      </div>
+    </div>
+  );
+}
   if (isLoading) {
     return (
       <div className="w-24 h-24 flex items-center justify-center bg-gray-50 rounded-xl animate-pulse">

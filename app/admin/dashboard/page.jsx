@@ -104,7 +104,7 @@ export default function AdminDashboardList() {
   ];
 
   return (
-    <div className="p-6 md:p-8 bg-slate-50 min-h-screen mt-20">
+    <div className="p-6 md:p-8 bg-slate-50 min-h-screen">
       <Notification
         isVisible={notification.isVisible}
         isError={notification.isError}

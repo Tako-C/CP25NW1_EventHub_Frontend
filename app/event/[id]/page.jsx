@@ -1,26 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { MapPin, Calendar, ChevronDown } from "lucide-react";
-import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { MapPin, Calendar, ChevronDown, Tag, ArrowLeft } from "lucide-react";
 import { FormatDate } from "@/utils/format";
-import { useRouter } from "next/navigation";
-import { getData, getDataNoToken } from "@/libs/fetch";
+import { getDataNoToken } from "@/libs/fetch";
 import { EventCardImage } from "@/utils/getImage";
 
 export default function Page() {
   const { id } = useParams();
   const router = useRouter();
-  const [isDescriptionOpen, setIsDescriptionOpen] = useState(true);
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [eventData, setEventData] = useState(null);
 
-const isPastEvent = () => {
-    if (eventData?.eventStatus !== "FINISHED") return false;
-    return true;
-  };
-
-  const isEventPast = isPastEvent();
+  const isEventPast = eventData?.eventStatus === "FINISHED";
 
   const fetchData = async () => {
     const res = await getDataNoToken(`events/${id}`);
@@ -31,175 +24,154 @@ const isPastEvent = () => {
     fetchData();
   }, []);
 
+  // --- Loading skeleton ---
   if (!eventData) {
     return (
-      <div className="min-h-screen bg-gray-50 mt-20 animate-pulse">
-        <div className="h-[400px] md:h-[600px] bg-gray-200 flex items-center justify-center">
-          <div className="max-w-7xl mx-auto px-4 w-full flex flex-col md:flex-row gap-8 items-center">
-            <div className="w-72 h-72 md:w-96 md:h-96 bg-gray-300 rounded-3xl" />
-            <div className="flex-1 space-y-4 w-full max-w-lg">
-              <div className="h-10 bg-gray-300 rounded-lg w-3/4 mx-auto md:mx-0" />
-              <div className="h-6 bg-gray-300 rounded-lg w-1/2 mx-auto md:mx-0" />
-              <div className="h-12 bg-gray-300 rounded-full w-full" />
-            </div>
-          </div>
+      <div className="min-h-screen bg-gray-50 animate-pulse">
+        <div className="relative h-[50vh] md:h-[60vh] bg-gray-200" />
+        <div className="max-w-4xl mx-auto px-4 py-8 space-y-4">
+          <div className="h-8 bg-gray-200 rounded-xl w-2/3" />
+          <div className="h-5 bg-gray-200 rounded-lg w-1/3" />
+          <div className="h-5 bg-gray-200 rounded-lg w-1/2" />
+          <div className="h-14 bg-gray-200 rounded-full w-full md:w-64 mt-6" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 mt-20">
-      <div
-        className={`relative h-auto md:h-[600px] bg-gradient-to-r from-gray-200 to-gray-300 ${
-          isEventPast ? "opacity-80" : ""
-        }`}
-      >
-        <div
-          className={`absolute inset-0 opacity-40 ${
-            isEventPast ? "grayscale" : ""
-          }`}
-        >
-          {eventData && (
-            <div className="w-full h-full relative">
-              <EventCardImage
-                imageCard={eventData?.images?.imgDetail}
-                eventName={eventData?.eventName}
-              />
-            </div>
-          )}
+    <div className="min-h-screen bg-gray-50">
+
+      {/* ─── Hero Banner ─── */}
+      <div className="relative h-[50vh] md:h-[60vh] overflow-hidden bg-slate-900">
+
+        {/* Background image — full opacity with dark overlay */}
+        <div className={`absolute inset-0 ${isEventPast ? "grayscale" : ""}`}>
+          <EventCardImage
+            imageCard={eventData?.images?.imgDetail || eventData?.images?.imgCard}
+            eventName={eventData?.eventName}
+          />
         </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-          <div className="flex flex-col md:flex-row items-center justify-center h-full gap-8 py-10 md:py-0">
-            <div className="bg-white rounded-3xl shadow-2xl w-72 h-72 md:w-96 md:h-96 p-4 flex-shrink-0 relative">
-              <div
-                className={`w-full h-full bg-gray-100 rounded-2xl overflow-hidden relative ${
-                  isEventPast ? "grayscale" : ""
-                }`}
-              >
-                <EventCardImage
-                  imageCard={eventData?.images?.imgDetail}
-                  eventName={eventData?.eventName}
-                />
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="absolute top-4 left-4 z-10 flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium bg-black/30 hover:bg-black/50 backdrop-blur-sm px-3 py-2 rounded-full transition-all"
+        >
+          <ArrowLeft size={15} />
+          กลับ
+        </button>
+
+        {/* Event Ended badge */}
+        {isEventPast && (
+          <div className="absolute top-4 right-4 z-10 bg-red-600 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg">
+            Event Ended
+          </div>
+        )}
+
+        {/* Hero content — bottom aligned */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 z-10">
+          <div className="max-w-4xl mx-auto">
+
+            {/* Event type badge */}
+            {eventData?.eventTypeId?.eventTypeName && (
+              <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
+                <Tag size={11} />
+                {eventData.eventTypeId.eventTypeName}
               </div>
-              {isEventPast && (
-                <div className="absolute top-8 right-8 bg-red-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                  Event Ended
-                </div>
-              )}
-            </div>
+            )}
 
-            <div className="flex flex-col items-center space-y-6 w-full md:w-auto">
-              <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 text-center w-full max-w-lg">
-                <h1
-                  className={`text-2xl md:text-4xl font-bold mb-4 md:mb-6 ${
-                    isEventPast ? "text-gray-600" : "text-gray-900"
-                  }`}
-                >
-                  {eventData?.eventName || (
-                    <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-                  )}
-                </h1>
+            <h1 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight drop-shadow-md">
+              {eventData?.eventName}
+            </h1>
 
-                <div className="space-y-4 text-left">
-                  <div
-                    className={`flex items-center gap-3 ${
-                      isEventPast ? "text-gray-600" : "text-gray-700"
-                    }`}
-                  >
-                    <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                    <span className="text-base md:text-lg font-medium break-words">
-                      {eventData ? eventData.location : "Loading location..."}
-                    </span>
-                  </div>
-
-                  <div
-                    className={`flex items-center gap-3 ${
-                      isEventPast ? "text-gray-600" : "text-gray-700"
-                    }`}
-                  >
-                    <Calendar className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                    <span className="text-base md:text-lg font-medium">
-                      {`${FormatDate(eventData?.startDate)} - ${FormatDate(
-                        eventData?.endDate,
-                      )}` || "null"}
-                    </span>
-                  </div>
-                </div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-white/85 text-sm md:text-base">
+              <div className="flex items-center gap-2">
+                <MapPin size={16} className="text-purple-300 flex-shrink-0" />
+                <span className="font-medium">{eventData?.location || "—"}</span>
               </div>
-
-              <button
-                className={`w-full md:w-auto font-semibold px-8 md:px-32 py-4 rounded-full shadow-lg transition-all ${
-                  isEventPast
-                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                    : "bg-blue-900 hover:bg-blue-800 text-white transform hover:scale-105 active:scale-95"
-                }`}
-                onClick={() => {
-                  if (!isEventPast) {
-                    router.push(`/event/${id}/registration`);
-                  }
-                }}
-                disabled={isEventPast}
-              >
-                {isEventPast ? "Registration Closed" : "Register Now"}
-              </button>
-              {isEventPast && (
-                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 w-full md:w-auto">
-                  <p className="text-sm text-red-700 text-center font-medium">
-                    This event has ended. Registration is no longer available.
-                  </p>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <Calendar size={16} className="text-purple-300 flex-shrink-0" />
+                <span className="font-medium">
+                  {FormatDate(eventData?.startDate)} – {FormatDate(eventData?.endDate)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+      {/* ─── CTA + info strip ─── */}
+      <div className="bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center gap-4 justify-between">
+          <div className="text-center sm:text-left">
+            {isEventPast ? (
+              <p className="text-sm text-red-600 font-medium">
+                งานนี้สิ้นสุดแล้ว ไม่สามารถลงทะเบียนได้
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500">
+                กดปุ่มเพื่อลงทะเบียนเข้าร่วมงานนี้
+              </p>
+            )}
+          </div>
+
+          <button
+            onClick={() => {
+              if (!isEventPast) router.push(`/event/${id}/registration`);
+            }}
+            disabled={isEventPast}
+            className={`w-full sm:w-auto font-semibold px-10 py-3.5 rounded-full shadow-md transition-all text-base ${
+              isEventPast
+                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white hover:scale-105 active:scale-95 hover:shadow-purple-200 hover:shadow-lg"
+            }`}
+          >
+            {isEventPast ? "Registration Closed" : "Register Now"}
+          </button>
+        </div>
+      </div>
+
+      {/* ─── Description ─── */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-8 space-y-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <button
             onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
-            className="flex items-center justify-between w-full"
+            className="flex items-center justify-between w-full px-6 py-5 hover:bg-gray-50 transition-colors"
           >
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900">
-              Description
-            </h2>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">รายละเอียดกิจกรรม</h2>
             <ChevronDown
-              className={`w-6 h-6 text-gray-500 transition-transform ${
+              className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${
                 isDescriptionOpen ? "rotate-180" : ""
               }`}
             />
           </button>
 
           {isDescriptionOpen && (
-            <div
-              className={`mt-6 space-y-4 text-sm md:text-base leading-relaxed ${
-                isEventPast ? "text-gray-600" : "text-gray-700"
-              }`}
-            >
-              <p>{eventData?.eventDesc}</p>
+            <div className="px-6 pb-6 border-t border-gray-100">
+              <p className="text-sm md:text-base text-gray-600 leading-relaxed whitespace-pre-line pt-4">
+                {eventData?.eventDesc || "ไม่มีรายละเอียดกิจกรรม"}
+              </p>
             </div>
           )}
         </div>
-      </div>
 
-      {eventData?.images?.imgMap && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-          <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-6">
-              Location Map
-            </h2>
-            <div className="rounded-xl overflow-hidden border border-gray-100 shadow-inner">
+        {/* ─── Location Map ─── */}
+        {eventData?.images?.imgMap && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-gray-100">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">แผนที่สถานที่จัดงาน</h2>
+            </div>
+            <div className="overflow-hidden">
               <EventCardImage
                 imageCard={eventData.images.imgMap}
                 eventName={`Map of ${eventData.eventName}`}
-                className="w-full h-auto object-cover"
               />
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

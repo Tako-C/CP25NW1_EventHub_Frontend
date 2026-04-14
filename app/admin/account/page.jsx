@@ -162,7 +162,7 @@ const handleStatusChange = async (id, newStatus) => {
   ];
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen mt-20">
+    <div className="p-6 bg-gray-50 min-h-screen">
       <Notification
         isVisible={notification.isVisible}
         isError={notification.isError}

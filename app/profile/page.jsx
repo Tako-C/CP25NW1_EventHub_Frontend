@@ -27,13 +27,17 @@ export default function Page() {
     postCode: '',
     address: '',
     job: '',
-    // totalPoint: '',
     gender: 'N', 
     dateOfBirth: '', 
   });
 
   const [events, setEvent] = useState([]);
   const [rewards, setRewards] = useState([]);
+  const [loadedTabs, setLoadedTabs] = useState({
+    account: true,
+    events: tab === 'events',
+    rewards: tab === 'rewards',
+  });
 
   const fetchUserData = async () => {
     const res = await getData('users/me/profile');
@@ -52,30 +56,21 @@ export default function Page() {
         postCode: userData?.postCode || '',
         address: userData?.address || '',
         job: userData?.job || '',
-        // totalPoint: userData?.totalPoint || '',
         gender: userData?.gender || 'N',
         dateOfBirth: userData?.dateOfBirth ? userData.dateOfBirth.split('T')[0] : '',
       });
     }
   };
 
-const fetchEventData = async () => {
+  const fetchEventData = async () => {
     const res = await getData('users/me/registered-events');
-
     if (res?.statusCode === 200 && Array.isArray(res?.data)) {
       const detailedEventsPromises = res.data.map(async (registeredEvent) => {
         const eventId = registeredEvent.eventId;
-        
         const eventRes = await getData(`/events/${eventId}`);
-
         if (eventRes?.statusCode === 200) {
-
-          return {
-            ...registeredEvent,
-            ...eventRes.data   
-          };
+          return { ...registeredEvent, ...eventRes.data };
         }
-        
         return registeredEvent;
       });
       const detailedEvents = await Promise.all(detailedEventsPromises);
@@ -83,24 +78,13 @@ const fetchEventData = async () => {
     }
   };
 
-  useEffect(() => {
-    fetchUserData();
-    fetchEventData();
-    fetchRewardData();
-    if (tab) {
-      router.replace('/profile', { scroll: false });
-    }
-  }, []);
-
   const fetchRewardData = async () => {
     try {
       const token = Cookies.get('token');
       if (!token) return;
-
       const decoded = jwtDecode(token);
       const userId = decoded.id || decoded.userId || decoded.sub;
       if (!userId) return;
-
       const res = await getData(`events/rewards/${userId}`);
       if (res?.statusCode === 200 && Array.isArray(res?.data)) {
         setRewards(res.data);
@@ -110,63 +94,72 @@ const fetchEventData = async () => {
     }
   };
 
+  useEffect(() => {
+    fetchUserData();
+    if (activePage === 'events') fetchEventData();
+    if (activePage === 'rewards') fetchRewardData();
+    if (tab) {
+      router.replace('/profile', { scroll: false });
+    }
+  }, []);
+
+  const handleTabChange = (page) => {
+    setActivePage(page);
+    if (!loadedTabs[page]) {
+      setLoadedTabs((prev) => ({ ...prev, [page]: true }));
+      if (page === 'events') fetchEventData();
+      if (page === 'rewards') fetchRewardData();
+    }
+  };
+
+  const tabs = [
+    { key: 'account', label: 'บัญชีของฉัน', icon: <User size={20} /> },
+    { key: 'events', label: 'ประวัติ Events', icon: <Calendar size={20} /> },
+    { key: 'rewards', label: 'รางวัลของฉัน', icon: <Gift size={20} /> },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 mt-16 md:mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-full lg:w-80 flex-shrink-0">
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 lg:space-y-4">
-              <button
-                onClick={() => setActivePage('account')}
-                className={`w-full p-3 md:p-4 rounded-xl shadow-sm flex justify-center lg:justify-between items-center hover:shadow-md transition-all ${
-                  activePage === 'account'
-                    ? 'bg-purple-600 text-white lg:bg-gray-200 lg:text-gray-900'
-                    : 'bg-white text-gray-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <User size={20} className="lg:hidden" />
-                  <span className="font-semibold text-sm md:text-lg">
-                    My Account
-                  </span>
-                </div>
-                <ChevronRight size={24} className="hidden lg:block" />
-              </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 
-              <button
-                onClick={() => setActivePage('events')}
-                className={`w-full p-3 md:p-4 rounded-xl shadow-sm flex justify-center lg:justify-between items-center hover:shadow-md transition-all ${
-                  activePage === 'events'
-                    ? 'bg-purple-600 text-white lg:bg-gray-200 lg:text-gray-900'
-                    : 'bg-white text-gray-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Calendar size={20} className="lg:hidden" />
-                  <span className="font-semibold text-sm md:text-lg">
-                    Events History
-                  </span>
-                </div>
-                <ChevronRight size={24} className="hidden lg:block" />
-              </button>
+        {/* Mobile / Tablet (< lg): tab bar แนวนอนด้านบน */}
+        <div className="flex lg:hidden gap-2 mb-4 bg-white rounded-xl p-1.5 shadow-sm border border-gray-100">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => handleTabChange(tab.key)}
+              className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+                activePage === tab.key
+                  ? 'bg-purple-600 text-white shadow'
+                  : 'text-gray-500 hover:bg-gray-50'
+              }`}
+            >
+              {tab.icon}
+              <span className="leading-tight text-center">{tab.label}</span>
+            </button>
+          ))}
+        </div>
 
+        {/* Desktop (>= lg): sidebar + content แนวนอน */}
+        <div className="hidden lg:flex gap-8 items-start">
+          <div className="w-64 xl:w-72 flex-shrink-0 flex flex-col gap-2">
+            {tabs.map((tab) => (
               <button
-                onClick={() => setActivePage('rewards')}
-                className={`w-full p-3 md:p-4 rounded-xl shadow-sm flex justify-center lg:justify-between items-center hover:shadow-md transition-all ${
-                  activePage === 'rewards'
-                    ? 'bg-purple-600 text-white lg:bg-gray-200 lg:text-gray-900'
-                    : 'bg-white text-gray-600'
+                key={tab.key}
+                onClick={() => handleTabChange(tab.key)}
+                className={`w-full p-4 rounded-xl flex justify-between items-center transition-all ${
+                  activePage === tab.key
+                    ? 'bg-purple-600 text-white shadow-lg'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <Gift size={20} className="lg:hidden" />
-                  <span className="font-semibold text-sm md:text-lg">
-                    My Rewards
-                  </span>
+                <div className="flex items-center gap-3">
+                  {tab.icon}
+                  <span className="font-bold">{tab.label}</span>
                 </div>
-                <ChevronRight size={24} className="hidden lg:block" />
+                <ChevronRight size={18} className="opacity-50" />
               </button>
-            </div>
+            ))}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -178,12 +171,25 @@ const fetchEventData = async () => {
                 setProfile={setProfile}
               />
             )}
-
             {activePage === 'events' && <MyEventPage events={events} />}
-
             {activePage === 'rewards' && <MyRewardPage rewards={rewards} />}
           </div>
         </div>
+
+        {/* Mobile / Tablet content area */}
+        <div className="lg:hidden">
+          {activePage === 'account' && (
+            <ProfilePage
+              isEditing={isEditing}
+              setIsEditing={setIsEditing}
+              profile={profile}
+              setProfile={setProfile}
+            />
+          )}
+          {activePage === 'events' && <MyEventPage events={events} />}
+          {activePage === 'rewards' && <MyRewardPage rewards={rewards} />}
+        </div>
+
       </div>
     </div>
   );
