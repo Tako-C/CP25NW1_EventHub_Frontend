@@ -29,7 +29,6 @@ const REQUIREMENT_LABELS = {
   CHECK_IN: "Check-in แล้ว",
 };
 
-// 💡 ตั้งค่าเป็น true หากในอนาคตต้องการซ่อน Event และ Reward ที่หมดอายุไปเลยจากหน้า Home
 const HIDE_EXPIRED_ITEMS = false; 
 
 export default function Page() {
@@ -134,13 +133,29 @@ export default function Page() {
     return ["All", ...new Set(types)];
   }, [eventData]);
 
-  const slideShowEvents = useMemo(() => {
-    return eventData.filter((event) => event.status !== "FINISHED");
+  const slides = useMemo(() => {
+    const activeEvents = eventData.filter((event) => event.status !== "FINISHED");
+    const allSlides = [];
+
+    activeEvents.forEach((event) => {
+      const slideImages = event?.images?.imgSlideShow;
+
+      if (Array.isArray(slideImages) && slideImages.length > 0) {
+        slideImages.forEach((img) => {
+          allSlides.push({ ...event, currentSlideImage: img });
+        });
+      } else if (typeof slideImages === "string") {
+        allSlides.push({ ...event, currentSlideImage: slideImages });
+      } else {
+        allSlides.push({ ...event, currentSlideImage: null });
+      }
+    });
+
+    return allSlides;
   }, [eventData]);
 
-  const currentEvent = slideShowEvents[currentEventIndex];
+  const currentEvent = slides[currentEventIndex];
 
-  // 💡 จัดการ Sort และซ่อน Events
   const filteredEvents = useMemo(() => {
     let list = eventData;
 
@@ -165,7 +180,6 @@ export default function Page() {
       }
     });
 
-    // เรียงจากใหม่สุด -> เก่าสุด (อิงจาก startDate)
     const sortByNewest = (a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0);
 
     activeEvents.sort(sortByNewest);
@@ -175,11 +189,9 @@ export default function Page() {
       return activeEvents;
     }
 
-    // เอา Active ขึ้นก่อน แล้วตามด้วย Expired ด้านล่างสุด
     return [...activeEvents, ...expiredEvents];
   }, [selectedCategory, eventData]);
 
-  // 💡 จัดการ Sort และซ่อน Rewards
   const sortedRewards = useMemo(() => {
     const now = new Date();
     const activeRewards = [];
@@ -195,7 +207,6 @@ export default function Page() {
       }
     });
 
-    // เรียงจากใหม่สุด -> เก่าสุด (อิงจาก createdAt หรือถ้าไม่มีให้ใช้ id แทน)
     const sortByNewest = (a, b) => {
       if (a.createdAt && b.createdAt) {
         return new Date(b.createdAt) - new Date(a.createdAt);
@@ -210,19 +221,18 @@ export default function Page() {
       return activeRewards;
     }
 
-    // เอา Active ขึ้นก่อน แล้วตามด้วย Expired ด้านล่างสุด
     return [...activeRewards, ...expiredRewards];
   }, [rewardsData]);
 
   const nextEvent = () => {
-    if (slideShowEvents.length === 0) return;
-    setCurrentEventIndex((prev) => (prev + 1) % slideShowEvents.length);
+    if (slides.length === 0) return;
+    setCurrentEventIndex((prev) => (prev + 1) % slides.length);
   };
 
   const prevEvent = () => {
-    if (slideShowEvents.length === 0) return;
+    if (slides.length === 0) return;
     setCurrentEventIndex(
-      (prev) => (prev - 1 + slideShowEvents.length) % slideShowEvents.length,
+      (prev) => (prev - 1 + slides.length) % slides.length,
     );
   };
 
@@ -231,14 +241,14 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (!isAutoPlay || isHovered || slideShowEvents.length === 0) return;
+    if (!isAutoPlay || isHovered || slides.length === 0) return;
 
     const interval = setInterval(() => {
-      setCurrentEventIndex((prev) => (prev + 1) % slideShowEvents.length);
+      setCurrentEventIndex((prev) => (prev + 1) % slides.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isAutoPlay, isHovered, slideShowEvents.length]);
+  }, [isAutoPlay, isHovered, slides.length]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -250,12 +260,12 @@ export default function Page() {
           <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
             <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-emerald-500"></div>
           </div>
-        ) : slideShowEvents.length > 0 ? (
+        ) : slides.length > 0 ? (
           <>
             <div className="absolute inset-0">
-              {slideShowEvents.map((event, index) => (
+              {slides.map((slide, index) => (
                 <div
-                  key={event.id || index} 
+                  key={`${slide.id}-${index}`} 
                   className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
                     index === currentEventIndex
                       ? "opacity-100 z-0"
@@ -263,8 +273,8 @@ export default function Page() {
                   }`}
                 >
                   <EventCardImage
-                    imageCard={event?.images?.imgSlideShow}
-                    eventName={event?.eventName}
+                    imageCard={slide.currentSlideImage} 
+                    eventName={slide?.eventName}
                   />
                 </div>
               ))}
@@ -339,7 +349,7 @@ export default function Page() {
 
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-10">
                 <div className="flex items-center gap-2 px-4 py-3 bg-black/30 backdrop-blur-md rounded-full">
-                  {slideShowEvents.map((_, index) => (
+                  {slides.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => goToSlide(index)}
@@ -360,8 +370,8 @@ export default function Page() {
 
               <div className="absolute top-24 right-4 md:top-8 md:right-8 px-4 py-2 bg-black/30 backdrop-blur-md rounded-full z-10">
                 <span className="text-white font-medium">
-                  {slideShowEvents.length > 0
-                    ? `${currentEventIndex + 1} / ${slideShowEvents.length}`
+                  {slides.length > 0
+                    ? `${currentEventIndex + 1} / ${slides.length}`
                     : "0 / 0"}
                 </span>
               </div>
@@ -422,7 +432,6 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Rewards Section */}
       <section id="rewards" className="bg-gradient-to-b from-gray-50 to-white py-8 md:py-16 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
@@ -458,7 +467,6 @@ export default function Page() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* 💡 ใช้ตัวแปร sortedRewards ตรงนี้แทน rewardsData แบบเดิม */}
               {sortedRewards.map((reward) => {
                 const reqLabel = REQUIREMENT_LABELS[reward.requirementType] || "ไม่มีเงื่อนไข";
                 const endDate = new Date(reward.endRedeemAt);
@@ -471,7 +479,6 @@ export default function Page() {
                     onClick={() => router.push(`/reward/${reward.id}`)}
                     className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col ${isExpired ? "opacity-75 grayscale-[50%]" : ""}`}
                   >
-                    {/* Image — fixed height */}
                     <div className="h-44 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center relative overflow-hidden flex-shrink-0">
                       <RewardImage imagePath={reward.imagePath} rewardName={reward.name} />
                       {isExpired ? (
@@ -483,7 +490,6 @@ export default function Page() {
                       )}
                     </div>
 
-                    {/* Content — flex-1 ทำให้การ์ดสูงเท่ากัน */}
                     <div className="p-4 flex flex-col flex-1">
                       <p className="text-xs text-amber-600 font-medium mb-1 line-clamp-1">{reward.eventName}</p>
                       <h4 className="font-bold text-gray-900 mb-1 line-clamp-1">{reward.name}</h4>
