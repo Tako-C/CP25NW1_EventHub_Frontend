@@ -53,7 +53,7 @@ export const getData = (path) => apiFetch(path, { method: "GET" });
 
 export const getDataNoToken = async (path) => {
   const response = await fetch(`${url}/${path}`);
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(`Error ${response.status}: ${errorText}`);
@@ -74,10 +74,24 @@ export const authLoginPassword = (email, password) =>
     body: JSON.stringify({ email, password }),
   });
 
-export const authRegisterRequest = (firstName, lastName, email, password, gender, dateOfBirth) =>
+export const authRegisterRequest = (
+  firstName,
+  lastName,
+  email,
+  password,
+  gender,
+  dateOfBirth,
+) =>
   apiFetch("auth/register/otp/request", {
     method: "POST",
-    body: JSON.stringify({ firstName, lastName, email, password, gender, dateOfBirth }),
+    body: JSON.stringify({
+      firstName,
+      lastName,
+      email,
+      password,
+      gender,
+      dateOfBirth,
+    }),
   });
 
 export const authRegisterVerify = (email, otp, password) =>
@@ -391,8 +405,18 @@ export const updateRewardByAdmin = (eventId, rewardId, formData) =>
     method: "PUT",
     body: formData,
   });
-  
+
 export const hardDeleteRewardByAdmin = (eventId, rewardId) =>
   apiFetch(`admin/events/${eventId}/rewards/${rewardId}/hard-delete`, {
     method: "DELETE",
   });
+
+export const importUsersToEvent = (id, file) => {
+  const formData = new FormData();
+  formData.append("file", file); 
+
+  return apiFetch(`admin/events/${id}/users/import`, {
+    method: "POST",
+    body: formData,
+  });
+};
