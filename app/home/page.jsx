@@ -29,6 +29,9 @@ const REQUIREMENT_LABELS = {
   CHECK_IN: "Check-in แล้ว",
 };
 
+// 💡 ตั้งค่าเป็น true หากในอนาคตต้องการซ่อน Event และ Reward ที่หมดอายุไปเลยจากหน้า Home
+const HIDE_EXPIRED_ITEMS = false; 
+
 export default function Page() {
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
   const [eventData, setEventData] = useState([]);
@@ -75,7 +78,7 @@ export default function Page() {
     checkUserToken();
   }, []);
 
-   const fetchRewards = async () => {
+  const fetchRewards = async () => {
     setRewardsLoading(true);
     try {
       const res = await getDataNoToken("events/rewards");
@@ -137,6 +140,7 @@ export default function Page() {
 
   const currentEvent = slideShowEvents[currentEventIndex];
 
+  // 💡 จัดการ Sort และซ่อน Events
   const filteredEvents = useMemo(() => {
     let list = eventData;
 
@@ -146,24 +150,81 @@ export default function Page() {
       );
     }
 
-    return [...list].sort((a, b) => {
-      if (a.status !== "FINISHED" && b.status === "FINISHED") return -1;
-      if (a.status === "FINISHED" && b.status !== "FINISHED") return 1;
-      return 0;
+    const now = new Date();
+    const activeEvents = [];
+    const expiredEvents = [];
+
+    list.forEach((event) => {
+      const isFinished = event.status === "FINISHED";
+      const isExpiredDate = event.endDate ? new Date(event.endDate) < now : false;
+
+      if (isFinished || isExpiredDate) {
+        expiredEvents.push(event);
+      } else {
+        activeEvents.push(event);
+      }
     });
+
+    // เรียงจากใหม่สุด -> เก่าสุด (อิงจาก startDate)
+    const sortByNewest = (a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0);
+
+    activeEvents.sort(sortByNewest);
+    expiredEvents.sort(sortByNewest);
+
+    if (HIDE_EXPIRED_ITEMS) {
+      return activeEvents;
+    }
+
+    // เอา Active ขึ้นก่อน แล้วตามด้วย Expired ด้านล่างสุด
+    return [...activeEvents, ...expiredEvents];
   }, [selectedCategory, eventData]);
 
-const nextEvent = () => {
-  if (slideShowEvents.length === 0) return;
-  setCurrentEventIndex((prev) => (prev + 1) % slideShowEvents.length);
-};
+  // 💡 จัดการ Sort และซ่อน Rewards
+  const sortedRewards = useMemo(() => {
+    const now = new Date();
+    const activeRewards = [];
+    const expiredRewards = [];
 
-const prevEvent = () => {
-  if (slideShowEvents.length === 0) return;
-  setCurrentEventIndex(
-    (prev) => (prev - 1 + slideShowEvents.length) % slideShowEvents.length,
-  );
-};
+    rewardsData.forEach((reward) => {
+      const isExpired = reward.endRedeemAt ? new Date(reward.endRedeemAt) < now : false;
+      
+      if (isExpired) {
+        expiredRewards.push(reward);
+      } else {
+        activeRewards.push(reward);
+      }
+    });
+
+    // เรียงจากใหม่สุด -> เก่าสุด (อิงจาก createdAt หรือถ้าไม่มีให้ใช้ id แทน)
+    const sortByNewest = (a, b) => {
+      if (a.createdAt && b.createdAt) {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+      return (b.id || 0) - (a.id || 0);
+    };
+
+    activeRewards.sort(sortByNewest);
+    expiredRewards.sort(sortByNewest);
+
+    if (HIDE_EXPIRED_ITEMS) {
+      return activeRewards;
+    }
+
+    // เอา Active ขึ้นก่อน แล้วตามด้วย Expired ด้านล่างสุด
+    return [...activeRewards, ...expiredRewards];
+  }, [rewardsData]);
+
+  const nextEvent = () => {
+    if (slideShowEvents.length === 0) return;
+    setCurrentEventIndex((prev) => (prev + 1) % slideShowEvents.length);
+  };
+
+  const prevEvent = () => {
+    if (slideShowEvents.length === 0) return;
+    setCurrentEventIndex(
+      (prev) => (prev - 1 + slideShowEvents.length) % slideShowEvents.length,
+    );
+  };
 
   const goToSlide = (index) => {
     setCurrentEventIndex(index);
@@ -295,18 +356,6 @@ const prevEvent = () => {
                     </button>
                   ))}
                 </div>
-
-                {/* <button
-                  onClick={() => setIsAutoPlay(!isAutoPlay)}
-                  className="p-3 bg-black/30 hover:bg-black/40 backdrop-blur-md rounded-full transition-all duration-300"
-                  aria-label={isAutoPlay ? "Pause autoplay" : "Play autoplay"}
-                >
-                  {isAutoPlay ? (
-                    <Pause className="w-4 h-4 text-white" />
-                  ) : (
-                    <Play className="w-4 h-4 text-white" />
-                  )}
-                </button> */}
               </div>
 
               <div className="absolute top-24 right-4 md:top-8 md:right-8 px-4 py-2 bg-black/30 backdrop-blur-md rounded-full z-10">
@@ -402,59 +451,60 @@ const prevEvent = () => {
                 </div>
               ))}
             </div>
-          ) : rewardsData.length === 0 ? (
+          ) : sortedRewards.length === 0 ? (
             <div className="text-center py-16 text-gray-400">
               <Gift className="w-12 h-12 mx-auto mb-3 text-gray-200" />
               <p>ยังไม่มีรางวัลในขณะนี้</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rewardsData.map((reward) => {
-              const reqLabel = REQUIREMENT_LABELS[reward.requirementType] || "ไม่มีเงื่อนไข";
-              const endDate = new Date(reward.endRedeemAt);
-              const isExpired = endDate < new Date();
-              const daysLeft = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
+              {/* 💡 ใช้ตัวแปร sortedRewards ตรงนี้แทน rewardsData แบบเดิม */}
+              {sortedRewards.map((reward) => {
+                const reqLabel = REQUIREMENT_LABELS[reward.requirementType] || "ไม่มีเงื่อนไข";
+                const endDate = new Date(reward.endRedeemAt);
+                const isExpired = endDate < new Date();
+                const daysLeft = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
 
-              return (
-                <div
-                  key={reward.id}
-                  onClick={() => router.push(`/reward/${reward.id}`)}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col"
-                >
-                  {/* Image — fixed height */}
-                  <div className="h-44 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center relative overflow-hidden flex-shrink-0">
-                    <RewardImage imagePath={reward.imagePath} rewardName={reward.name} />
-                    {isExpired ? (
-                      <span className="absolute top-3 right-3 bg-gray-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">หมดเวลา</span>
-                    ) : daysLeft <= 3 ? (
-                      <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full animate-pulse">เหลือ {daysLeft} วัน!</span>
-                    ) : (
-                      <span className="absolute top-3 right-3 bg-green-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">รับได้เลย</span>
-                    )}
-                  </div>
+                return (
+                  <div
+                    key={reward.id}
+                    onClick={() => router.push(`/reward/${reward.id}`)}
+                    className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-pointer flex flex-col ${isExpired ? "opacity-75 grayscale-[50%]" : ""}`}
+                  >
+                    {/* Image — fixed height */}
+                    <div className="h-44 bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center relative overflow-hidden flex-shrink-0">
+                      <RewardImage imagePath={reward.imagePath} rewardName={reward.name} />
+                      {isExpired ? (
+                        <span className="absolute top-3 right-3 bg-gray-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">หมดเวลา</span>
+                      ) : daysLeft <= 3 ? (
+                        <span className="absolute top-3 right-3 bg-red-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full animate-pulse shadow-sm">เหลือ {daysLeft} วัน!</span>
+                      ) : (
+                        <span className="absolute top-3 right-3 bg-green-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full shadow-sm">รับได้เลย</span>
+                      )}
+                    </div>
 
-                  {/* Content — flex-1 ทำให้การ์ดสูงเท่ากัน */}
-                  <div className="p-4 flex flex-col flex-1">
-                    <p className="text-xs text-amber-600 font-medium mb-1 line-clamp-1">{reward.eventName}</p>
-                    <h4 className="font-bold text-gray-900 mb-1 line-clamp-1">{reward.name}</h4>
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-3 flex-1">{reward.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium">
-                        <Tag className="w-3 h-3" />{reqLabel}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium">
-                        <Gift className="w-3 h-3" />เหลือ {reward.quantity}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400 border-t border-gray-100 pt-3 mt-auto">
-                      <Clock className="w-3 h-3" />
-                      หมดเขต {endDate.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}
+                    {/* Content — flex-1 ทำให้การ์ดสูงเท่ากัน */}
+                    <div className="p-4 flex flex-col flex-1">
+                      <p className="text-xs text-amber-600 font-medium mb-1 line-clamp-1">{reward.eventName}</p>
+                      <h4 className="font-bold text-gray-900 mb-1 line-clamp-1">{reward.name}</h4>
+                      <p className="text-sm text-gray-500 line-clamp-2 mb-3 flex-1">{reward.description}</p>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium">
+                          <Tag className="w-3 h-3" />{reqLabel}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium">
+                          <Gift className="w-3 h-3" />เหลือ {reward.quantity}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400 border-t border-gray-100 pt-3 mt-auto">
+                        <Clock className="w-3 h-3" />
+                        หมดเขต {endDate.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </section>
