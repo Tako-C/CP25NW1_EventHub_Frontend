@@ -32,8 +32,9 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   WarningOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import {
   getData,
   postAddUserToEvent,
@@ -100,7 +101,7 @@ export default function UserEventPage() {
   const [parsedRows, setParsedRows] = useState([]);
   const [importResult, setImportResult] = useState(null);
   const [fileName, setFileName] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null); 
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const [notification, setNotification] = useState({
     isVisible: false,
@@ -225,9 +226,48 @@ export default function UserEventPage() {
     }
   };
 
+  const downloadTemplate = (eventName) => {
+    const wb = XLSX.utils.book_new();
+    const headerData = [["First Name", "Last Name", "Email", "Gender", "Date of Birth"]];
+
+    const colsConfig = [
+      { wch: 20 }, { wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 20 },
+    ];
+
+    const headerStyle = {
+      fill: { patternType: "solid", fgColor: { rgb: "C6EFCE" } },
+      font: { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } },
+      alignment: { vertical: "center", horizontal: "center" },
+      border: {
+        top: { style: "thin", color: { rgb: "94C493" } },
+        bottom: { style: "thin", color: { rgb: "94C493" } },
+        left: { style: "thin", color: { rgb: "94C493" } },
+        right: { style: "thin", color: { rgb: "94C493" } },
+      },
+    };
+
+    const createStyledSheet = (data) => {
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      ws["!cols"] = colsConfig;
+      const range = XLSX.utils.decode_range(ws["!ref"]);
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const address = XLSX.utils.encode_col(C) + "1";
+        if (!ws[address]) continue;
+        ws[address].s = headerStyle;
+      }
+      return ws;
+    };
+
+    XLSX.utils.book_append_sheet(wb, createStyledSheet(headerData), "STAFF");
+    XLSX.utils.book_append_sheet(wb, createStyledSheet(headerData), "EXHIBITOR");
+
+    const safeName = (eventName || "event").replace(/[^a-zA-Z0-9ก-๙]/g, "_");
+    XLSX.writeFile(wb, `Staff_Exhibitor_Template_${safeName}.xlsx`);
+  };
+
   const handleFileUpload = (file) => {
     setFileName(file.name);
-    setSelectedFile(file); 
+    setSelectedFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -282,16 +322,16 @@ export default function UserEventPage() {
 
   const handleConfirmImport = async () => {
     if (!selectedFile) {
-        showNotification("ไม่พบไฟล์สำหรับอัปโหลด", true);
-        return;
+      showNotification("ไม่พบไฟล์สำหรับอัปโหลด", true);
+      return;
     }
-    
+
     setImportLoading(true);
     try {
       const res = await importUsersToEvent(selectedEvent.id, selectedFile);
-      
+
       setImportResult({
-        success: res?.successCount ?? validRows.length, 
+        success: res?.successCount ?? validRows.length,
         failed: invalidRows.length,
         total: parsedRows.length,
       });
@@ -300,7 +340,9 @@ export default function UserEventPage() {
       await fetchData();
     } catch (error) {
       console.error(error);
-      const errMsg = error.data?.message || "เกิดข้อผิดพลาดในการ import กรุณาลองใหม่อีกครั้ง";
+      const errMsg =
+        error.data?.message ||
+        "เกิดข้อผิดพลาดในการ import กรุณาลองใหม่อีกครั้ง";
       showNotification(errMsg, true);
     } finally {
       setImportLoading(false);
@@ -364,13 +406,22 @@ export default function UserEventPage() {
   ];
 
   const eventColumns = [
-    { title: "ชื่ออีเว้นท์", dataIndex: "name", key: "name", className: "font-medium" },
+    {
+      title: "ชื่ออีเว้นท์",
+      dataIndex: "name",
+      key: "name",
+      className: "font-medium",
+    },
     { title: "วันที่จัดงาน", dataIndex: "date", key: "date" },
     {
       title: "ผู้เข้าร่วม",
       dataIndex: "participantCount",
       key: "participantCount",
-      render: (count) => <Tag color="blue" className="px-3 rounded-full">{count} คน</Tag>,
+      render: (count) => (
+        <Tag color="blue" className="px-3 rounded-full">
+          {count} คน
+        </Tag>
+      ),
     },
     {
       title: "จัดการ",
@@ -407,7 +458,12 @@ export default function UserEventPage() {
       width: 80,
       render: (g) => ({ M: "Male", F: "Female", U: "Other", N: "N/A" }[g] ?? g),
     },
-    { title: "Date of Birth", dataIndex: "dateOfBirth", key: "dateOfBirth", width: 120 },
+    {
+      title: "Date of Birth",
+      dataIndex: "dateOfBirth",
+      key: "dateOfBirth",
+      width: 120,
+    },
     {
       title: "Status",
       key: "status",
@@ -446,30 +502,31 @@ export default function UserEventPage() {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <Title level={2} className="!m-0 text-gray-800">
-            {selectedEvent ? `จัดการผู้ใช้งาน: ${selectedEvent.name}` : "รายการอีเว้นท์ทั้งหมด"}
+            {selectedEvent
+              ? `จัดการผู้ใช้งาน: ${selectedEvent.name}`
+              : "รายการอีเว้นท์ทั้งหมด"}
           </Title>
 
           {selectedEvent && (
             <Space>
-              <Button icon={<ArrowLeftOutlined />} onClick={() => setSelectedEvent(null)}>
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => setSelectedEvent(null)}
+              >
                 กลับหน้าหลัก
               </Button>
-              
-              {/* <Button
-                type="primary"
-                icon={<UserAddOutlined />}
-                onClick={() => setIsAddUserModalOpen(true)}
-                className="bg-green-600"
+
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={() => downloadTemplate(selectedEvent.name)}
               >
-                เพิ่มคนเข้าอีเว้นท์
-              </Button> 
-              */}
+                Download Template
+              </Button>
 
               <Button
                 type="primary"
                 icon={<FileExcelOutlined />}
                 onClick={() => setImportOpen(true)}
-                className="bg-green-600 hover:bg-green-700 border-green-600"
                 style={{ backgroundColor: "#16a34a", borderColor: "#16a34a" }}
               >
                 Import Excel
@@ -494,15 +551,15 @@ export default function UserEventPage() {
         )}
 
         {!selectedEvent ? (
-          <Table 
-            dataSource={events} 
-            columns={eventColumns} 
-            rowKey="id" 
+          <Table
+            dataSource={events}
+            columns={eventColumns}
+            rowKey="id"
             loading={loading}
           />
         ) : (
           <Table
-            dataSource={filteredAndSortedUsers} 
+            dataSource={filteredAndSortedUsers}
             columns={userColumns}
             rowKey={(record) => record.userId || record.id}
             loading={loading}
@@ -597,9 +654,17 @@ export default function UserEventPage() {
               title="รูปแบบไฟล์ที่รองรับ"
               description={
                 <ul className="mt-1 space-y-1 text-sm">
-                  <li>• ไฟล์ <strong>.xlsx</strong> เท่านั้น</li>
-                  <li>• ต้องมี sheet ชื่อ <strong>STAFF</strong> และ/หรือ <strong>EXHIBITOR</strong></li>
-                  <li>• Header row: First Name, Last Name, Email, Gender, Date of Birth</li>
+                  <li>
+                    • ไฟล์ <strong>.xlsx</strong> เท่านั้น
+                  </li>
+                  <li>
+                    • ต้องมี sheet ชื่อ <strong>STAFF</strong> และ/หรือ{" "}
+                    <strong>EXHIBITOR</strong>
+                  </li>
+                  <li>
+                    • Header row: First Name, Last Name, Email, Gender, Date of
+                    Birth
+                  </li>
                   <li>• Gender: Male / Female / M / F</li>
                   <li>• Date of Birth: YYYY-MM-DD</li>
                 </ul>
@@ -632,11 +697,18 @@ export default function UserEventPage() {
                   style={{ backgroundColor: "#22c55e" }}
                   showZero
                 >
-                  <Tag color="green" className="mr-2">พร้อม import</Tag>
+                  <Tag color="green" className="mr-2">
+                    พร้อม import
+                  </Tag>
                 </Badge>
                 {invalidRows.length > 0 && (
-                  <Badge count={invalidRows.length} style={{ backgroundColor: "#ef4444" }}>
-                    <Tag color="red" className="mr-2">มีข้อผิดพลาด</Tag>
+                  <Badge
+                    count={invalidRows.length}
+                    style={{ backgroundColor: "#ef4444" }}
+                  >
+                    <Tag color="red" className="mr-2">
+                      มีข้อผิดพลาด
+                    </Tag>
                   </Badge>
                 )}
               </Space>
@@ -683,16 +755,22 @@ export default function UserEventPage() {
             <Divider />
             <div className="flex justify-center gap-8 text-center">
               <div>
-                <div className="text-3xl font-bold text-green-600">{importResult.success}</div>
+                <div className="text-3xl font-bold text-green-600">
+                  {importResult.success}
+                </div>
                 <div className="text-sm text-gray-500 mt-1">นำเข้าสำเร็จ</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-gray-400">{importResult.total}</div>
+                <div className="text-3xl font-bold text-gray-400">
+                  {importResult.total}
+                </div>
                 <div className="text-sm text-gray-500 mt-1">ทั้งหมด</div>
               </div>
               {importResult.failed > 0 && (
                 <div>
-                  <div className="text-3xl font-bold text-red-500">{importResult.failed}</div>
+                  <div className="text-3xl font-bold text-red-500">
+                    {importResult.failed}
+                  </div>
                   <div className="text-sm text-gray-500 mt-1">พบข้อผิดพลาด</div>
                 </div>
               )}
