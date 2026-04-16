@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react"; // เพิ่ม useMemo
 import {
   Table,
   Button,
@@ -14,7 +14,7 @@ import {
   Typography,
   DatePicker,
 } from "antd";
-import { PlusOutlined, DeleteOutlined, SwapOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons"; // เพิ่ม SearchOutlined
 import {
   getData,
   createAccount,
@@ -27,9 +27,10 @@ import Notification from "@/components/Notification/Notification";
 const { Title } = Typography;
 
 export default function Page() {
-  const [dataSource, setDataSource] = useState(null);
+  const [dataSource, setDataSource] = useState([]); // เปลี่ยนเริ่มต้นเป็น array ว่าง
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState(""); // เพิ่ม state สำหรับ search
   const [form] = Form.useForm();
 
   const [notification, setNotification] = useState({
@@ -37,6 +38,17 @@ export default function Page() {
     isError: false,
     message: "",
   });
+
+  // --- Search Logic ---
+  const filteredData = useMemo(() => {
+    if (!dataSource) return [];
+    return dataSource.filter((user) => {
+      const fullName = `${user.firstName || ""} ${user.lastName || ""}`.toLowerCase();
+      const email = (user.email || "").toLowerCase();
+      const search = searchText.toLowerCase();
+      return fullName.includes(search) || email.includes(search);
+    });
+  }, [dataSource, searchText]);
 
   const showNotification = (msg, isErr = false) => {
     setNotification({
@@ -71,15 +83,15 @@ export default function Page() {
     fetchData();
   }, []);
 
-const handleStatusChange = async (id, newStatus) => {
-  try {
-    await updateStatusAccount(id, newStatus);
-    showNotification(`เปลี่ยนสถานะเป็น ${newStatus} สำเร็จ`);
-    await fetchData();
-  } catch (error) {
-    showNotification("ไม่สามารถเปลี่ยนสถานะได้", true);
-  }
-};
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await updateStatusAccount(id, newStatus);
+      showNotification(`เปลี่ยนสถานะเป็น ${newStatus} สำเร็จ`);
+      await fetchData();
+    } catch (error) {
+      showNotification("ไม่สามารถเปลี่ยนสถานะได้", true);
+    }
+  };
 
   const handleDelete = async (id) => {
     try {
@@ -87,7 +99,6 @@ const handleStatusChange = async (id, newStatus) => {
       showNotification("ลบผู้ใช้งานสำเร็จ");
       await fetchData();
     } catch (error) {
-      // showNotification(error.message || "ไม่สามารถลบผู้ใช้งานได้", true);
       showNotification("ไม่สามารถลบผู้ใช้งานได้", true);
     }
   };
@@ -102,7 +113,6 @@ const handleStatusChange = async (id, newStatus) => {
         await fetchData();
       }
     } catch (error) {
-      // showNotification(error.message || "ไม่สามารถสร้างบัญชีผู้ใช้ได้", true);
       showNotification("ไม่สามารถสร้างบัญชีผู้ใช้ได้", true);
     }
   };
@@ -118,47 +128,47 @@ const handleStatusChange = async (id, newStatus) => {
       dataIndex: "email",
       key: "email",
     },
-{
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    render: (status, record) => (
-      <Select
-        value={status}
-        style={{ width: 120 }}
-        onChange={(value) => handleStatusChange(record.id, value)}
-      >
-        <Select.Option value="ACTIVE">
-          <Tag color="green">ACTIVE</Tag>
-        </Select.Option>
-        <Select.Option value="INACTIVE">
-          <Tag color="grey">INACTIVE</Tag>
-        </Select.Option>
-        <Select.Option value="BAN">
-          <Tag color="red">BAN</Tag>
-        </Select.Option>
-      </Select>
-    ),
-  },
-  {
-    title: "Action",
-    key: "action",
-    render: (_, record) => (
-      <Space size="middle">
-        <Popconfirm
-          title="Delete the user"
-          description="Are you sure to delete this user?"
-          onConfirm={() => handleDelete(record.id)}
-          okText="Yes"
-          cancelText="No"
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status, record) => (
+        <Select
+          value={status}
+          style={{ width: 120 }}
+          onChange={(value) => handleStatusChange(record.id, value)}
         >
-          <Button size="small" danger icon={<DeleteOutlined />}>
-            Delete
-          </Button>
-        </Popconfirm>
-      </Space>
-    ),
-  },
+          <Select.Option value="ACTIVE">
+            <Tag color="green">ACTIVE</Tag>
+          </Select.Option>
+          <Select.Option value="INACTIVE">
+            <Tag color="grey">INACTIVE</Tag>
+          </Select.Option>
+          <Select.Option value="BAN">
+            <Tag color="red">BAN</Tag>
+          </Select.Option>
+        </Select>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <Space size="middle">
+          <Popconfirm
+            title="Delete the user"
+            description="Are you sure to delete this user?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button size="small" danger icon={<DeleteOutlined />}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
   ];
 
   return (
@@ -185,8 +195,20 @@ const handleStatusChange = async (id, newStatus) => {
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-sm">
+        {/* --- ส่วนของ Input Search --- */}
+        <div className="mb-4">
+          <Input
+            placeholder="Search by name or email..."
+            prefix={<SearchOutlined className="text-gray-400" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="max-w-md rounded-lg"
+            allowClear
+          />
+        </div>
+
         <Table
-          dataSource={dataSource}
+          dataSource={filteredData} // เปลี่ยนมาใช้ข้อมูลที่ Filter แล้ว
           columns={columns}
           rowKey="id"
           bordered
@@ -195,6 +217,7 @@ const handleStatusChange = async (id, newStatus) => {
         />
       </div>
 
+      {/* Modal Add New User คงเดิม ... */}
       <Modal
         title="Add New User Account"
         open={isModalOpen}
@@ -237,19 +260,6 @@ const handleStatusChange = async (id, newStatus) => {
           >
             <Input />
           </Form.Item>
-
-          {/* <Form.Item
-            label="Password"
-            name="password"
-            rules={[
-              {
-                required: true,
-                message: "Please input password",
-              },
-            ]}
-          >
-            <Input />
-          </Form.Item> */}
 
           <Form.Item
             label="Date Of Birth"
