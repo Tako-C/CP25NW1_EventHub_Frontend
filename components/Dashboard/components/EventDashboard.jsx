@@ -277,7 +277,9 @@ export default function EventDashboard({ mode = "organizer" }) {
               getData(`events/${id}`),
             ])
           )[1];
-
+      const testData = await getData(`/ai/analysis/${id}`)
+      console.log(testData)
+      
       setTitle(eventRes?.data?.eventName);
       setEventMeta({
         eventName: eventRes?.data?.eventName || "",
