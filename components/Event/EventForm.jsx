@@ -28,6 +28,7 @@ import { FormatDate, now } from "@/utils/format";
 import { useRouter } from "next/navigation";
 import { getEventTypes } from "@/libs/fetch";
 import EventPreview from "./EventPreview"; 
+import UploadBox from "../ImageCrop/UploadBox";
 
 function CustomInputField({
   label,
@@ -514,47 +515,3 @@ export default function EventForm({
   );
 }
 
-// Helper: Upload Box
-function UploadBox({ label, name, normFile, desc, required = false, onRemove }) {
-  return (
-    <div className="flex flex-col items-center p-4 rounded-2xl bg-gray-50 border-2 border-dashed border-gray-200 hover:border-purple-300 transition-colors">
-      <span className="text-sm font-semibold text-gray-700 mb-2">{label}</span>
-      <Form.Item
-        name={name}
-        valuePropName="fileList"
-        getValueFromEvent={normFile}
-        rules={required ? [{ required: true, message: "Required" }] : []}
-        className="mb-1 [&_.ant-form-item-explain]:text-center"
-      >
-        <Upload
-          listType="picture-card"
-          maxCount={1}
-          beforeUpload={(file) => {
-            const isLt5M = file.size / 1024 / 1024 < 5;
-            if (!isLt5M) {
-              message.error(`ไฟล์ "${file.name}" ใหญ่เกินไป! กรุณาใช้ไฟล์ขนาดไม่เกิน 5MB`);
-              return Upload.LIST_IGNORE;
-            }
-            const isImage = file.type.startsWith("image/");
-            if (!isImage) {
-              message.error("กรุณาอัปโหลดเฉพาะไฟล์รูปภาพ");
-              return Upload.LIST_IGNORE;
-            }
-            return false;
-          }}
-          showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }}
-          onRemove={(file) => {
-            if (onRemove) return onRemove(file, name);
-            return true;
-          }}
-        >
-          <div className="flex flex-col items-center justify-center text-gray-400 hover:text-purple-500">
-            <Plus size={20} />
-            <div className="mt-1 text-xs">Upload</div>
-          </div>
-        </Upload>
-      </Form.Item>
-      <span className="text-xs text-gray-400 text-center">{desc}</span>
-    </div>
-  );
-}
