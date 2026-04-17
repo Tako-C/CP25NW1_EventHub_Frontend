@@ -5,6 +5,7 @@ import {
   authLoginOTPVerify,
   authLoginOTPRequest,
   verifyEmailOTP,
+  getData,
 } from "@/libs/fetch";
 import { useRouter } from "next/navigation";
 import Cookie from "js-cookie";
@@ -40,6 +41,22 @@ export default function Page() {
   const closeNotification = () => {
     setNotification((prev) => ({ ...prev, isVisible: false }));
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorParam = params.get("error");
+    if (errorParam === "inactive") {
+      showNotification(
+        "ไม่สามารถเข้าสู่ระบบได้ เนื่องจากบัญชีของท่านยังไม่ได้เปิดใช้งาน (INACTIVE) กรุณาติดต่อผู้ดูแลระบบ",
+        true
+      );
+    } else if (errorParam === "ban") {
+      showNotification(
+        "ไม่สามารถเข้าสู่ระบบได้ เนื่องจากบัญชีของท่านถูกระงับการใช้งาน (BAN) กรุณาติดต่อผู้ดูแลระบบ",
+        true
+      );
+    }
+  }, []);
 
   useEffect(() => {
     const data = Cookie.get("signinData");
@@ -149,8 +166,25 @@ export default function Page() {
           : await authLoginOTPVerify(data, otpCode);
 
         localStorage.removeItem(`otp_end_time_${data}`);
+
+        // Set token ชั่วคราวก่อน เพื่อใช้ดึง profile
         Cookie.set("token", res?.data.token, { path: "/" });
-        
+
+        // ตรวจสอบสถานะบัญชีจาก API
+        const profileRes = await getData("users/me/profile");
+        const userStatus = profileRes?.data?.status;
+
+        if (userStatus === "INACTIVE" || userStatus === "BAN") {
+          // ลบ token ที่ set ไปชั่วคราว ไม่ให้ user ใช้งานได้
+          Cookie.remove("token");
+          const statusLabel = userStatus === "INACTIVE" ? "ยังไม่ได้เปิดใช้งาน (INACTIVE)" : "ถูกระงับการใช้งาน (BAN)";
+          showNotification(
+            `ไม่สามารถเข้าสู่ระบบได้ เนื่องจากบัญชีของท่าน${statusLabel} กรุณาติดต่อผู้ดูแลระบบ`,
+            true
+          );
+          return;
+        }
+
         if (!eventId) Cookie.remove("signinData");
 
         window.dispatchEvent(new Event("user-logged-in"));

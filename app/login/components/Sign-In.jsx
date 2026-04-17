@@ -3,7 +3,7 @@
 import Cookie from "js-cookie";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { authLoginPassword } from "@/libs/fetch";
+import { authLoginPassword, getData } from "@/libs/fetch";
 import Notification from "@/components/Notification/Notification";
 // เพิ่ม Import Icon สำหรับ UX ที่ดีขึ้น
 import { Eye, EyeOff, XCircle } from "lucide-react";
@@ -26,6 +26,23 @@ export default function SignInPage({
     isError: false,
     message: "",
   });
+
+  // [Effect] ตรวจสอบ error param จาก URL (เช่น กรณี middleware redirect มาพร้อม ?error=inactive หรือ ?error=ban)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorParam = params.get("error");
+    if (errorParam === "inactive") {
+      showNotification(
+        "ไม่สามารถเข้าสู่ระบบได้ เนื่องจากบัญชีของท่านยังไม่ได้เปิดใช้งาน (INACTIVE) กรุณาติดต่อผู้ดูแลระบบ",
+        true
+      );
+    } else if (errorParam === "ban") {
+      showNotification(
+        "ไม่สามารถเข้าสู่ระบบได้ เนื่องจากบัญชีของท่านถูกระงับการใช้งาน (BAN) กรุณาติดต่อผู้ดูแลระบบ",
+        true
+      );
+    }
+  }, []);
 
   // 1. [Effect] ดึงค่าอีเมลที่เคยจำไว้ใน localStorage เมื่อโหลดหน้า
   useEffect(() => {
@@ -60,6 +77,24 @@ export default function SignInPage({
       const res = await authLoginPassword(email, password);
 
       if (res.statusCode === 200) {
+        // Set token ชั่วคราวก่อน เพื่อใช้ดึง profile
+        Cookie.set("token", res?.data.token, { path: "/" });
+
+        // ตรวจสอบสถานะบัญชีจาก API
+        const profileRes = await getData("users/me/profile");
+        const userStatus = profileRes?.data?.status;
+
+        if (userStatus === "INACTIVE" || userStatus === "BAN") {
+          // ลบ token ที่ set ไปชั่วคราว ไม่ให้ user ใช้งานได้
+          Cookie.remove("token");
+          const statusLabel = userStatus === "INACTIVE" ? "ยังไม่ได้เปิดใช้งาน (INACTIVE)" : "ถูกระงับการใช้งาน (BAN)";
+          showNotification(
+            `ไม่สามารถเข้าสู่ระบบได้ เนื่องจากบัญชีของท่าน${statusLabel} กรุณาติดต่อผู้ดูแลระบบ`,
+            true
+          );
+          return;
+        }
+
         // 2. [Logic] จัดการการจดจำอีเมลตามสถานะ Checkbox
         if (rememberMe) {
           localStorage.setItem("remembered_email", email);
@@ -67,7 +102,6 @@ export default function SignInPage({
           localStorage.removeItem("remembered_email");
         }
 
-        Cookie.set("token", res?.data.token, { path: "/" });
         window.dispatchEvent(new Event("user-logged-in"));
 
         showNotification("เข้าสู่ระบบสำเร็จ กำลังนำท่านไปหน้าหลัก...");
