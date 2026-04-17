@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Gift } from "lucide-react";
-import { getDataNoToken } from "@/libs/fetch";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
+import { getData, getDataNoToken } from "@/libs/fetch";
 import { useRouter } from "next/navigation";
 import RewardEventCard from "@/components/Reward/RewardEventCard";
 import Notification from "@/components/Notification/Notification";
@@ -12,7 +10,6 @@ import Notification from "@/components/Notification/Notification";
 export default function Page() {
   const [eventData, setEventData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState(null);
   const router = useRouter();
 
   const [notification, setNotification] = useState({
@@ -38,42 +35,39 @@ export default function Page() {
 
   useEffect(() => {
     fetchData();
-    checkUserToken();
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await getDataNoToken("events");
-      setEventData(res.data || []);
+      // ดึงข้อมูลกิจกรรมทั้งหมดและข้อมูลการลงทะเบียนของผู้ใช้พร้อมกัน
+      const [allEventsRes, registeredRes] = await Promise.all([
+        getDataNoToken("events"),
+        getData("users/me/registered-events"),
+      ]);
+
+      const allEvents = allEventsRes.data || [];
+      const registeredData = registeredRes.data || [];
+
+      // กรองหา Event ID ที่ผู้ใช้มีบทบาทเป็น ORGANIZER
+      const organizerEventIds = registeredData
+        .filter((item) => item.eventRole === "ORGANIZER")
+        .map((item) => item.eventId);
+
+      // กรองข้อมูลกิจกรรมหลักให้เหลือเฉพาะกิจกรรมที่เราเป็นผู้จัด
+      const myEvents = allEvents.filter((event) =>
+        organizerEventIds.includes(event.id)
+      );
+
+      setEventData(myEvents);
     } catch (error) {
+      console.error("Error fetching data:", error);
       showNotification("ไม่สามารถดึงข้อมูลกิจกรรมได้ กรุณาลองใหม่อีกครั้ง", true);
       setEventData([]);
     } finally {
       setLoading(false);
     }
   };
-
-  const checkUserToken = () => {
-    const token = Cookies.get("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const id = decoded.id || decoded.userId || decoded.sub;
-        setUserId(id);
-      } catch (error) {
-        showNotification("ข้อมูลผู้ใช้งานไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่", true);
-      }
-    }
-  };
-
-  const myOrganizedEvents = useMemo(() => {
-    if (!userId || !eventData.length) return [];
-    return eventData.filter((event) => {
-      if (typeof event.createdBy !== "object") return event.createdBy == userId;
-      return event.createdBy?.id == userId;
-    });
-  }, [userId, eventData]);
 
   const handleEventClick = (eventId) => {
     router.push(`/organizer/reward/${eventId}`);
@@ -106,7 +100,7 @@ export default function Page() {
           <p className="text-gray-500 text-sm">จัดการของรางวัลสำหรับกิจกรรมที่คุณเป็นผู้จัด</p>
         </div>
 
-        {myOrganizedEvents.length === 0 ? (
+        {eventData.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-50 rounded-full mb-4">
               <Gift className="w-12 h-12 text-gray-300" />
@@ -115,12 +109,12 @@ export default function Page() {
               ยังไม่มีกิจกรรม
             </h3>
             <p className="text-gray-500">
-              สร้างกิจกรรมแรกของคุณเพื่อเริ่มจัดการของรางวัล
+              คุณยังไม่มีกิจกรรมที่เป็นผู้จัดในขณะนี้
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {myOrganizedEvents.map((event) => (
+            {eventData.map((event) => (
               <RewardEventCard
                 key={event.id}
                 event={event}

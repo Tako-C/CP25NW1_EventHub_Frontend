@@ -282,6 +282,7 @@ export default function Navbar({ token }) {
   ];
   const organizerOptions = [
     { label: "Events Manager", path: "/organizer/event" },
+    { label: "User Event Manager", path: "/organizer/event-user" },
     { label: "Surveys Manager", path: "/organizer/survey" },
     { label: "Rewards Manager", path: "/organizer/reward" },
   ];
