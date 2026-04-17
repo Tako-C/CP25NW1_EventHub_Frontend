@@ -8,27 +8,6 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const handleScrollToHash = () => {
-      const hash = window.location.hash;
-      if (hash) {
-        const element = document.querySelector(hash);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }
-    };
-
-    handleScrollToHash();
-    const timer1 = setTimeout(handleScrollToHash, 500);
-    const timer2 = setTimeout(handleScrollToHash, 1500);
-
-    return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-    };
-  }, []);
-
-  useEffect(() => {
     fetchData();
   }, []);
 
