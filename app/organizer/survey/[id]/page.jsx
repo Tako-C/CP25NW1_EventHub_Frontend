@@ -14,16 +14,6 @@ import SurveyCard from "@/components/Survey/SurveyCard";
 import Notification from "@/components/Notification/Notification";
 import { FormatDate } from "@/utils/format";
 
-function FormatDate(dateString) {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("th-TH", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 export default function EventSurveysDetailPage() {
   const [event, setEvent] = useState(null);
   const [surveys, setSurveys] = useState({

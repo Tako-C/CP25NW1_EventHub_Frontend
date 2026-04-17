@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { ClipboardList } from "lucide-react";
-import { getDataNoToken } from "@/libs/fetch";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
+import { getData, getDataNoToken } from "@/libs/fetch"; // เพิ่ม getData สำหรับดึงข้อมูลส่วนตัว
 import { useRouter } from "next/navigation";
 import SurveyEventCard from "./components/SurveyEventCard";
 import Notification from "@/components/Notification/Notification";
@@ -12,7 +10,6 @@ import Notification from "@/components/Notification/Notification";
 export default function Page() {
   const [eventData, setEventData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState(null);
   const router = useRouter();
 
   const [notification, setNotification] = useState({
@@ -38,49 +35,39 @@ export default function Page() {
 
   useEffect(() => {
     fetchData();
-    checkUserToken();
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await getDataNoToken("events");
-      const fetchedEvents = res.data || [];
-      setEventData(fetchedEvents);
+      // ดึงข้อมูลทั้งกิจกรรมทั้งหมด และกิจกรรมที่ยูสเซอร์ลงทะเบียนไว้พร้อมกัน
+      const [allEventsRes, registeredRes] = await Promise.all([
+        getDataNoToken("events"),
+        getData("users/me/registered-events"),
+      ]);
+
+      const allEvents = allEventsRes.data || [];
+      const registeredData = registeredRes.data || [];
+
+      // กรองหาเฉพาะ Event ID ที่เราเป็น ORGANIZER
+      const organizerEventIds = registeredData
+        .filter((item) => item.eventRole === "ORGANIZER")
+        .map((item) => item.eventId);
+
+      // กรองข้อมูลกิจกรรมหลักให้เหลือเฉพาะกิจกรรมที่เราเป็นผู้จัด
+      const myEvents = allEvents.filter((event) =>
+        organizerEventIds.includes(event.id)
+      );
+
+      setEventData(myEvents);
     } catch (error) {
+      console.error("Error fetching data:", error);
       showNotification("ไม่สามารถดึงข้อมูลกิจกรรมได้ กรุณาลองใหม่อีกครั้ง", true);
       setEventData([]);
     } finally {
       setLoading(false);
     }
   };
-
-  const checkUserToken = () => {
-    const token = Cookies.get("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        const id = decoded.id || decoded.userId || decoded.sub;
-
-        setUserId(id);
-      } catch (error) {
-        showNotification("ข้อมูลผู้ใช้งานไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่", true);
-      }
-    }
-  };
-
-  const myOrganizedEvents = useMemo(() => {
-    if (!userId || !eventData.length) return [];
-
-    const myEvents = eventData.filter((event) => {
-      if (typeof event.createdBy !== "object") {
-        return event.createdBy == userId;
-      }
-      return event.createdBy?.id == userId;
-    });
-
-    return myEvents;
-  }, [userId, eventData]);
 
   const handleEventClick = (eventId) => {
     router.push(`/organizer/survey/${eventId}`);
@@ -113,7 +100,7 @@ export default function Page() {
           <p className="text-gray-500 text-sm">จัดการแบบสำรวจสำหรับกิจกรรมที่คุณเป็นผู้จัด</p>
         </div>
 
-        {myOrganizedEvents.length === 0 ? (
+        {eventData.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-50 rounded-full mb-4">
               <ClipboardList className="w-12 h-12 text-gray-300" />
@@ -122,12 +109,12 @@ export default function Page() {
               ยังไม่มีกิจกรรม
             </h3>
             <p className="text-gray-500 font-medium">
-              สร้างกิจกรรมแรกของคุณเพื่อเริ่มเก็บข้อมูลแบบสำรวจ
+              คุณยังไม่มีกิจกรรมที่เป็นผู้จัดในขณะนี้
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {myOrganizedEvents.map((event) => (
+            {eventData.map((event) => (
               <SurveyEventCard
                 key={event.id}
                 event={event}
