@@ -94,7 +94,12 @@ export default function Navbar({ token }) {
   useEffect(() => {
     const fetchUser = async () => {
       const tokenFromCookie = Cookie.get("token");
-      if (!tokenFromCookie) return;
+      // if (!tokenFromCookie) return;
+      if (!tokenFromCookie) {
+        setUser(null);
+        setData(null);
+        return;
+      }
       try {
         const res = await getData("users/me/profile");
         if (res?.data) {
@@ -165,6 +170,17 @@ export default function Navbar({ token }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // [เพิ่มใหม่] เช็ค Token ทุกครั้งที่มีการเปลี่ยน URL
+  useEffect(() => {
+    // ถ้าเปลี่ยนหน้าแล้วพบว่าไม่มี Token (เช่น โดน Middleware ลบไปแล้ว) แต่ดันมี State user ค้างอยู่
+    const tokenFromCookie = Cookie.get("token");
+    if (!tokenFromCookie && user) {
+      setUser(null);
+      setData(null);
+      setActiveRole("default");
+    }
+  }, [pathName, user]); // ทำงานเมื่อ pathName เปลี่ยน
 
   // --- Search logic ---
   const handleSearch = useCallback((query) => {
@@ -277,10 +293,15 @@ export default function Navbar({ token }) {
     { label: "Reward Manager", path: "/admin/reward" },
   ];
 
-  const isActivePath = (path) => {
-    if (path.startsWith("#")) return pathName === "/" || pathName === "/home";
-    return pathName.startsWith(path);
-  };
+// ลบ activeHash state และ useEffect ของ hashchange ออกทั้งหมด
+
+// แก้ isActivePath
+const isActivePath = (path) => {
+  if (path.startsWith("#")) {
+    return false; // # path ไม่ highlight อะไรเลย
+  }
+  return pathName.startsWith(path);
+};
 
   // --- Search Dropdown Component ---
   const SearchDropdown = ({ isMobile = false }) => (
@@ -327,7 +348,7 @@ export default function Navbar({ token }) {
   );
 
   // --- Dropdown sub-menu renderer ---
-  const renderDropdown = (label, isOpen, setOpen, options, ref, icon) => (
+  const renderDropdown = (label, isOpen, setOpen, options, ref, icon, basePath) => (
     <div key={label} className="relative" ref={ref}>
       <button
         onClick={() => {
@@ -336,11 +357,11 @@ export default function Navbar({ token }) {
           setIsStaffOpen(false);
           setOpen(!isOpen);
         }}
-        className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-          isActivePath("/" + label.toLowerCase())
-            ? "bg-purple-50 text-purple-700"
-            : "text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-        }`}
+      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+        isActivePath(basePath) 
+          ? "bg-purple-50 text-purple-700"
+          : "text-gray-600 hover:text-purple-600 hover:bg-purple-50"
+      }`}
       >
         {icon && <span className="opacity-70">{icon}</span>}
         <span>{label}</span>
@@ -374,7 +395,7 @@ export default function Navbar({ token }) {
           onClick={() => handleNavigation("/home")}
         >
           <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 tracking-tight">
-            EXPO HUB
+            EVENT HUB
           </span>
         </div>
 
@@ -382,11 +403,11 @@ export default function Navbar({ token }) {
         <div className="hidden xl:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
           {menuItems.map((item) => {
             if (item.label === "Check-in" && item.hasDropdown)
-              return renderDropdown("Check-in", isStaffOpen, setIsStaffOpen, staffOptions, staffDropdownRef, item.icon);
+              return renderDropdown("Check-in", isStaffOpen, setIsStaffOpen, staffOptions, staffDropdownRef, item.icon, item.path);
             if (item.label === "Events" && item.hasDropdown)
-              return renderDropdown("Events", isOrganizerOpen, setIsOrganizerOpen, organizerOptions, organizerDropdownRef, item.icon);
+              return renderDropdown("Events", isOrganizerOpen, setIsOrganizerOpen, organizerOptions, organizerDropdownRef, item.icon, item.path);
             if (item.label === "Admin" && item.hasDropdown)
-              return renderDropdown("Admin", isAdminOpen, setIsAdminOpen, adminOptions, adminDropdownRef, item.icon);
+              return renderDropdown("Admin", isAdminOpen, setIsAdminOpen, adminOptions, adminDropdownRef, item.icon, item.path);
 
             const active = isActivePath(item.path);
             return (
