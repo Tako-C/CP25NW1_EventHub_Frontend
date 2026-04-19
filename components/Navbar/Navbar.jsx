@@ -256,14 +256,14 @@ export default function Navbar({ token }) {
         return [
           { label: "Home", path: "#home", icon: <HomeIcon size={16} /> },
           { label: "Events", path: "/organizer", icon: <Calendar size={16} />, hasDropdown: true },
-          { label: "Check-in", path: "/staff", icon: <ScanLine size={16} />, hasDropdown: true },
+          { label: "Check-in", path: "/staff/event/check-in", icon: <ScanLine size={16} />},
           { label: "Dashboard", path: "/organizer/dashboard", icon: <LayoutDashboard size={16} /> },
         ];
       case "staff":
         return [
           { label: "Home", path: "#home", icon: <HomeIcon size={16} /> },
           { label: "Events", path: "#events", icon: <Calendar size={16} /> },
-          { label: "Check-in", path: "/staff", icon: <ScanLine size={16} />, hasDropdown: true },
+          { label: "Check-in", path: "/staff/event/check-in", icon: <ScanLine size={16} />},
         ];
       default:
         return [
