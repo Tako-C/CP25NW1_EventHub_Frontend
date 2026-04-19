@@ -32,7 +32,8 @@ export async function middleware(req) {
     if (
       pathname === "/home" || 
       pathname.startsWith("/event") || 
-      pathname.startsWith("/reward")
+      pathname.startsWith("/reward") ||
+      pathname.startsWith("/sign-up")
     ) {
       return NextResponse.next();
     }
