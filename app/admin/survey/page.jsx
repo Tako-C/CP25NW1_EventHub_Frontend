@@ -1,150 +1,186 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, ClipboardList, Calendar, MapPin } from "lucide-react";
-import { Table, Button, Input, Card, Space, Tag, Spin } from "antd";
+import { Search, X, SlidersHorizontal, ClipboardList } from "lucide-react";
+import { Table, Button, Tag } from "antd";
 import { getData } from "@/libs/fetch";
 import { FormatDate } from "@/utils/format";
-
 import Notification from "@/components/Notification/Notification";
+import { EventCardImage } from "@/utils/getImage";
+
+const STATUS_OPTIONS = ["ALL", "UPCOMING", "ONGOING", "FINISHED"];
+const STATUS_TAG_COLOR = {
+  UPCOMING: "blue",
+  ONGOING: "green",
+  FINISHED: "default",
+};
 
 export default function SelectEventSurveyPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchText, setSearchText] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const router = useRouter();
 
-  const [notification, setNotification] = useState({
-    isVisible: false,
-    isError: false,
-    message: "",
-  });
-
-  const showNotification = (message, isError = false) => {
-    setNotification({
-      isVisible: true,
-      message: message,
-      isError: isError,
-    });
-    setTimeout(() => {
-      closeNotification();
-    }, 3000);
-  };
-
-  const closeNotification = () => {
-    setNotification((prev) => ({ ...prev, isVisible: false }));
+  const [notification, setNotification] = useState({ isVisible: false, isError: false, message: "" });
+  const close = () => setNotification((p) => ({ ...p, isVisible: false }));
+  const notify = (msg, isErr = false) => {
+    setNotification({ isVisible: true, message: msg, isError: isErr });
+    setTimeout(close, 3000);
   };
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    (async () => {
       try {
         setLoading(true);
         const res = await getData("admin/events");
-        const formatData = res?.data.filter((item) => item.eventStatus !== "DELETED");
-        setEvents(formatData || []);
-      } catch (err) {
-        showNotification("ไม่สามารถดึงข้อมูลอีเว้นท์ได้ กรุณาลองใหม่อีกครั้ง", true);
-        console.error("Fetch events failed");
+        setEvents(res?.data?.filter((e) => e.eventStatus !== "DELETED") || []);
+      } catch {
+        notify("ไม่สามารถดึงข้อมูลอีเว้นท์ได้ กรุณาลองใหม่อีกครั้ง", true);
       } finally {
         setLoading(false);
       }
-    };
-    fetchEvents();
+    })();
   }, []);
 
-  const filteredEvents = events.filter(event =>
-    event.eventName.toLowerCase().includes(searchText.toLowerCase()) ||
-    event.location?.toLowerCase().includes(searchText.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    let list = events;
+    if (statusFilter !== "ALL") list = list.filter((e) => e.eventStatus === statusFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (e) => e.eventName?.toLowerCase().includes(q) || e.location?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [events, search, statusFilter]);
 
   const columns = [
     {
-      title: "EVENT NAME",
-      dataIndex: "eventName",
-      key: "eventName",
-      render: (text, record) => (
-        <div className="flex flex-col">
-          <span className="font-black text-slate-800 text-base">{text}</span>
-          <span className="text-xs text-slate-400 flex items-center gap-1">
-            <MapPin size={12} /> {record.location || "N/A"}
-          </span>
+      title: "Event",
+      key: "event",
+      render: (_, r) => (
+        <div className="flex items-start gap-3">
+          {/* Thumbnail */}
+          <div className="w-14 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+            <EventCardImage imageCard={r.images?.imgCard} eventName={r.eventName} />
+          </div>
+          <div className="min-w-0">
+            {/* Full name wraps */}
+            <p className="font-semibold text-slate-800 text-sm leading-snug mb-0.5">
+              {r.eventName}
+            </p>
+            <p className="text-xs text-slate-400">{r.location || "N/A"}</p>
+          </div>
         </div>
       ),
     },
     {
-      title: "EVENT DATE",
+      title: "วันที่",
       key: "date",
-      render: (_, record) => (
-        <div className="text-slate-600 font-bold text-sm">
-          <Calendar size={14} className="inline mr-2 text-indigo-500" />
-          {FormatDate(record.startDate, "custom", "DD MMM YYYY")}
-        </div>
+      width: 130,
+      render: (_, r) => (
+        <span className="text-sm text-slate-600">
+          {r.startDate ? FormatDate(r.startDate, "custom", "DD MMM YYYY") : "TBA"}
+        </span>
       ),
     },
     {
-      title: "ACTION",
+      title: "Status",
+      dataIndex: "eventStatus",
+      key: "status",
+      width: 110,
+      render: (s) => (
+        <Tag color={STATUS_TAG_COLOR[s] || "default"} className="text-xs font-medium">
+          {s}
+        </Tag>
+      ),
+    },
+    {
+      title: "",
       key: "action",
-      align: "right",
-      render: (_, record) => (
+      width: 160,
+      render: (_, r) => (
         <Button
           type="primary"
-          icon={<ClipboardList size={16} />}
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/admin/survey/${record.id}`);
-          }}
-          className="bg-indigo-600 hover:bg-indigo-700 h-10 px-6 rounded-xl font-black flex items-center gap-2 border-none shadow-lg shadow-indigo-100"
+          size="small"
+          icon={<ClipboardList size={14} />}
+          onClick={(e) => { e.stopPropagation(); router.push(`/admin/survey/${r.id}`); }}
+          className="bg-indigo-600 hover:bg-indigo-700 border-none flex items-center gap-1"
         >
-          Manage Surveys
+          Manage
         </Button>
       ),
     },
   ];
 
   return (
-    <div className="p-8 bg-slate-50 min-h-screen">
+    <div className="p-4 md:p-6 bg-slate-50 min-h-screen">
       <Notification
         isVisible={notification.isVisible}
         isError={notification.isError}
         message={notification.message}
-        onClose={closeNotification}
+        onClose={close}
       />
 
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-          <div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tight">Survey Management</h1>
-            <p className="text-slate-500 font-medium">เลือกอีเว้นท์จากรายการเพื่อจัดการแบบสำรวจ</p>
-          </div>
-          
-          <div className="relative w-full md:w-80">
-            <Input
-              prefix={<Search className="text-slate-400 mr-2" size={20} />}
-              placeholder="ค้นหาชื่ออีเว้นท์..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="h-12 rounded-2xl border-slate-200 shadow-sm font-medium focus:border-indigo-500 transition-all"
-            />
-          </div>
+      {/* Header */}
+      <div className="mb-5">
+        <h1 className="text-xl font-bold text-slate-900">Survey Management</h1>
+        <p className="text-slate-400 text-sm mt-0.5">เลือกอีเว้นท์เพื่อจัดการแบบสำรวจ</p>
+      </div>
+
+      {/* Search + Filter */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="ค้นหาชื่ออีเว้นท์..."
+            className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-transparent"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        <Card className="rounded-[2.5rem] shadow-xl border-none overflow-hidden bg-white/80 backdrop-blur-sm">
+        <div className="flex items-center gap-2 flex-wrap">
+          <SlidersHorizontal className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          {STATUS_OPTIONS.map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                statusFilter === s
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-white text-gray-500 border border-gray-200 hover:border-indigo-300 hover:text-indigo-600"
+              }`}
+            >
+              {s === "ALL" ? "ทั้งหมด" : s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
           <Table
             columns={columns}
-            dataSource={filteredEvents}
+            dataSource={filtered}
             rowKey="id"
             loading={loading}
-            pagination={{
-              pageSize: 6,
-              className: "px-8 py-4",
-            }}
-            className="custom-admin-table"
-            onRow={(record) => ({
-              onClick: () => router.push(`/admin/survey/${record.id}`),
+            pagination={{ pageSize: 8, showSizeChanger: false, showTotal: (t) => `ทั้งหมด ${t} รายการ` }}
+            size="middle"
+            onRow={(r) => ({
+              onClick: () => router.push(`/admin/survey/${r.id}`),
               className: "cursor-pointer hover:bg-slate-50 transition-colors",
             })}
           />
-        </Card>
+        </div>
       </div>
     </div>
   );
