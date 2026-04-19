@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getData, authRegisterRequest } from "@/libs/fetch";
 import Cookie from "js-cookie";
-import { Eye, EyeOff, Users, ChevronDown, Calendar } from "lucide-react";
+import { Eye, EyeOff, Users, ChevronDown, Calendar, Zap, Mail, Lock } from "lucide-react";
 import Notification from "@/components/Notification/Notification";
 
 export default function Page() {
@@ -170,239 +170,185 @@ export default function Page() {
     }
   };
 
-  const handleSignIn = () => {
-    router.push("/login");
-  };
+  const handleSignIn = () => router.push("/login");
 
   return (
     <>
-      <Notification
-        isVisible={notification.isVisible}
-        isError={notification.isError}
-        message={notification.message}
-        onClose={closeNotification}
-      />
-      <div className="flex items-center justify-center py-20 px-4">
-        <div className="w-full max-w-md">
-          <h1 className="text-4xl font-bold text-center text-gray-900 mb-8">
-            สร้างบัญชีใหม่
-          </h1>
+      <Notification isVisible={notification.isVisible} isError={notification.isError} message={notification.message} onClose={closeNotification} />
 
-          <div className="bg-white rounded-3xl shadow-lg p-8">
-            <div className="mb-4">
-              <label htmlFor="firstName" className="block text-gray-700 font-medium mb-2">
-                ชื่อจริง
-              </label>
-              <input
-                id="firstName"
-                type="text"
-                placeholder="กรอกชื่อจริงของคุณ"
-                value={formData.firstName}
-                onChange={(e) => handleInputChange("firstName", e.target.value)}
-                maxLength={20}
-                className={`w-full px-4 py-3 border ${
-                  errors.firstName ? "border-red-500" : "border-gray-300"
-                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-              />
-              {errors.firstName && (
-                <p className="text-red-500 text-sm mt-1 ml-2">{errors.firstName}</p>
-              )}
+      <div className="flex min-h-[calc(100vh-57px)]">
+        {/* Brand panel */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-700 via-purple-600 to-indigo-700 flex-col items-center justify-center p-12 relative overflow-hidden">
+          <div className="absolute top-[-80px] left-[-80px] w-72 h-72 bg-white/5 rounded-full" />
+          <div className="absolute bottom-[-60px] right-[-60px] w-96 h-96 bg-white/5 rounded-full" />
+          <div className="relative z-10 text-center max-w-sm">
+            <div className="inline-flex items-center gap-2 mb-8">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <Zap size={20} className="text-white" />
+              </div>
+              <span className="text-2xl font-extrabold text-white tracking-tight">Expo Hub</span>
             </div>
-
-            <div className="mb-4">
-              <label htmlFor="lastName" className="block text-gray-700 font-medium mb-2">
-                นามสกุล
-              </label>
-              <input
-                id="lastName"
-                type="text"
-                placeholder="กรอกนามสกุลของคุณ"
-                value={formData.lastName}
-                onChange={(e) => handleInputChange("lastName", e.target.value)}
-                maxLength={20}
-                className={`w-full px-4 py-3 border ${
-                  errors.lastName ? "border-red-500" : "border-gray-300"
-                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-              />
-              {errors.lastName && (
-                <p className="text-red-500 text-sm mt-1 ml-2">{errors.lastName}</p>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
-                อีเมล
-              </label>
-              <input
-                id="email"
-                type="email"
-                placeholder="example@email.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                maxLength={50}
-                className={`w-full px-4 py-3 border ${
-                  errors.email ? "border-red-500" : "border-gray-300"
-                } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1 ml-2">{errors.email}</p>
-              )}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-gray-700 font-medium mb-2 ml-1 text-sm">
-                เพศ
-              </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Users size={18} />
+            <h2 className="text-3xl font-bold text-white mb-4 leading-snug">เริ่มต้น<br />ประสบการณ์ใหม่</h2>
+            <p className="text-purple-200 text-base leading-relaxed">สมัครสมาชิกและเข้าร่วมกิจกรรม สะสมรางวัล และอีกมากมาย</p>
+            <div className="mt-10 space-y-3">
+              {["เข้าร่วมกิจกรรมพิเศษ", "สะสมคะแนนและรางวัล", "รับการแจ้งเตือนก่อนใคร"].map((t) => (
+                <div key={t} className="flex items-center gap-3 text-left bg-white/10 rounded-xl px-4 py-2.5">
+                  <div className="w-5 h-5 rounded-full bg-emerald-400 flex items-center justify-center flex-shrink-0">
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <span className="text-white text-sm font-medium">{t}</span>
                 </div>
-                <select
-                  value={formData.gender}
-                  onChange={(e) => handleInputChange("gender", e.target.value)}
-                  className="w-full pl-11 pr-10 py-3 border border-gray-300 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 appearance-none text-gray-700"
-                >
-                  {genderOptions.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <ChevronDown size={18} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Form panel */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-10 bg-gray-50">
+          <div className="w-full max-w-md">
+            {/* Mobile logo */}
+            <div className="flex lg:hidden items-center gap-2 justify-center mb-6">
+              <div className="w-9 h-9 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <Zap size={18} className="text-white" />
+              </div>
+              <span className="text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">Expo Hub</span>
+            </div>
+
+            <div className="mb-7">
+              <h1 className="text-3xl font-bold text-gray-900">สร้างบัญชีใหม่</h1>
+              <p className="text-gray-500 mt-1 text-sm">
+                มีบัญชีอยู่แล้ว?{" "}
+                <button onClick={handleSignIn} className="text-purple-600 hover:text-purple-700 font-semibold">เข้าสู่ระบบ</button>
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {/* ชื่อ-นามสกุล */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">ชื่อจริง</label>
+                  <input
+                    type="text" placeholder="ชื่อ" value={formData.firstName} maxLength={20}
+                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    className={`w-full px-4 py-3 border rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all ${errors.firstName ? "border-red-400" : "border-gray-200"}`}
+                  />
+                  {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">นามสกุล</label>
+                  <input
+                    type="text" placeholder="นามสกุล" value={formData.lastName} maxLength={20}
+                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    className={`w-full px-4 py-3 border rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all ${errors.lastName ? "border-red-400" : "border-gray-200"}`}
+                  />
+                  {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
                 </div>
               </div>
-            </div>
 
-            <div className="mb-6">
-              <label className="block text-gray-700 font-medium mb-2 ml-1 text-sm">
-                วันเดือนปีเกิด
-              </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <Calendar size={18} />
+              {/* อีเมล */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">อีเมล</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="email" placeholder="example@email.com" value={formData.email} maxLength={50}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className={`w-full pl-10 pr-4 py-3 border rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all ${errors.email ? "border-red-400" : "border-gray-200"}`}
+                  />
                 </div>
-                <input
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={(e) =>
-                    handleInputChange("dateOfBirth", e.target.value)
-                  }
-                  className={`w-full pl-11 pr-4 py-3 border ${errors.dateOfBirth ? "border-red-500" : "border-gray-300"} rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-gray-700`}
-                />
+                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
               </div>
-              {errors.dateOfBirth && (
-                <p className="text-red-500 text-xs mt-1 ml-3">
-                  {errors.dateOfBirth}
-                </p>
-              )}
-            </div>
 
-            <div className="mb-4">
-              <label htmlFor="password" class="block text-gray-700 font-medium mb-2">
-                รหัสผ่าน
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="ตั้งรหัสผ่านของคุณ"
-                  value={formData.password}
-                  onChange={(e) =>
-                    handleInputChange("password", e.target.value)
-                  }
-                  maxLength={20}
-                  className={`w-full px-4 py-3 border ${
-                    errors.password ? "border-red-500" : "border-gray-300"
-                  } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+              {/* เพศ + วันเกิด */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">เพศ</label>
+                  <div className="relative">
+                    <Users size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => handleInputChange("gender", e.target.value)}
+                      className="w-full pl-10 pr-8 py-3 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 appearance-none transition-all"
+                    >
+                      {genderOptions.map((opt) => (
+                        <option key={opt.id} value={opt.id}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">วันเกิด</label>
+                  <div className="relative">
+                    <Calendar size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <input
+                      type="date" value={formData.dateOfBirth}
+                      onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                      className={`w-full pl-10 pr-3 py-3 border rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all ${errors.dateOfBirth ? "border-red-400" : "border-gray-200"}`}
+                    />
+                  </div>
+                  {errors.dateOfBirth && <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>}
+                </div>
               </div>
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1 ml-2">{errors.password}</p>
-              )}
-            </div>
 
-            <div className="mb-6">
-              <label htmlFor="confirmPassword" class="block text-gray-700 font-medium mb-2">
-                ยืนยันรหัสผ่าน
-              </label>
-              <div className="relative">
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="ยืนยันรหัสผ่านอีกครั้ง"
-                  value={formData.confirmPassword}
-                  onChange={(e) =>
-                    handleInputChange("confirmPassword", e.target.value)
-                  }
-                  maxLength={20}
-                  className={`w-full px-4 py-3 border ${
-                    errors.confirmPassword
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  } rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-gray-700"
-                >
-                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+              {/* รหัสผ่าน */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">รหัสผ่าน</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type={showPassword ? "text" : "password"} placeholder="ตั้งรหัสผ่านของคุณ (อย่างน้อย 8 ตัว)" value={formData.password} maxLength={20}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    className={`w-full pl-10 pr-10 py-3 border rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all ${errors.password ? "border-red-400" : "border-gray-200"}`}
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
               </div>
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1 ml-2">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
 
-            <div className="mb-6">
-              <label className="flex items-start gap-2 cursor-pointer">
+              {/* ยืนยันรหัสผ่าน */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">ยืนยันรหัสผ่าน</label>
+                <div className="relative">
+                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type={showConfirmPassword ? "text" : "password"} placeholder="กรอกรหัสผ่านอีกครั้ง" value={formData.confirmPassword} maxLength={20}
+                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                    className={`w-full pl-10 pr-10 py-3 border rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all ${errors.confirmPassword ? "border-red-400" : "border-gray-200"}`}
+                  />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+              </div>
+
+              {/* ยอมรับเงื่อนไข */}
+              <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
-                  type="checkbox"
-                  checked={agreeTerms}
-                  onChange={(e) => setAgreeTerms(e.target.checked)}
-                  className="w-4 h-4 mt-1 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer flex-shrink-0"
                 />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 leading-relaxed">
                   ฉันยอมรับ{" "}
-                  <Link href="#" className="text-blue-500 hover:text-blue-600 font-semibold">
-                    เงื่อนไขและข้อกำหนด
-                  </Link>{" "}
+                  <Link href="#" className="text-purple-600 hover:text-purple-700 font-semibold">เงื่อนไขและข้อกำหนด</Link>{" "}
                   และ{" "}
-                  <Link href="#" className="text-blue-500 hover:text-blue-600 font-semibold">
-                    นโยบายความเป็นส่วนตัว
-                  </Link>
+                  <Link href="#" className="text-purple-600 hover:text-purple-700 font-semibold">นโยบายความเป็นส่วนตัว</Link>
                 </span>
               </label>
+
+              {/* Submit */}
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] shadow-lg shadow-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "กำลังดำเนินการ..." : "สร้างบัญชี"}
+              </button>
             </div>
-
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full bg-blue-900 text-white py-3.5 rounded-full font-bold hover:bg-blue-800 transition shadow-lg active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {loading ? "กำลังดำเนินการ..." : "สร้างบัญชีผู้ใช้"}
-            </button>
           </div>
-
-          <p className="text-center mt-6 text-gray-700">
-            มีบัญชีผู้ใช้อยู่แล้ว?{" "}
-            <button
-              onClick={handleSignIn}
-              className="text-blue-500 hover:text-blue-600 font-bold"
-            >
-              เข้าสู่ระบบที่นี่
-            </button>
-          </p>
         </div>
       </div>
     </>

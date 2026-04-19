@@ -225,7 +225,7 @@ export default function ResetPasswordPage() {
           ) : (
             <button
                 onClick={handleSubmit}
-                className="w-full bg-blue-900 text-white py-4 rounded-2xl font-bold hover:bg-blue-800 transition-all shadow-lg shadow-blue-100 active:scale-95"
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-4 rounded-2xl font-bold transition-all shadow-lg shadow-purple-200 active:scale-95"
             >
                 ยืนยันการเปลี่ยนรหัสผ่าน
             </button>

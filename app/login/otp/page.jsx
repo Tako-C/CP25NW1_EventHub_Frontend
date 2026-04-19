@@ -237,7 +237,7 @@ export default function Page() {
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-900 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                  className="w-12 h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all"
                 />
               ))}
             </div>
@@ -246,7 +246,7 @@ export default function Page() {
               <button
                 onClick={handleResend}
                 disabled={cooldown > 0 || loading}
-                className="text-sm font-semibold text-blue-600 underline hover:text-blue-800 disabled:text-gray-400 disabled:no-underline transition-colors"
+                className="text-sm font-semibold text-purple-600 underline hover:text-purple-800 disabled:text-gray-400 disabled:no-underline transition-colors"
               >
                 {cooldown > 0 ? `ขอรหัสใหม่ได้ในอีก ${cooldown} วินาที` : "ส่งรหัสใหม่อีกครั้ง"}
               </button>
@@ -258,7 +258,7 @@ export default function Page() {
               className={`w-full py-3.5 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95 ${
                 isDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                  : "bg-blue-900 text-white hover:bg-blue-800 shadow-blue-100"
+                  : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-200"
               }`}
             >
               ยืนยันรหัส
