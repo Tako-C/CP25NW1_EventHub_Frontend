@@ -73,7 +73,7 @@ export default function MyEventPage({ events }) {
             const isStaffOrOrganizer = ["STAFF", "ORGANIZER"].includes(
               event.eventRole?.toUpperCase(),
             );
-
+            console.log(event)
             return (
               <div
                 key={index}
@@ -177,7 +177,7 @@ export default function MyEventPage({ events }) {
                 </div>
 
                 {/* QR Code (ORGANIZER only) */}
-                {event.eventRole?.toUpperCase() === "ORGANIZER" && (
+                {event.eventRole?.toUpperCase() !== "ORGANIZER" && event.eventRole?.toUpperCase() !== "STAFF"  && (
                   <>
                     <div className="sm:hidden w-full h-px bg-gray-100"></div>
                     <div className="hidden sm:block w-px bg-gray-100 self-stretch"></div>
