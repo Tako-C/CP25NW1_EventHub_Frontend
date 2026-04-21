@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react"; // เพิ่ม useMemo
+import { useState, useEffect, useMemo } from "react";
 import {
   Table,
   Button,
@@ -14,7 +14,7 @@ import {
   Typography,
   DatePicker,
 } from "antd";
-import { PlusOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons"; // เพิ่ม SearchOutlined
+import { PlusOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   getData,
   createAccount,
@@ -27,10 +27,10 @@ import Notification from "@/components/Notification/Notification";
 const { Title } = Typography;
 
 export default function Page() {
-  const [dataSource, setDataSource] = useState([]); // เปลี่ยนเริ่มต้นเป็น array ว่าง
+  const [dataSource, setDataSource] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState(""); // เพิ่ม state สำหรับ search
+  const [searchText, setSearchText] = useState("");
   const [form] = Form.useForm();
 
   const [notification, setNotification] = useState({
@@ -104,6 +104,19 @@ export default function Page() {
   };
 
   const handleAdd = async (values) => {
+    // --- Duplicate Email Validation ---
+    const emailInput = (values.email || "").toLowerCase().trim();
+    const existingUser = dataSource.find(
+      (user) => (user.email || "").toLowerCase().trim() === emailInput
+    );
+    if (existingUser) {
+      showNotification(
+        `เคยเพิ่ม user ${existingUser.email} แล้ว`,
+        true
+      );
+      return;
+    }
+
     try {
       const res = await createAccount(values);
       if (res?.statusCode === 201) {
@@ -178,6 +191,7 @@ export default function Page() {
         isError={notification.isError}
         message={notification.message}
         onClose={closeNotification}
+        style={{ zIndex: 9999 }}
       />
 
       <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-lg shadow-sm">
@@ -195,7 +209,6 @@ export default function Page() {
       </div>
 
       <div className="bg-white p-4 rounded-lg shadow-sm">
-        {/* --- ส่วนของ Input Search --- */}
         <div className="mb-4">
           <Input
             placeholder="Search by name or email..."
@@ -208,7 +221,7 @@ export default function Page() {
         </div>
 
         <Table
-          dataSource={filteredData} // เปลี่ยนมาใช้ข้อมูลที่ Filter แล้ว
+          dataSource={filteredData}
           columns={columns}
           rowKey="id"
           bordered
@@ -217,7 +230,6 @@ export default function Page() {
         />
       </div>
 
-      {/* Modal Add New User คงเดิม ... */}
       <Modal
         title="Add New User Account"
         open={isModalOpen}

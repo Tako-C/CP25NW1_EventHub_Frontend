@@ -47,9 +47,6 @@ import Notification from "@/components/Notification/Notification";
 
 const { Title, Text } = Typography;
 
-/** * Constants & Helpers 
- * (แยกไว้ด้านนอกเพื่อความเป็นระเบียบและไม่ถูกประกาศซ้ำเมื่อ Re-render)
- */
 const ROLE_PRIORITY = {
   ORGANIZER: 1,
   STAFF: 2,
@@ -131,8 +128,8 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const test = await getDataNoToken('events');
-      console.log(test)
+      const test = await getDataNoToken("events");
+      console.log(test);
       const res = await getData("events");
       const resEvent = await getData(`admin/events/users`);
       if (res?.data && resEvent?.data) {
@@ -199,6 +196,18 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
   }, [eventUsers, searchText]);
 
   const handleAddUser = async (values) => {
+    // --- Duplicate User in Event Validation ---
+    const alreadyInEvent = eventUsers.find(
+      (u) => (u.userId || u.id) === values.userId
+    );
+    if (alreadyInEvent) {
+      showNotification(
+        `เคยเพิ่ม user ${alreadyInEvent.email} แล้ว`,
+        true
+      );
+      return;
+    }
+
     try {
       await postAddUserToEvent(selectedEvent.id, values.userId);
       showNotification("เพิ่มผู้ใช้งานเข้าอีเว้นท์สำเร็จ");
@@ -240,15 +249,13 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
     const colsConfig = [{ wch: 20 }, { wch: 20 }, { wch: 30 }, { wch: 15 }, { wch: 20 }];
     const headerStyle = {
       font: { bold: true, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "16A34A" } },
-      alignment: { horizontal: "center" },
+      fill: { fgColor: { rgb: "16a34a" } },
     };
     ["STAFF", "EXHIBITOR"].forEach((sheetName) => {
       const ws = XLSX.utils.aoa_to_sheet(headerData);
       ws["!cols"] = colsConfig;
-      headerData[0].forEach((_, i) => {
-        const cellRef = XLSX.utils.encode_cell({ r: 0, c: i });
-        if (ws[cellRef]) ws[cellRef].s = headerStyle;
+      ["A1", "B1", "C1", "D1", "E1"].forEach((cell) => {
+        if (ws[cell]) ws[cell].s = headerStyle;
       });
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
     });
@@ -298,13 +305,39 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
     return false;
   };
 
+  const resetImport = () => {
+    setImportStep(0);
+    setParsedRows([]);
+    setSelectedFile(null);
+    setFileName("");
+    setImportResult(null);
+  };
+
   const handleConfirmImport = async () => {
+    // --- Duplicate Email Check against existing event users ---
+    const existingEmails = new Set(
+      eventUsers.map((u) => (u.email || "").toLowerCase().trim())
+    );
+    const validRows = parsedRows.filter((r) => r._errors.length === 0);
+    const duplicateRows = validRows.filter((r) =>
+      existingEmails.has((r.email || "").toLowerCase().trim())
+    );
+
+    if (duplicateRows.length > 0) {
+      const emails = duplicateRows.map((r) => r.email).join(", ");
+      showNotification(
+        `พบ ${duplicateRows.length} คนที่เคยเพิ่มแล้วในอีเว้นท์นี้: ${emails}`,
+        true
+      );
+      return;
+    }
+
     setImportLoading(true);
     try {
       const res = await importUsersToEvent(selectedEvent.id, selectedFile);
       setImportResult({
-        success: res?.successCount ?? parsedRows.filter(r => r._errors.length === 0).length,
-        failed: parsedRows.filter(r => r._errors.length > 0).length,
+        success: res?.successCount ?? validRows.length,
+        failed: parsedRows.filter((r) => r._errors.length > 0).length,
         total: parsedRows.length,
       });
       setImportStep(2);
@@ -325,12 +358,20 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
     {
       title: "ผู้เข้าร่วม",
       dataIndex: "participantCount",
-      render: (count) => <Tag color="blue" className="px-3 rounded-full">{count} คน</Tag>,
+      render: (count) => (
+        <Tag color="blue" className="px-3 rounded-full">
+          {count} คน
+        </Tag>
+      ),
     },
     {
       title: "จัดการ",
       render: (_, record) => (
-        <Button type="primary" icon={<TeamOutlined />} onClick={() => handleManageUsers(record)}>
+        <Button
+          type="primary"
+          icon={<TeamOutlined />}
+          onClick={() => handleManageUsers(record)}
+        >
           Manage Users
         </Button>
       ),
@@ -362,24 +403,48 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
     {
       title: "จัดการ",
       render: (_, record) => (
-        <Popconfirm title="ยืนยันการนำออก" onConfirm={() => handleRemoveUser(record.userId)}>
-          <Button type="text" danger icon={<DeleteOutlined />}>Remove</Button>
+        <Popconfirm
+          title="ยืนยันการนำออก"
+          onConfirm={() => handleRemoveUser(record.userId)}
+        >
+          <Button type="text" danger icon={<DeleteOutlined />}>
+            Remove
+          </Button>
         </Popconfirm>
       ),
     },
   ];
 
+  const validRows = parsedRows.filter((r) => r._errors.length === 0);
+  const invalidRows = parsedRows.filter((r) => r._errors.length > 0);
+
   const previewColumns = [
-    { title: "Sheet", dataIndex: "role", render: (role) => <Tag color={role === "STAFF" ? "blue" : "purple"}>{role}</Tag> },
+    {
+      title: "Sheet",
+      dataIndex: "role",
+      render: (role) => (
+        <Tag color={role === "STAFF" ? "blue" : "purple"}>{role}</Tag>
+      ),
+    },
     { title: "First Name", dataIndex: "firstName" },
     { title: "Last Name", dataIndex: "lastName" },
     { title: "Email", dataIndex: "email" },
-    { title: "Status", render: (_, r) => r._errors.length === 0 ? <CheckCircleOutlined style={{ color: "#22c55e" }} /> : <CloseCircleOutlined style={{ color: "#ef4444" }} /> },
+    {
+      title: "Status",
+      render: (_, r) =>
+        r._errors.length === 0 ? (
+          <CheckCircleOutlined style={{ color: "#22c55e" }} />
+        ) : (
+          <Tooltip title={r._errors.join(", ")}>
+            <CloseCircleOutlined style={{ color: "#ef4444" }} />
+          </Tooltip>
+        ),
+    },
   ];
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
-      <Notification {...notification} onClose={closeNotification} />
+      <Notification {...notification} onClose={closeNotification} style={{ zIndex: 9999 }} />
 
       <div className="mb-6">
         <Breadcrumb
@@ -393,15 +458,40 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <Title level={2} className="!m-0 text-gray-800">
-            {selectedEvent ? `จัดการผู้ใช้งาน: ${selectedEvent.name}` : "รายการอีเว้นท์ทั้งหมด"}
+            {selectedEvent
+              ? `จัดการผู้ใช้งาน: ${selectedEvent.name}`
+              : "รายการอีเว้นท์ทั้งหมด"}
           </Title>
 
           {selectedEvent && (
             <Space>
-              <Button icon={<ArrowLeftOutlined />} onClick={() => setSelectedEvent(null)}>กลับหน้าหลัก</Button>
-              <Button icon={<DownloadOutlined />} onClick={() => downloadTemplate(selectedEvent.name)}>Download Template</Button>
-              <Button type="primary" icon={<FileExcelOutlined />} onClick={() => setImportOpen(true)} className="bg-green-600 border-green-600">Import Excel</Button>
-              <Button type="primary" icon={<TeamOutlined />} onClick={() => setIsAddUserModalOpen(true)}>Add User</Button>
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => setSelectedEvent(null)}
+              >
+                กลับหน้าหลัก
+              </Button>
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={() => downloadTemplate(selectedEvent.name)}
+              >
+                Download Template
+              </Button>
+              <Button
+                type="primary"
+                icon={<FileExcelOutlined />}
+                onClick={() => setImportOpen(true)}
+                className="bg-green-600 border-green-600"
+              >
+                Import Excel
+              </Button>
+              <Button
+                type="primary"
+                icon={<TeamOutlined />}
+                onClick={() => setIsAddUserModalOpen(true)}
+              >
+                Add User
+              </Button>
             </Space>
           )}
         </div>
@@ -409,7 +499,12 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
 
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         {!selectedEvent ? (
-          <Table dataSource={events} columns={eventColumns} rowKey="id" loading={loading} />
+          <Table
+            dataSource={events}
+            columns={eventColumns}
+            rowKey="id"
+            loading={loading}
+          />
         ) : (
           <>
             <Input
@@ -432,23 +527,35 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
       </div>
 
       {/* --- Modals --- */}
-      
+
       {/* Add User Modal */}
       <Modal
         title="เพิ่มผู้ใช้งานเข้าอีเว้นท์"
         open={isAddUserModalOpen}
         onOk={() => form.submit()}
-        onCancel={() => setIsAddUserModalOpen(false)}
+        onCancel={() => {
+          setIsAddUserModalOpen(false);
+          form.resetFields();
+        }}
         okText="Add Member"
         centered
       >
         <Form form={form} layout="vertical" onFinish={handleAddUser}>
-          <Form.Item label="เลือกผู้ใช้งาน" name="userId" rules={[{ required: true, message: "กรุณาเลือกผู้ใช้งาน" }]}>
+          <Form.Item
+            label="เลือกผู้ใช้งาน"
+            name="userId"
+            rules={[{ required: true, message: "กรุณาเลือกผู้ใช้งาน" }]}
+          >
             <Select
               showSearch
               placeholder="ค้นหาชื่อ หรืออีเมล"
-              options={allUsers.map((u) => ({ value: u.id || u.userId, label: `${u.firstName} ${u.lastName} (${u.email})` }))}
-              filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
+              options={allUsers.map((u) => ({
+                value: u.id || u.userId,
+                label: `${u.firstName} ${u.lastName} (${u.email})`,
+              }))}
+              filterOption={(input, option) =>
+                (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+              }
             />
           </Form.Item>
         </Form>
@@ -456,36 +563,163 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
 
       {/* Import Modal */}
       <Modal
-        title="Import Users via Excel"
+        title={
+          <div className="flex items-center gap-2">
+            <FileExcelOutlined style={{ color: "#16a34a" }} />
+            <span>Import Users via Excel</span>
+          </div>
+        }
         open={importOpen}
-        onCancel={() => { setImportOpen(false); setImportStep(0); }}
+        onCancel={() => {
+          setImportOpen(false);
+          resetImport();
+        }}
         width={820}
-        footer={importStep === 2 ? <Button onClick={() => setImportOpen(false)}>ปิด</Button> : null}
+        footer={
+          importStep === 0
+            ? null
+            : importStep === 1
+            ? (
+              <div className="flex justify-between items-center">
+                <Button onClick={resetImport}>← เปลี่ยนไฟล์</Button>
+                <Space>
+                  <Button onClick={() => { setImportOpen(false); resetImport(); }}>
+                    ยกเลิก
+                  </Button>
+                  <Button
+                    type="primary"
+                    loading={importLoading}
+                    disabled={validRows.length === 0}
+                    onClick={handleConfirmImport}
+                    className="bg-green-600 border-green-600"
+                  >
+                    ส่งไฟล์เพื่อ Import
+                  </Button>
+                </Space>
+              </div>
+            )
+            : (
+              <Button type="primary" onClick={() => { setImportOpen(false); resetImport(); }}>
+                เสร็จสิ้น
+              </Button>
+            )
+        }
       >
-        <Steps current={importStep} items={[{ title: "Upload" }, { title: "Preview" }, { title: "Result" }]} className="mb-6" />
-        
+        <Steps
+          current={importStep}
+          size="small"
+          className="mb-6"
+          items={[
+            { title: "อัปโหลดไฟล์", icon: <UploadOutlined /> },
+            { title: "ตรวจสอบข้อมูล", icon: <WarningOutlined /> },
+            { title: "สำเร็จ", icon: <CheckCircleOutlined /> },
+          ]}
+        />
+
         {importStep === 0 && (
-          <Upload.Dragger accept=".xlsx" showUploadList={false} beforeUpload={handleFileUpload}>
-            <p className="ant-upload-drag-icon"><InboxOutlined style={{ color: "#16a34a" }} /></p>
+          <Upload.Dragger
+            accept=".xlsx"
+            showUploadList={false}
+            beforeUpload={handleFileUpload}
+          >
+            <p className="ant-upload-drag-icon">
+              <InboxOutlined style={{ fontSize: 40, color: "#16a34a" }} />
+            </p>
             <p className="ant-upload-text">คลิกหรือลากไฟล์ .xlsx มาวางที่นี่</p>
+            <p className="ant-upload-hint text-gray-400">รองรับเฉพาะ .xlsx</p>
           </Upload.Dragger>
         )}
 
         {importStep === 1 && (
-          <>
-            <Table dataSource={parsedRows} columns={previewColumns} size="small" pagination={{ pageSize: 5 }} className="mb-4" />
-            <div className="flex justify-end gap-2">
-              <Button onClick={() => setImportStep(0)}>เปลี่ยนไฟล์</Button>
-              <Button type="primary" loading={importLoading} onClick={handleConfirmImport} className="bg-green-600">ยืนยัน Import</Button>
+          <div>
+            <div className="flex items-center gap-4 mb-3 flex-wrap">
+              <Text type="secondary" className="text-sm">
+                ไฟล์: <strong>{fileName}</strong>
+              </Text>
+              <Space>
+                <Badge
+                  count={validRows.length}
+                  style={{ backgroundColor: "#22c55e" }}
+                  showZero
+                >
+                  <Tag color="green" className="mr-2">
+                    พร้อม import
+                  </Tag>
+                </Badge>
+                {invalidRows.length > 0 && (
+                  <Badge
+                    count={invalidRows.length}
+                    style={{ backgroundColor: "#ef4444" }}
+                  >
+                    <Tag color="red" className="mr-2">
+                      มีข้อผิดพลาด
+                    </Tag>
+                  </Badge>
+                )}
+              </Space>
             </div>
-          </>
+
+            {invalidRows.length > 0 && (
+              <Alert
+                className="mb-3"
+                type="warning"
+                showIcon
+                message={`พบ ${invalidRows.length} แถวที่มีข้อผิดพลาด`}
+                description={
+                  <ul className="mt-1 text-sm space-y-0.5 max-h-24 overflow-y-auto">
+                    {invalidRows.map((r) => (
+                      <li key={`${r.role}-${r._rowIndex}`}>
+                        แถว {r._rowIndex} ({r.role}): {r._errors.join(", ")}
+                      </li>
+                    ))}
+                  </ul>
+                }
+              />
+            )}
+
+            <Table
+              dataSource={parsedRows}
+              columns={previewColumns}
+              rowKey={(r) => `${r.role}-${r._rowIndex}`}
+              size="small"
+              pagination={{ pageSize: 8, size: "small" }}
+              scroll={{ x: 700 }}
+              rowClassName={(r) => (r._errors.length > 0 ? "bg-red-50" : "")}
+              bordered
+            />
+          </div>
         )}
 
         {importStep === 2 && importResult && (
-          <div className="text-center py-4">
-            <CheckCircleOutlined style={{ fontSize: 48, color: "#22c55e" }} />
-            <Title level={4} className="mt-4">Import สำเร็จ</Title>
-            <Text>สำเร็จ: {importResult.success} | ผิดพลาด: {importResult.failed}</Text>
+          <div className="py-4 text-center">
+            <CheckCircleOutlined style={{ fontSize: 52, color: "#22c55e" }} />
+            <Title level={4} className="mt-4 !mb-1">
+              Import เสร็จสิ้น
+            </Title>
+            <Text type="secondary">ผลลัพธ์การนำเข้าข้อมูลจากไฟล์</Text>
+            <Divider />
+            <div className="flex justify-center gap-8 text-center">
+              <div>
+                <div className="text-3xl font-bold text-green-600">
+                  {importResult.success}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">นำเข้าสำเร็จ</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-gray-400">
+                  {importResult.total}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">ทั้งหมด</div>
+              </div>
+              {importResult.failed > 0 && (
+                <div>
+                  <div className="text-3xl font-bold text-red-500">
+                    {importResult.failed}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">พบข้อผิดพลาด</div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </Modal>

@@ -94,7 +94,6 @@ export default function Navbar({ token }) {
   useEffect(() => {
     const fetchUser = async () => {
       const tokenFromCookie = Cookie.get("token");
-      // if (!tokenFromCookie) return;
       if (!tokenFromCookie) {
         setUser(null);
         setData(null);
@@ -171,16 +170,15 @@ export default function Navbar({ token }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // [เพิ่มใหม่] เช็ค Token ทุกครั้งที่มีการเปลี่ยน URL
+  // เช็ค Token ทุกครั้งที่มีการเปลี่ยน URL
   useEffect(() => {
-    // ถ้าเปลี่ยนหน้าแล้วพบว่าไม่มี Token (เช่น โดน Middleware ลบไปแล้ว) แต่ดันมี State user ค้างอยู่
     const tokenFromCookie = Cookie.get("token");
     if (!tokenFromCookie && user) {
       setUser(null);
       setData(null);
       setActiveRole("default");
     }
-  }, [pathName, user]); // ทำงานเมื่อ pathName เปลี่ยน
+  }, [pathName, user]);
 
   // --- Search logic ---
   const handleSearch = useCallback((query) => {
@@ -256,14 +254,14 @@ export default function Navbar({ token }) {
         return [
           { label: "Home", path: "#home", icon: <HomeIcon size={16} /> },
           { label: "Events", path: "/organizer", icon: <Calendar size={16} />, hasDropdown: true },
-          { label: "Check-in", path: "/staff/event/check-in", icon: <ScanLine size={16} />},
+          { label: "Check-in", path: "/staff/event/check-in", icon: <ScanLine size={16} /> },
           { label: "Dashboard", path: "/organizer/dashboard", icon: <LayoutDashboard size={16} /> },
         ];
       case "staff":
         return [
           { label: "Home", path: "#home", icon: <HomeIcon size={16} /> },
           { label: "Events", path: "#events", icon: <Calendar size={16} /> },
-          { label: "Check-in", path: "/staff/event/check-in", icon: <ScanLine size={16} />},
+          { label: "Check-in", path: "/staff/event/check-in", icon: <ScanLine size={16} /> },
         ];
       default:
         return [
@@ -293,16 +291,6 @@ export default function Navbar({ token }) {
     { label: "Survey Manager", path: "/admin/survey" },
     { label: "Reward Manager", path: "/admin/reward" },
   ];
-
-// ลบ activeHash state และ useEffect ของ hashchange ออกทั้งหมด
-
-// แก้ isActivePath
-const isActivePath = (path) => {
-  if (path.startsWith("#")) {
-    return false; // # path ไม่ highlight อะไรเลย
-  }
-  return pathName.startsWith(path);
-};
 
   // --- Search Dropdown Component ---
   const SearchDropdown = ({ isMobile = false }) => (
@@ -358,11 +346,7 @@ const isActivePath = (path) => {
           setIsStaffOpen(false);
           setOpen(!isOpen);
         }}
-      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-        isActivePath(basePath) 
-          ? "bg-purple-50 text-purple-700"
-          : "text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-      }`}
+        className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 text-gray-600 hover:text-purple-600 hover:bg-purple-50"
       >
         {icon && <span className="opacity-70">{icon}</span>}
         <span>{label}</span>
@@ -410,16 +394,11 @@ const isActivePath = (path) => {
             if (item.label === "Admin" && item.hasDropdown)
               return renderDropdown("Admin", isAdminOpen, setIsAdminOpen, adminOptions, adminDropdownRef, item.icon, item.path);
 
-            const active = isActivePath(item.path);
             return (
               <button
                 key={item.label}
                 onClick={() => handleNavigation(item.path)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                  active
-                    ? "bg-purple-50 text-purple-700"
-                    : "text-gray-600 hover:text-purple-600 hover:bg-purple-50"
-                }`}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 text-gray-600 hover:text-purple-600 hover:bg-purple-50"
               >
                 {item.icon && <span className="opacity-70">{item.icon}</span>}
                 {item.label}
@@ -809,15 +788,9 @@ const isActivePath = (path) => {
                 <button
                   key={item.label}
                   onClick={() => handleNavigation(item.path)}
-                  className={`flex items-center gap-2.5 w-full text-left px-4 py-2.5 rounded-xl font-medium text-sm transition ${
-                    isActivePath(item.path)
-                      ? "bg-purple-50 text-purple-700"
-                      : "text-gray-700 hover:bg-purple-50 hover:text-purple-600"
-                  }`}
+                  className="flex items-center gap-2.5 w-full text-left px-4 py-2.5 rounded-xl font-medium text-sm transition text-gray-700 hover:bg-purple-50 hover:text-purple-600"
                 >
-                  <span className={isActivePath(item.path) ? "text-purple-500" : "text-gray-400"}>
-                    {item.icon}
-                  </span>
+                  <span className="text-gray-400">{item.icon}</span>
                   {item.label}
                 </button>
               );
