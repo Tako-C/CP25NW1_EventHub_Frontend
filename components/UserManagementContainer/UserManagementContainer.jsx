@@ -87,6 +87,8 @@ const validateRow = (row) => {
 };
 
 export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
+  const isOrganizer = baseBreadcrumb === "Organizer";
+
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventUsers, setEventUsers] = useState([]);
@@ -122,30 +124,74 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
 
   useEffect(() => {
     fetchData();
-    fetchAllUsers();
+    if (!isOrganizer) {
+      fetchAllUsers();
+    }
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const test = await getDataNoToken("events");
-      console.log(test);
-      const res = await getData("events");
-      const resEvent = await getData(`admin/events/users`);
-      if (res?.data && resEvent?.data) {
-        const processedEvents = res.data.map((event) => {
-          const participantCount = resEvent.data.filter(
-            (u) => u.eventId === event.id
-          ).length;
+if (isOrganizer) {
+  const res = await getData("users/me/registered-events");
+  if (res?.statusCode === 200 && Array.isArray(res?.data)) {
+    const organizerEvents = res.data.filter(
+      (e) => e.eventRole === "ORGANIZER"
+    );
+    console.log(organizerEvents)
+    const detailedEvents = await Promise.all(
+      organizerEvents.map(async (registeredEvent) => {
+        const [eventRes, usersRes] = await Promise.all([
+          getData(`events/${registeredEvent.eventId}`),
+          getData(`admin/events/${registeredEvent.eventId}/users`),
+        ]);
+        const participantCount = Array.isArray(usersRes?.data)
+          ? usersRes.data.length
+          : 0;
+        if (eventRes?.statusCode === 200) {
           return {
-            ...event,
-            key: event.id,
-            name: event.eventName,
-            date: event.startDate ? event.startDate.split("T")[0] : "-",
-            participantCount: participantCount,
+            ...registeredEvent,
+            ...eventRes.data,
+            eventRole: registeredEvent.eventRole, // ป้องกัน eventRole ถูก overwrite
+            key: registeredEvent.eventId,
+            id: registeredEvent.eventId,
+            name: eventRes.data.eventName,
+            date: eventRes.data.startDate?.split("T")[0] ?? "-",
+            participantCount,
           };
-        });
-        setEvents(processedEvents);
+        }
+        return {
+          ...registeredEvent,
+          key: registeredEvent.eventId,
+          id: registeredEvent.eventId,
+          name: registeredEvent.eventName ?? "-",
+          date: registeredEvent.startDate?.split("T")[0] ?? "-",
+          participantCount,
+        };
+      })
+    );
+    setEvents(detailedEvents);
+  }
+      } else {
+        const test = await getDataNoToken("events");
+        console.log(test);
+        const res = await getData("events");
+        const resEvent = await getData(`admin/events/users`);
+        if (res?.data && resEvent?.data) {
+          const processedEvents = res.data.map((event) => {
+            const participantCount = resEvent.data.filter(
+              (u) => u.eventId === event.id
+            ).length;
+            return {
+              ...event,
+              key: event.id,
+              name: event.eventName,
+              date: event.startDate ? event.startDate.split("T")[0] : "-",
+              participantCount: participantCount,
+            };
+          });
+          setEvents(processedEvents);
+        }
       }
     } catch (error) {
       showNotification("ดึงข้อมูลอีเว้นท์ไม่สำเร็จ", true);
@@ -196,7 +242,6 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
   }, [eventUsers, searchText]);
 
   const handleAddUser = async (values) => {
-    // --- Duplicate User in Event Validation ---
     const alreadyInEvent = eventUsers.find(
       (u) => (u.userId || u.id) === values.userId
     );
@@ -485,13 +530,16 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
               >
                 Import Excel
               </Button>
-              <Button
-                type="primary"
-                icon={<TeamOutlined />}
-                onClick={() => setIsAddUserModalOpen(true)}
-              >
-                Add User
-              </Button>
+              {/* ซ่อน Add User สำหรับ Organizer เพราะไม่มีสิทธิ์ดึง admin/users */}
+              {!isOrganizer && (
+                <Button
+                  type="primary"
+                  icon={<TeamOutlined />}
+                  onClick={() => setIsAddUserModalOpen(true)}
+                >
+                  Add User
+                </Button>
+              )}
             </Space>
           )}
         </div>
@@ -528,38 +576,40 @@ export default function UserManagementContainer({ baseBreadcrumb = "Admin" }) {
 
       {/* --- Modals --- */}
 
-      {/* Add User Modal */}
-      <Modal
-        title="เพิ่มผู้ใช้งานเข้าอีเว้นท์"
-        open={isAddUserModalOpen}
-        onOk={() => form.submit()}
-        onCancel={() => {
-          setIsAddUserModalOpen(false);
-          form.resetFields();
-        }}
-        okText="Add Member"
-        centered
-      >
-        <Form form={form} layout="vertical" onFinish={handleAddUser}>
-          <Form.Item
-            label="เลือกผู้ใช้งาน"
-            name="userId"
-            rules={[{ required: true, message: "กรุณาเลือกผู้ใช้งาน" }]}
-          >
-            <Select
-              showSearch
-              placeholder="ค้นหาชื่อ หรืออีเมล"
-              options={allUsers.map((u) => ({
-                value: u.id || u.userId,
-                label: `${u.firstName} ${u.lastName} (${u.email})`,
-              }))}
-              filterOption={(input, option) =>
-                (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
-              }
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* Add User Modal (Admin only) */}
+      {!isOrganizer && (
+        <Modal
+          title="เพิ่มผู้ใช้งานเข้าอีเว้นท์"
+          open={isAddUserModalOpen}
+          onOk={() => form.submit()}
+          onCancel={() => {
+            setIsAddUserModalOpen(false);
+            form.resetFields();
+          }}
+          okText="Add Member"
+          centered
+        >
+          <Form form={form} layout="vertical" onFinish={handleAddUser}>
+            <Form.Item
+              label="เลือกผู้ใช้งาน"
+              name="userId"
+              rules={[{ required: true, message: "กรุณาเลือกผู้ใช้งาน" }]}
+            >
+              <Select
+                showSearch
+                placeholder="ค้นหาชื่อ หรืออีเมล"
+                options={allUsers.map((u) => ({
+                  value: u.id || u.userId,
+                  label: `${u.firstName} ${u.lastName} (${u.email})`,
+                }))}
+                filterOption={(input, option) =>
+                  (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+                }
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
 
       {/* Import Modal */}
       <Modal
