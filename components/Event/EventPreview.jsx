@@ -175,7 +175,7 @@ export default function EventPreview({ formValues }) {
 
     return (
       <div className="flex justify-center p-8 bg-gray-50 rounded-xl">
-        <div className="w-[300px] md:w-[350px]">
+        <div className="w-[300px] md:w-[350px] pointer-events-none select-none">
           <EventCard event={mockEventForCard} />
         </div>
       </div>
@@ -243,7 +243,7 @@ export default function EventPreview({ formValues }) {
                   </div>
                 </div>
 
-                <button className="w-full md:w-auto font-semibold px-8 md:px-32 py-4 rounded-full shadow-lg bg-blue-900 text-white opacity-90 cursor-default">
+                <button type="button" className="w-full md:w-auto font-semibold px-8 md:px-32 py-4 rounded-full shadow-lg bg-blue-900 text-white opacity-90 cursor-default">
                   Register Now (Preview)
                 </button>
               </div>
@@ -254,6 +254,7 @@ export default function EventPreview({ formValues }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
             <button
+              type="button"
               onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
               className="flex items-center justify-between w-full"
             >
