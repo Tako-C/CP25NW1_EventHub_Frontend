@@ -1,7 +1,7 @@
 "use client";
 import { Pie, Column } from "@ant-design/plots";
 import { Card, Table, Tag, Rate, Select } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const PALETTE = {
   primary: ["#2563EB", "#0EA5E9", "#8B5CF6"],
@@ -56,7 +56,6 @@ export const STANDARD_KEYWORDS = [
 const getPalette = (palette) => ({ ...PALETTE, ...(palette || {}) });
 
 // ─── HELPER: กรอง hourly slots ที่ว่างออก ────────────────────────────────────
-// เก็บเฉพาะ slot ที่มีค่า > 0 และ slot ติดกัน ±1 เพื่อให้เห็น context
 function filterHourlyData(hourlyStats) {
   if (!hourlyStats || !hourlyStats.length) return [];
   const allZero = hourlyStats.every((h) => h.total === 0);
@@ -75,7 +74,6 @@ function filterHourlyData(hourlyStats) {
 
 // ─── CHART COMPONENTS ─────────────────────────────────────────────────────────
 
-// RegistrationByTimeChart — สีฟ้า (Registration)
 export const RegistrationByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
 
@@ -103,9 +101,7 @@ export const RegistrationByTimeChart = ({ palette, data }) => {
         data={chartData}
         xField="time"
         yField="value"
-        style={{
-          fill: "#BFD3F2",
-        }}
+        style={{ fill: "#BFD3F2" }}
         label={{
           position: "inside",
           style: { fill: "#1E40AF", fontSize: 13, fontWeight: 600 },
@@ -126,7 +122,6 @@ export const RegistrationByTimeChart = ({ palette, data }) => {
   );
 };
 
-// CheckinByTimeChart — สีเขียวน้ำทะเล (Check-in) แตกต่างจาก Registration
 export const CheckinByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
 
@@ -139,8 +134,8 @@ export const CheckinByTimeChart = ({ palette, data }) => {
   if (!chartData.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
 
-  const checkinColor = "#B2E3DF"; 
-  const darkTeal = "#0F766E"; 
+  const checkinColor = "#B2E3DF";
+  const darkTeal = "#0F766E";
 
   return (
     <>
@@ -158,17 +153,10 @@ export const CheckinByTimeChart = ({ palette, data }) => {
         xField="time"
         yField="value"
         color={checkinColor}
-        style={{
-          fill: checkinColor,
-          stroke: checkinColor,
-        }}
+        style={{ fill: checkinColor, stroke: checkinColor }}
         label={{
-          position: "inside", 
-          style: { 
-            fill: darkTeal, 
-            fontSize: 12, 
-            fontWeight: 700 
-          },
+          position: "inside",
+          style: { fill: darkTeal, fontSize: 12, fontWeight: 700 },
         }}
         legend={false}
         height={240}
@@ -186,7 +174,6 @@ export const CheckinByTimeChart = ({ palette, data }) => {
   );
 };
 
-// OccupationChart — เลขสีขาวในแท่ง
 export const OccupationChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -229,7 +216,6 @@ export const OccupationChart = ({ palette, data }) => {
   );
 };
 
-// ProvinceChart — เลขสีขาวในแท่ง
 export const ProvinceChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -272,7 +258,6 @@ export const ProvinceChart = ({ palette, data }) => {
   );
 };
 
-// RolePieChart — Donut + custom legend ข้างข้าง ไม่มีปัญหา label ชนกัน
 export const RolePieChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -305,10 +290,7 @@ export const RolePieChart = ({ palette, data }) => {
         }}
         legend={false}
         statistic={{
-          title: {
-            content: "ทั้งหมด",
-            style: { fontSize: 12, color: "#94A3B8" },
-          },
+          title: { content: "ทั้งหมด", style: { fontSize: 12, color: "#94A3B8" } },
           content: {
             content: `${total}`,
             style: { fontSize: 26, fontWeight: 900, color: "#1E293B" },
@@ -320,13 +302,9 @@ export const RolePieChart = ({ palette, data }) => {
           value: `${datum.value} คน (${((datum.value / total) * 100).toFixed(1)}%)`,
         })}
       />
-      {/* Custom legend แทน built-in เพื่อหลีกเลี่ยง label ชนกัน */}
       <div className="flex flex-col gap-2 px-2">
         {chartData.map((item, i) => (
-          <div
-            key={item.type}
-            className="flex items-center justify-between text-sm"
-          >
+          <div key={item.type} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span
                 className="inline-block w-3 h-3 rounded-sm flex-shrink-0"
@@ -353,7 +331,6 @@ export const RolePieChart = ({ palette, data }) => {
   );
 };
 
-// AgeChart — เลขสีขาวในแท่ง
 export const AgeChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -390,7 +367,6 @@ export const AgeChart = ({ palette, data }) => {
   );
 };
 
-// GenderPieChart — Donut + custom legend ด้านล่าง
 export const GenderPieChart = ({ palette, data }) => {
   const p = getPalette(palette);
   const chartData = (data || []).map((d) => ({
@@ -423,10 +399,7 @@ export const GenderPieChart = ({ palette, data }) => {
         }}
         legend={false}
         statistic={{
-          title: {
-            content: "ทั้งหมด",
-            style: { fontSize: 12, color: "#94A3B8" },
-          },
+          title: { content: "ทั้งหมด", style: { fontSize: 12, color: "#94A3B8" } },
           content: {
             content: `${total}`,
             style: { fontSize: 26, fontWeight: 900, color: "#1E293B" },
@@ -440,10 +413,7 @@ export const GenderPieChart = ({ palette, data }) => {
       />
       <div className="flex flex-col gap-2 px-2">
         {chartData.map((item, i) => (
-          <div
-            key={item.type}
-            className="flex items-center justify-between text-sm"
-          >
+          <div key={item.type} className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <span
                 className="inline-block w-3 h-3 rounded-full flex-shrink-0"
@@ -470,7 +440,6 @@ export const GenderPieChart = ({ palette, data }) => {
   );
 };
 
-// VisitorSubmittedChart — สีฟ้าเข้ม (Visitor)
 export const VisitorSubmittedChart = ({ palette, data }) => {
   const filtered = filterHourlyData(data?.hourlyPostSurveyStats);
   const chartData = filtered.map((h) => ({
@@ -486,10 +455,7 @@ export const VisitorSubmittedChart = ({ palette, data }) => {
   return (
     <>
       <div className="flex items-center gap-2 mb-3">
-        <span
-          className="inline-block w-3 h-3 rounded-sm"
-          style={{ background: color }}
-        />
+        <span className="inline-block w-3 h-3 rounded-sm" style={{ background: color }} />
         <span className="text-sm font-semibold text-slate-600">
           Visitor ส่งแบบสอบถาม (คน)
         </span>
@@ -505,23 +471,14 @@ export const VisitorSubmittedChart = ({ palette, data }) => {
         }}
         legend={false}
         height={220}
-        xAxis={{
-          label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } },
-        }}
-        yAxis={{
-          minLimit: 0,
-          title: { text: "จำนวนคน", style: { fontSize: 12 } },
-        }}
-        tooltip={(datum) => ({
-          name: "Visitor ส่ง Survey",
-          value: `${datum.value} คน`,
-        })}
+        xAxis={{ label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } } }}
+        yAxis={{ minLimit: 0, title: { text: "จำนวนคน", style: { fontSize: 12 } } }}
+        tooltip={(datum) => ({ name: "Visitor ส่ง Survey", value: `${datum.value} คน` })}
       />
     </>
   );
 };
 
-// ExhibitorSubmittedChart — สีส้ม (Exhibitor) แตกต่างจาก Visitor ชัดเจน
 export const ExhibitorSubmittedChart = ({ palette, data }) => {
   const filtered = filterHourlyData(data?.hourlyPostSurveyStats);
   const chartData = filtered.map((h) => ({
@@ -537,10 +494,7 @@ export const ExhibitorSubmittedChart = ({ palette, data }) => {
   return (
     <>
       <div className="flex items-center gap-2 mb-3">
-        <span
-          className="inline-block w-3 h-3 rounded-sm"
-          style={{ background: color }}
-        />
+        <span className="inline-block w-3 h-3 rounded-sm" style={{ background: color }} />
         <span className="text-sm font-semibold text-slate-600">
           Exhibitor ส่งแบบสอบถาม (คน)
         </span>
@@ -556,24 +510,14 @@ export const ExhibitorSubmittedChart = ({ palette, data }) => {
         }}
         legend={false}
         height={220}
-        xAxis={{
-          label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } },
-        }}
-        yAxis={{
-          minLimit: 0,
-          title: { text: "จำนวนคน", style: { fontSize: 12 } },
-        }}
-        tooltip={(datum) => ({
-          name: "Exhibitor ส่ง Survey",
-          value: `${datum.value} คน`,
-        })}
+        xAxis={{ label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } } }}
+        yAxis={{ minLimit: 0, title: { text: "จำนวนคน", style: { fontSize: 12 } } }}
+        tooltip={(datum) => ({ name: "Exhibitor ส่ง Survey", value: `${datum.value} คน` })}
       />
     </>
   );
 };
 
-// PreSurveySubmittedChart — สีเขียว (Pre-Survey = ส่งพร้อม Registration)
-// รับ hourlyPreSurveyStats ที่คำนวณมาจาก checkInList ใน EventDashboard
 export const PreSurveySubmittedChart = ({ data }) => {
   const filtered = filterHourlyData(data || []);
   const chartData = filtered.map((h) => ({
@@ -621,12 +565,7 @@ const SatisfactionBar = ({ level, count, total, color }) => {
   return (
     <div className="flex items-center gap-3 text-sm">
       <div className="flex items-center gap-1 w-20 shrink-0">
-        <Rate
-          disabled
-          defaultValue={level}
-          count={level}
-          style={{ fontSize: 11, color }}
-        />
+        <Rate disabled defaultValue={level} count={level} style={{ fontSize: 11, color }} />
       </div>
       <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
         <div
@@ -634,9 +573,7 @@ const SatisfactionBar = ({ level, count, total, color }) => {
           style={{ width: `${pct}%`, backgroundColor: color }}
         />
       </div>
-      <span className="w-12 text-right font-semibold text-gray-700">
-        {count} คน
-      </span>
+      <span className="w-12 text-right font-semibold text-gray-700">{count} คน</span>
     </div>
   );
 };
@@ -648,7 +585,7 @@ export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
   });
 
   const total = Object.values(dataMap).reduce((a, b) => a + b, 0);
-  const avg = data.avgScore
+  const avg = data.avgScore;
 
   return (
     <Card
@@ -663,18 +600,10 @@ export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
     >
       <div className="flex flex-col gap-3">
         {[5, 4, 3, 2, 1].map((lvl) => (
-          <SatisfactionBar
-            key={lvl}
-            level={lvl}
-            count={dataMap[lvl] || 0}
-            total={total}
-            color={color}
-          />
+          <SatisfactionBar key={lvl} level={lvl} count={dataMap[lvl] || 0} total={total} color={color} />
         ))}
       </div>
-      <div className="mt-3 text-right text-xs text-gray-400">
-        จากทั้งหมด {total} คน
-      </div>
+      <div className="mt-3 text-right text-xs text-gray-400">จากทั้งหมด {total} คน</div>
     </Card>
   );
 };
@@ -684,16 +613,11 @@ export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
 export const AnswerRatioChart = ({ palette, data }) => {
   const p = getPalette(palette);
 
-  if (!data || !data.length) {
+  if (!data || !data.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
-  }
 
   const chartData = data
-    .map((q) => ({
-      question: q.question,
-      value: q.answered,
-      type: "ตอบแล้ว",
-    }))
+    .map((q) => ({ question: q.question, value: q.answered, type: "ตอบแล้ว" }))
     .concat(
       data.map((q) => ({
         question: q.question,
@@ -738,53 +662,35 @@ export const SentimentDonutChart = ({ data }) => {
   ].filter((d) => d.value > 0);
 
   if (!total)
-    return (
-      <div className="text-center py-10 text-gray-400">
-        ไม่มีข้อมูล Sentiment
-      </div>
-    );
+    return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล Sentiment</div>;
 
   const SENTIMENT_COLORS = ["#22C55E", "#F59E0B", "#EF4444"];
 
   return (
     <div>
-      {/* Summary pill badges */}
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-4 py-2">
           <span className="text-xl">😊</span>
           <div>
-            <div className="text-xs font-bold text-green-600 uppercase tracking-wide">
-              Positive
-            </div>
-            <div className="text-2xl font-black text-green-700">
-              {counts.POSITIVE}
-            </div>
+            <div className="text-xs font-bold text-green-600 uppercase tracking-wide">Positive</div>
+            <div className="text-2xl font-black text-green-700">{counts.POSITIVE}</div>
           </div>
         </div>
         <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2">
           <span className="text-xl">😐</span>
           <div>
-            <div className="text-xs font-bold text-amber-600 uppercase tracking-wide">
-              Neutral
-            </div>
-            <div className="text-2xl font-black text-amber-700">
-              {counts.NEUTRAL}
-            </div>
+            <div className="text-xs font-bold text-amber-600 uppercase tracking-wide">Neutral</div>
+            <div className="text-2xl font-black text-amber-700">{counts.NEUTRAL}</div>
           </div>
         </div>
         <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2">
           <span className="text-xl">😞</span>
           <div>
-            <div className="text-xs font-bold text-red-600 uppercase tracking-wide">
-              Negative
-            </div>
-            <div className="text-2xl font-black text-red-700">
-              {counts.NEGATIVE}
-            </div>
+            <div className="text-xs font-bold text-red-600 uppercase tracking-wide">Negative</div>
+            <div className="text-2xl font-black text-red-700">{counts.NEGATIVE}</div>
           </div>
         </div>
       </div>
-
       <Pie
         data={chartData}
         angleField="value"
@@ -798,19 +704,10 @@ export const SentimentDonutChart = ({ data }) => {
             `${item.type}: ${item.value} (${((item.value / total) * 100).toFixed(1)}%)`,
           style: { fontSize: 13, fontWeight: 600 },
         }}
-        legend={{
-          position: "bottom",
-          itemName: { style: { fontSize: 14, fontWeight: 600 } },
-        }}
+        legend={{ position: "bottom", itemName: { style: { fontSize: 14, fontWeight: 600 } } }}
         statistic={{
-          title: {
-            content: "ทั้งหมด",
-            style: { fontSize: 13, color: "#64748B" },
-          },
-          content: {
-            content: `${total}`,
-            style: { fontSize: 28, fontWeight: 900, color: "#1E293B" },
-          },
+          title: { content: "ทั้งหมด", style: { fontSize: 13, color: "#64748B" } },
+          content: { content: `${total}`, style: { fontSize: 28, fontWeight: 900, color: "#1E293B" } },
         }}
         height={300}
         tooltip={(datum) => ({
@@ -840,9 +737,7 @@ const suggestionColumns = [
     dataIndex: "surveysType",
     key: "surveysType",
     render: (t) => (
-      <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">
-        {t}
-      </span>
+      <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">{t}</span>
     ),
   },
   {
@@ -850,11 +745,7 @@ const suggestionColumns = [
     dataIndex: "keyword",
     key: "keyword",
     render: (k) =>
-      k ? (
-        <Tag color="geekblue">{k}</Tag>
-      ) : (
-        <span className="text-gray-300">-</span>
-      ),
+      k ? <Tag color="geekblue">{k}</Tag> : <span className="text-gray-300">-</span>,
   },
   {
     title: "Sentiment",
@@ -875,11 +766,13 @@ const suggestionColumns = [
 export const SuggestionTable = ({ data }) => {
   const [selectedKeyword, setSelectedKeyword] = useState(null);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
+  // ── Fix: render Select เฉพาะ client-side เพื่อแก้ hydration mismatch ──────
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const filteredData = (data || []).filter((item) => {
     const keywordMatch = !selectedKeyword || item.keyword === selectedKeyword;
-    const sentimentMatch =
-      !selectedSentiment || item.sentiment === selectedSentiment;
+    const sentimentMatch = !selectedSentiment || item.sentiment === selectedSentiment;
     return keywordMatch && sentimentMatch;
   });
 
@@ -906,31 +799,35 @@ export const SuggestionTable = ({ data }) => {
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
             กรองตาม Keyword
           </label>
-          <Select
-            allowClear
-            placeholder="ทั้งหมด"
-            value={selectedKeyword}
-            onChange={setSelectedKeyword}
-            style={{ width: 240 }}
-            options={STANDARD_KEYWORDS.map((kw) => ({ label: kw, value: kw }))}
-          />
+          {mounted && (
+            <Select
+              allowClear
+              placeholder="ทั้งหมด"
+              value={selectedKeyword}
+              onChange={setSelectedKeyword}
+              style={{ width: 240 }}
+              options={STANDARD_KEYWORDS.map((kw) => ({ label: kw, value: kw }))}
+            />
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
             กรองตาม Sentiment
           </label>
-          <Select
-            allowClear
-            placeholder="ทั้งหมด"
-            value={selectedSentiment}
-            onChange={setSelectedSentiment}
-            style={{ width: 180 }}
-            options={[
-              { label: "😊 Positive", value: "POSITIVE" },
-              { label: "😐 Neutral", value: "NEUTRAL" },
-              { label: "😞 Negative", value: "NEGATIVE" },
-            ]}
-          />
+          {mounted && (
+            <Select
+              allowClear
+              placeholder="ทั้งหมด"
+              value={selectedSentiment}
+              onChange={setSelectedSentiment}
+              style={{ width: 180 }}
+              options={[
+                { label: "😊 Positive", value: "POSITIVE" },
+                { label: "😐 Neutral", value: "NEUTRAL" },
+                { label: "😞 Negative", value: "NEGATIVE" },
+              ]}
+            />
+          )}
         </div>
         {(selectedKeyword || selectedSentiment) && (
           <div className="flex items-end">
@@ -969,9 +866,7 @@ export const SuggestionTable = ({ data }) => {
 export const ChartCard = ({ title, children, className = "" }) => (
   <Card
     variant="borderless"
-    title={
-      <span className="text-base font-extrabold text-slate-800">{title}</span>
-    }
+    title={<span className="text-base font-extrabold text-slate-800">{title}</span>}
     className={`h-fit rounded-2xl border border-slate-200 bg-white/95 shadow-sm ${className}`}
     styles={{ body: { padding: "20px" } }}
   >

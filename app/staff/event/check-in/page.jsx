@@ -44,6 +44,23 @@ export default function StaffCheckInPage() {
     ['STAFF', 'ORGANIZER'].includes(e.eventRole?.toUpperCase())
   );
 
+  const now = new Date();
+  const eventNotStarted = selectedEvent && new Date(selectedEvent.startDate) > now;
+  const eventEnded = selectedEvent && new Date(selectedEvent.endDate) < now;
+  const isEventUnavailable = eventNotStarted || eventEnded;
+
+  const getEventStatusMessage = () => {
+    if (eventNotStarted) {
+      const start = new Date(selectedEvent.startDate);
+      return `กิจกรรมยังไม่เริ่ม · เริ่มวันที่ ${start.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })} เวลา ${start.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
+    }
+    if (eventEnded) {
+      const end = new Date(selectedEvent.endDate);
+      return `กิจกรรมสิ้นสุดแล้ว · จบเมื่อวันที่ ${end.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })} เวลา ${end.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
+    }
+    return '';
+  };
+
   useEffect(() => {
     getData('users/me/registered-events').then(res => {
       if (res?.data && Array.isArray(res.data)) {
@@ -241,6 +258,13 @@ export default function StaffCheckInPage() {
                   <p className="text-xs text-amber-700 font-medium">⚠ กรุณาเลือกกิจกรรมก่อนสแกน QR</p>
                 </div>
               )}
+              {isEventUnavailable && (
+                <div className={`border rounded-2xl px-4 py-3 text-center ${eventEnded ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200'}`}>
+                  <p className={`text-xs font-medium ${eventEnded ? 'text-gray-500' : 'text-blue-700'}`}>
+                    {eventEnded ? '🔒' : '🕐'} {getEventStatusMessage()}
+                  </p>
+                </div>
+              )}
 
               <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
                 {/* Label */}
@@ -256,7 +280,17 @@ export default function StaffCheckInPage() {
 
                 {/* Camera */}
                 <div className="relative aspect-square bg-gray-900">
-                  {isScanning ? (
+                  {isEventUnavailable ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-4 px-6">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center border ${eventEnded ? 'bg-gray-500/20 border-gray-500/30' : 'bg-blue-500/20 border-blue-500/30'}`}>
+                        <span className="text-3xl">{eventEnded ? '🔒' : '🕐'}</span>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-bold text-white text-sm">{eventEnded ? 'กิจกรรมสิ้นสุดแล้ว' : 'กิจกรรมยังไม่เริ่ม'}</p>
+                        <p className="text-gray-400 text-xs mt-1">ไม่สามารถสแกน QR ได้ในขณะนี้</p>
+                      </div>
+                    </div>
+                  ) : isScanning ? (
                     <div className="w-full h-full relative">
                       <Scanner
                         onScan={handleScanSuccess}
@@ -299,6 +333,13 @@ export default function StaffCheckInPage() {
           {/* Manual Tab */}
           {activeTab === 'manual' && (
             <div className="space-y-4">
+              {isEventUnavailable && (
+                <div className={`border rounded-2xl px-4 py-3 text-center ${eventEnded ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200'}`}>
+                  <p className={`text-xs font-medium ${eventEnded ? 'text-gray-500' : 'text-blue-700'}`}>
+                    {eventEnded ? '🔒' : '🕐'} {getEventStatusMessage()}
+                  </p>
+                </div>
+              )}
               {/* Search */}
               <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
                 <p className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">ค้นหาผู้เข้าร่วม</p>
@@ -311,11 +352,11 @@ export default function StaffCheckInPage() {
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                      disabled={!selectedEventId}
+                      disabled={!selectedEventId || isEventUnavailable}
                       className="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl pl-9 pr-4 py-2.5 placeholder-gray-400 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     />
                   </div>
-                  <button onClick={handleSearch} disabled={isLoading || !selectedEventId}
+                  <button onClick={handleSearch} disabled={isLoading || !selectedEventId || isEventUnavailable}
                     className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-sm font-bold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 shadow-sm shadow-purple-200">
                     {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
                   </button>
@@ -370,6 +411,10 @@ export default function StaffCheckInPage() {
                           {checked ? (
                             <span className="flex-shrink-0 text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-full">
                               เข้างานแล้ว
+                            </span>
+                          ) : isEventUnavailable ? (
+                            <span className={`flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-full ${eventEnded ? 'text-gray-400 bg-gray-100 border border-gray-200' : 'text-blue-400 bg-blue-50 border border-blue-200'}`}>
+                              {eventEnded ? 'สิ้นสุดแล้ว' : 'ยังไม่เริ่ม'}
                             </span>
                           ) : (
                             <button onClick={() => handleCheckIn(visitor)} disabled={isUpdating}

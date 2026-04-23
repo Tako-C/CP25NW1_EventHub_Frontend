@@ -42,8 +42,6 @@ import {
   PreSurveySubmittedChart,
 } from "@/components/Dashboard/components/DashboardCharts";
 
-// ─── THEMES ───────────────────────────────────────────────────────────────────
-
 const EVENT_THEMES = {
   tech: {
     key: "tech",
@@ -137,8 +135,6 @@ const EVENT_THEMES = {
   },
 };
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-
 export default function EventDashboard({ mode = "organizer" }) {
   const { id } = useParams();
   const isAdmin = mode === "admin";
@@ -170,55 +166,39 @@ export default function EventDashboard({ mode = "organizer" }) {
   const [preSurveyHourly, setPreSurveyHourly] = useState([]);
   const [visitorQuestions, setVisitorQuestions] = useState([]);
   const [exhibitorQuestions, setExhibitorQuestions] = useState([]);
+  const [kpiData, setKpiData] = useState(null);
 
-  // ─── Derived stats ─────────────────────────────────────────────────────────
   const totalParticipants =
     registrationData?.totalParticipants ?? participants.length;
   const totalCheckedIn = checkinData?.totalCheckin ?? 0;
   const noShow = Math.max(totalParticipants - totalCheckedIn, 0);
-  //   const totalVisitorSurvey = visitorSurveyStats?.totalAllPreSurvey ?? visitorSurveyStatus.length;
-  //   const visitorSubmitted   = visitorSurveyStats?.totalAllBothSurveys ?? visitorSurveyStatus.filter((s) => s.postSurveyDone).length;
-  //   const totalExhibitorSurvey = exhibitorSurveyStats?.totalAllPreSurvey ?? exhibitorSurveyStatus.length;
-  //   const exhibitorSubmitted   = exhibitorSurveyStats?.totalAllBothSurveys ?? exhibitorSurveyStatus.filter((s) => s.postSurveyDone).length;
+
   const totalVisitorSurvey = visitorSurveyStats?.visitorSubPreSurvey;
   const visitorSubmitted = visitorSurveyStats?.visitorSubPostSurvey;
   const totalExhibitorSurvey = exhibitorSurveyStats?.exhibitorSubPreSurvey;
   const exhibitorSubmitted = exhibitorSurveyStats?.exhibitorSubPostSurvey;
 
-  const checkInRate = totalParticipants
-    ? (totalCheckedIn / totalParticipants) * 100
-    : 0;
-  const visitorSubmitRate = totalVisitorSurvey
-    ? (visitorSubmitted / totalVisitorSurvey) * 100
-    : 0;
-  const exhibitorSubmitRate = totalExhibitorSurvey
-    ? (exhibitorSubmitted / totalExhibitorSurvey) * 100
-    : 0;
-  const totalSurvey = totalVisitorSurvey + totalExhibitorSurvey;
-  const overallSurveyRate = totalSurvey
-    ? ((visitorSubmitted + exhibitorSubmitted) / totalSurvey) * 100
-    : 0;
+  const engagement = kpiData?.data?.engagement;
+  const operational = kpiData?.data?.operational;
 
-  const preSurveyVisitorTable = useMemo(
-    () =>
-      visitorSurveyStatus.map((item, i) => ({
-        ...item,
-        key: `pre-vis-${i}`,
-        no: i + 1,
-        surveyType: "Pre-Survey",
-        status: item.preSurveyDone ? "SUBMITTED" : "PENDING",
-      })),
-    [visitorSurveyStatus],
-  );
+  const checkInRate =
+    engagement?.totalRegistered
+      ? (engagement.totalCheckedIn / engagement.totalRegistered) * 100
+      : 0;
 
-   const preSurveyExhibitorTable = useMemo(
-    () => exhibitorSurveyStatus.map((item, i) => ({
-      ...item, key: `pre-ex-${i}`, no: i + 1,
-      surveyType: "Pre-Survey",
-      status: item.preSurveyDone ? "SUBMITTED" : "PENDING",
-    })),
-    [exhibitorSurveyStatus],
-  );
+  const totalSurveySum = (operational?.totalPostSurvey ?? 0) + (operational?.totalPreSurvey ?? 0);
+  const visitorSubSum = (operational?.visitorSubPostSurvey ?? 0) + (operational?.visitorSubPreSurvey ?? 0);
+  console.log(totalSurveySum)
+  console.log(visitorSubSum)
+  const visitorSubmitRate = totalSurveySum ? (visitorSubSum / totalSurveySum) * 100 : 0;
+  console.log(visitorSubmitRate)
+
+  const exhibitorSubSum = (operational?.exhibitorSubPostSurvey ?? 0) + (operational?.exhibitorSubPreSurvey ?? 0);
+  const exhibitorSubmitRate = totalSurveySum ? (exhibitorSubSum / totalSurveySum) * 100 : 0;
+  console.log(exhibitorSubSum)
+  console.log(exhibitorSubmitRate)
+
+  const submitCompletion = operational?.surveyCompletionRate ?? 0;
 
   const surveyVisitorTable = useMemo(
     () =>
@@ -264,11 +244,9 @@ export default function EventDashboard({ mode = "organizer" }) {
     return EVENT_THEMES.business;
   }, [eventMeta]);
 
-  // ─── Fetch ──────────────────────────────────────────────────────────────────
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Event detail — endpoint ต่างกันตาม mode
       const eventRes = isAdmin
         ? await getData(`admin/events/${id}`)
         : (
@@ -278,7 +256,6 @@ export default function EventDashboard({ mode = "organizer" }) {
             ])
           )[1];
       const testData = await getData(`/ai/analysis/${id}`)
-      console.log(testData)
       
       setTitle(eventRes?.data?.eventName);
       setEventMeta({
@@ -328,8 +305,9 @@ export default function EventDashboard({ mode = "organizer" }) {
         postUserCheckInDashboard("list/check-in", id),
       ]);
 
-    //   const testData = await getData(`ai/kpi/events/${id}`);
-    //   console.log(testData)
+      const kpiRes = await getData(`ai/kpi/events/${id}`);
+      console.log(kpiRes);
+      if (kpiRes) setKpiData(kpiRes);
 
       const testSurveyVisitor = await getData(`dashboard/events/${id}/surveys/visitor/questions`);
       const testSurveyExhibitor = await getData(`dashboard/events/${id}/surveys/exhibitor/questions`);
@@ -375,8 +353,6 @@ export default function EventDashboard({ mode = "organizer" }) {
         const list = checkInListRes.value.data;
         setParticipant(list.map((item, i) => ({ ...item, key: i, no: i + 1 })));
 
-        // คำนวณ Pre-Survey hourly จาก registration_date (registration = ส่ง pre ในตัว)
-        // สร้าง bucket 24 ชั่วโมงก่อน แล้วนับตาม hour ของ registration_date
         const hourBuckets = Array.from({ length: 24 }, (_, h) => {
           const start = String(h).padStart(2, "0");
           const end = String((h + 1) % 24).padStart(2, "0");
@@ -386,7 +362,6 @@ export default function EventDashboard({ mode = "organizer" }) {
         list.forEach((item) => {
           const date = item.registration_date || item.createdAt;
           if (!date) return;
-          // บวก offset +7 ชม. เหมือน column.jsx
           const localDate = new Date(
             new Date(date).getTime() + 7 * 60 * 60 * 1000,
           );
@@ -409,7 +384,6 @@ export default function EventDashboard({ mode = "organizer" }) {
     fetchData();
   }, [id]);
 
-  // ─── Mobile renderers ───────────────────────────────────────────────────────
   const renderParticipantMobile = (item) => (
     <div
       key={item.key}
@@ -471,10 +445,8 @@ export default function EventDashboard({ mode = "organizer" }) {
     </div>
   );
 
-  // ─── RENDER ─────────────────────────────────────────────────────────────────
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-100">
-      {/* Background glows */}
       <div
         className={`pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full blur-3xl ${activeTheme.glowA}`}
       />
@@ -486,7 +458,6 @@ export default function EventDashboard({ mode = "organizer" }) {
       />
 
       <div className="relative max-w-7xl mx-auto p-3 md:p-6 lg:p-8 space-y-5 md:space-y-6">
-        {/* ─── Hero Banner ─── */}
         <RevealSection order={0}>
           <section
             className={`rounded-3xl border border-white/70 bg-gradient-to-br ${activeTheme.hero} text-white shadow-2xl p-4 sm:p-5 md:p-8`}
@@ -514,15 +485,6 @@ export default function EventDashboard({ mode = "organizer" }) {
                   การตอบแบบสอบถาม และผลวิเคราะห์จาก AI ในหน้าเดียว
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:min-w-[260px]">
-                <BadgePill label="Participants" value={totalParticipants} />
-                <BadgePill label="Checked-in" value={totalCheckedIn} />
-                <BadgePill label="Visitor Submit" value={visitorSubmitted} />
-                <BadgePill
-                  label="Exhibitor Submit"
-                  value={exhibitorSubmitted}
-                />
-              </div>
             </div>
           </section>
         </RevealSection>
@@ -547,7 +509,7 @@ export default function EventDashboard({ mode = "organizer" }) {
             />
             <CardKpi
               label="Survey Completion"
-              value={`${overallSurveyRate.toFixed(2)}%`}
+              value={`${submitCompletion.toFixed(2)}%`}
               tone="amber"
             />
           </div>
@@ -811,7 +773,6 @@ export default function EventDashboard({ mode = "organizer" }) {
   );
 }
 
-// ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────
 
 function CardKpi({ label, value, tone = "blue" }) {
   const toneMap = {
