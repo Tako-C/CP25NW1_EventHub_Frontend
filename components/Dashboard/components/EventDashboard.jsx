@@ -188,15 +188,10 @@ export default function EventDashboard({ mode = "organizer" }) {
 
   const totalSurveySum = (operational?.totalPostSurvey ?? 0) + (operational?.totalPreSurvey ?? 0);
   const visitorSubSum = (operational?.visitorSubPostSurvey ?? 0) + (operational?.visitorSubPreSurvey ?? 0);
-  console.log(totalSurveySum)
-  console.log(visitorSubSum)
   const visitorSubmitRate = totalSurveySum ? (visitorSubSum / totalSurveySum) * 100 : 0;
-  console.log(visitorSubmitRate)
 
   const exhibitorSubSum = (operational?.exhibitorSubPostSurvey ?? 0) + (operational?.exhibitorSubPreSurvey ?? 0);
   const exhibitorSubmitRate = totalSurveySum ? (exhibitorSubSum / totalSurveySum) * 100 : 0;
-  console.log(exhibitorSubSum)
-  console.log(exhibitorSubmitRate)
 
   const submitCompletion = operational?.surveyCompletionRate ?? 0;
 
