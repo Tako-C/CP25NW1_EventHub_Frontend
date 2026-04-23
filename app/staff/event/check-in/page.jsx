@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import {
   ScanLine, ClipboardList, User, Calendar, Loader2,
-  CheckCircle2, Search, RotateCcw, ChevronDown, Zap
+  CheckCircle2, Search, RotateCcw, Zap
 } from 'lucide-react';
+import { Select } from 'antd';
 import { useSearchParams } from 'next/navigation';
 import { postQRCheckIn, postQRUserInfo, getImage, getListUser, getData, postUserCheckIn } from '@/libs/fetch';
 import Notification from '@/components/Notification/Notification';
@@ -39,10 +40,15 @@ export default function StaffCheckInPage() {
   };
   const closeNotification = () => setNotification(p => ({ ...p, isVisible: false }));
   const selectedEvent = events.find(e => e.eventId?.toString() === selectedEventId?.toString());
+  const filteredEvents = events.filter(e =>
+    ['STAFF', 'ORGANIZER'].includes(e.eventRole?.toUpperCase())
+  );
 
   useEffect(() => {
     getData('users/me/registered-events').then(res => {
-      if (res?.data && Array.isArray(res.data)) setEvents(res.data);
+      if (res?.data && Array.isArray(res.data)) {
+        console.log(res?.data)
+        setEvents(res.data);}
     }).catch(console.error);
   }, []);
 
@@ -180,20 +186,20 @@ export default function StaffCheckInPage() {
 
           {/* Event selector */}
           <div className="relative">
-            <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <select
-              value={selectedEventId}
-              onChange={e => { setSelectedEventId(e.target.value); setVisitors([]); setHasSearched(false); }}
-              className="w-full bg-gray-50 border border-gray-200 text-gray-800 text-sm rounded-xl pl-9 pr-9 py-2.5 appearance-none focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all"
-            >
-              <option value="" disabled className="text-gray-400">— เลือกกิจกรรม —</option>
-              {events.map(ev => (
-                <option key={ev.eventId} value={ev.eventId}>
-                  {ev.eventName} · {new Date(ev.startDate).toLocaleDateString('th-TH')}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10" />
+            <Select
+              value={selectedEventId || undefined}
+              onChange={(value) => { setSelectedEventId(value); setVisitors([]); setHasSearched(false); }}
+              placeholder="— เลือกกิจกรรม —"
+              className="w-full"
+              style={{ width: '100%' }}
+              size="large"
+              options={filteredEvents.map(ev => ({
+                value: String(ev.eventId),
+                label: `${ev.eventName} · ${new Date(ev.startDate).toLocaleDateString('th-TH')}`,
+              }))}
+              popupMatchSelectWidth={true}
+            />
           </div>
         </div>
       </header>
