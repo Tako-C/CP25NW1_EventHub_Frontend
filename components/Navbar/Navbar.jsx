@@ -702,7 +702,7 @@ export default function Navbar({ token }) {
           {/* Drawer header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <span className="text-lg font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">
-              EXPO HUB
+              EVENT HUB
             </span>
             <button
               onClick={() => setIsMobileMenuOpen(false)}

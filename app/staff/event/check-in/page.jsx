@@ -189,7 +189,7 @@ export default function StaffCheckInPage() {
                 <Zap size={16} className="text-white" />
               </div>
               <div>
-                <p className="text-xs text-gray-400 leading-none">Expo Hub</p>
+                <p className="text-xs text-gray-400 leading-none">Event Hub</p>
                 <p className="text-sm font-bold text-gray-900 leading-tight">Staff Portal</p>
               </div>
             </div>
