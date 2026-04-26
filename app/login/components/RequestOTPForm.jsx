@@ -57,7 +57,7 @@ export default function RequestOTPForm({
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) newErrors.email = '* กรุณากรอกอีเมลของคุณ';
     // else if (!email.includes('@') || !email.endsWith('.com')) newErrors.email = '* รูปแบบอีเมลไม่ถูกต้อง';
-    else if (!emailRegex.test(value)) return "* รูปแบบอีเมลไม่ถูกต้อง";
+    else if (!emailRegex.test(email)) return "* รูปแบบอีเมลไม่ถูกต้อง";
     setErrors(newErrors);
     return !newErrors.email;
   };
