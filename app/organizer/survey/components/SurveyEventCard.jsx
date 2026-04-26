@@ -51,7 +51,7 @@ export default function SurveyEventCard({ event, onClick }) {
             </span>
           </div>
           <div className="flex items-center gap-1.5 flex-1">
-            {event.hasPostSurvey
+            {event.hasPostSurvey && (event?.statusOnPostVisitorSurvey === "active" || event?.statusOnPostExhibitorSurvey === "active")
               ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
               : <XCircle className="w-4 h-4 text-gray-300 flex-shrink-0" />}
             <span className={`text-sm font-medium ${event.hasPostSurvey ? "text-gray-700" : "text-gray-400"}`}>

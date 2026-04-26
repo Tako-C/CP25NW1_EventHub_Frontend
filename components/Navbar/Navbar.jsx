@@ -68,7 +68,7 @@ export default function Navbar({ token }) {
       if (event.hasPreSurvey && !event.preSurveyCompleted && !event.isEnded && event.statusOnPreSurvey === "active") {
         pendingList.push({ ...event, surveyType: "pre", surveyLabel: "Pre-event survey awaiting" });
       }
-      if (event.hasPostSurvey && !event.postSurveyCompleted && event.isEnded) {
+      if (event.hasPostSurvey && !event.postSurveyCompleted && event.isEnded && (event?.statusOnPostVisitorSurvey === "active" || event?.statusOnPostExhibitorSurvey === "active")) {
         pendingList.push({ ...event, surveyType: "post", surveyLabel: "Post-event survey awaiting" });
       }
     });

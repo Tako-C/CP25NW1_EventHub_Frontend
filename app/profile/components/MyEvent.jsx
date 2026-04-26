@@ -137,7 +137,7 @@ export default function MyEventPage({ events }) {
                         <ClipboardCheck size={14} />
                         Manual Check-in
                       </button>
-                    ) : !event.postSurveyCompleted && event.hasPostSurvey ? (
+                    ) : !event.postSurveyCompleted && event.hasPostSurvey && (event?.statusOnPostVisitorSurvey === "active" || event?.statusOnPostExhibitorSurvey === "active") ? (
                       <button
                         onClick={() => router.push(`/event/${event?.eventId}/survey/post`)}
                         className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all active:scale-95"

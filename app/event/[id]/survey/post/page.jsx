@@ -92,7 +92,7 @@ export default function PostSurveyForm() {
       const eventRes = await getDataNoToken(`events/${id}`);
       setEventDetail(eventRes?.data);
 
-      if (!currentEvent || !eventRes.data?.hasPostSurvey) {
+      if (!currentEvent || !eventRes.data?.hasPostSurvey || (eventRes?.statusOnPostVisitorSurvey === "active" || eventRes?.statusOnPostExhibitorSurvey === "active")) {
         showNotification(
           "คุณไม่มีสิทธิ์เข้าถึงแบบประเมินนี้ หรือแบบประเมินยังไม่เปิดให้ใช้งาน",
           true,
