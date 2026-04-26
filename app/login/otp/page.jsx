@@ -258,7 +258,7 @@ export default function Page() {
               className={`w-full py-3.5 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-95 ${
                 isDisabled
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                  : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-200"
+                  : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-purple-200 text-white"
               }`}
             >
               ยืนยันรหัส
