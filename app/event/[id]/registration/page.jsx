@@ -179,7 +179,8 @@ export default function ExpoRegisterForm() {
     return currentQuestions.every((q) => {
       const answer = formData.surveyAnswers.find((a) => a.questionId === q.id);
       if (!answer) return false;
-      if (q.questionType === "TEXT") return answer.answers[0]?.trim().length > 0;
+      if (q.questionType === "TEXT")
+        return answer.answers[0]?.trim().length > 0;
       return answer.answers.length > 0;
     });
   };
@@ -311,7 +312,9 @@ export default function ExpoRegisterForm() {
       {icon && <span className="text-gray-400 flex-shrink-0">{icon}</span>}
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-400 mb-0.5">{label}</p>
-        <p className="text-sm font-medium text-gray-700 truncate">{value || "-"}</p>
+        <p className="text-sm font-medium text-gray-700 truncate">
+          {value || "-"}
+        </p>
       </div>
       <Lock size={14} className="text-gray-300 flex-shrink-0" />
     </div>
@@ -338,7 +341,6 @@ export default function ExpoRegisterForm() {
       ) : (
         <div className="relative min-h-screen">
           <div className="relative max-w-4xl mx-auto px-4 py-8 md:py-12">
-
             {/* ─── Header card ─── */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden mb-8">
               <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-10 text-white relative overflow-hidden">
@@ -348,7 +350,9 @@ export default function ExpoRegisterForm() {
                   <div className="flex items-center gap-2 mb-3">
                     <FileText className="w-5 h-5" />
                     <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm">
-                      {isSurveyOnly ? "แบบสำรวจก่อนงาน" : "ลงทะเบียนเข้าร่วมกิจกรรม"}
+                      {isSurveyOnly
+                        ? "แบบสำรวจก่อนงาน"
+                        : "ลงทะเบียนเข้าร่วมกิจกรรม"}
                     </span>
                   </div>
                   <h1 className="text-3xl md:text-4xl font-bold mb-3">
@@ -371,8 +375,12 @@ export default function ExpoRegisterForm() {
                       <Calendar className="w-4 h-4 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">วันที่เริ่ม</p>
-                      <p className="text-sm font-semibold text-gray-800">{FormatDate(eventDetail?.startDate)}</p>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        วันที่เริ่ม
+                      </p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {FormatDate(eventDetail?.startDate)}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -380,8 +388,12 @@ export default function ExpoRegisterForm() {
                       <Calendar className="w-4 h-4 text-purple-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">วันที่สิ้นสุด</p>
-                      <p className="text-sm font-semibold text-gray-800">{FormatDate(eventDetail?.endDate)}</p>
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        วันที่สิ้นสุด
+                      </p>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {FormatDate(eventDetail?.endDate)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -390,7 +402,6 @@ export default function ExpoRegisterForm() {
 
             {/* ─── Form fields ─── */}
             <div className="space-y-5">
-
               {!isSurveyOnly && (
                 <>
                   {/* ถ้า login แล้ว — แสดง readonly summary card แทน 5 input แยก */}
@@ -403,12 +414,21 @@ export default function ExpoRegisterForm() {
                         </h3>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <ReadonlyField label="ชื่อ" value={formData.firstName} />
-                        <ReadonlyField label="นามสกุล" value={formData.lastName} />
+                        <ReadonlyField
+                          label="ชื่อ"
+                          value={formData.firstName}
+                        />
+                        <ReadonlyField
+                          label="นามสกุล"
+                          value={formData.lastName}
+                        />
                         <ReadonlyField label="อีเมล" value={formData.email} />
                         <ReadonlyField
                           label="เพศ"
-                          value={genderOptions.find((g) => g.id === formData.gender)?.label}
+                          value={
+                            genderOptions.find((g) => g.id === formData.gender)
+                              ?.label
+                          }
                         />
                         <ReadonlyField
                           label="วันเกิด"
@@ -416,7 +436,9 @@ export default function ExpoRegisterForm() {
                         />
                         <div className="flex items-center gap-3 px-4 py-3 bg-purple-50 border border-purple-100 rounded-xl">
                           <div className="flex-1">
-                            <p className="text-xs text-purple-400 mb-0.5">อายุ</p>
+                            <p className="text-xs text-purple-400 mb-0.5">
+                              อายุ
+                            </p>
                             <p className="text-sm font-bold text-purple-700">
                               {calculateAge(formData.dateOfBirth)} ปี
                             </p>
@@ -441,8 +463,15 @@ export default function ExpoRegisterForm() {
                         <div className="flex items-start gap-3 mb-4">
                           <StepBadge n={1} />
                           <div>
-                            <h3 className="text-base font-semibold text-gray-900">ชื่อ <span className="text-sm font-normal text-gray-400">(First Name)</span></h3>
-                            <span className="text-xs text-red-500">* จำเป็นต้องตอบ</span>
+                            <h3 className="text-base font-semibold text-gray-900">
+                              ชื่อ{" "}
+                              <span className="text-sm font-normal text-gray-400">
+                                (First Name)
+                              </span>
+                            </h3>
+                            <span className="text-xs text-red-500">
+                              * จำเป็นต้องตอบ
+                            </span>
                           </div>
                         </div>
                         <input
@@ -470,8 +499,15 @@ export default function ExpoRegisterForm() {
                         <div className="flex items-start gap-3 mb-4">
                           <StepBadge n={2} />
                           <div>
-                            <h3 className="text-base font-semibold text-gray-900">นามสกุล <span className="text-sm font-normal text-gray-400">(Last Name)</span></h3>
-                            <span className="text-xs text-red-500">* จำเป็นต้องตอบ</span>
+                            <h3 className="text-base font-semibold text-gray-900">
+                              นามสกุล{" "}
+                              <span className="text-sm font-normal text-gray-400">
+                                (Last Name)
+                              </span>
+                            </h3>
+                            <span className="text-xs text-red-500">
+                              * จำเป็นต้องตอบ
+                            </span>
                           </div>
                         </div>
                         <input
@@ -499,8 +535,15 @@ export default function ExpoRegisterForm() {
                         <div className="flex items-start gap-3 mb-4">
                           <StepBadge n={3} />
                           <div>
-                            <h3 className="text-base font-semibold text-gray-900">อีเมล <span className="text-sm font-normal text-gray-400">(Email)</span></h3>
-                            <span className="text-xs text-red-500">* จำเป็นต้องตอบ</span>
+                            <h3 className="text-base font-semibold text-gray-900">
+                              อีเมล{" "}
+                              <span className="text-sm font-normal text-gray-400">
+                                (Email)
+                              </span>
+                            </h3>
+                            <span className="text-xs text-red-500">
+                              * จำเป็นต้องตอบ
+                            </span>
                           </div>
                         </div>
                         <input
@@ -528,12 +571,22 @@ export default function ExpoRegisterForm() {
                         <div className="flex items-start gap-3 mb-4">
                           <StepBadge n={4} />
                           <div>
-                            <h3 className="text-base font-semibold text-gray-900">เพศ <span className="text-sm font-normal text-gray-400">(Gender)</span></h3>
-                            <span className="text-xs text-red-500">* จำเป็นต้องตอบ</span>
+                            <h3 className="text-base font-semibold text-gray-900">
+                              เพศ{" "}
+                              <span className="text-sm font-normal text-gray-400">
+                                (Gender)
+                              </span>
+                            </h3>
+                            <span className="text-xs text-red-500">
+                              * จำเป็นต้องตอบ
+                            </span>
                           </div>
                         </div>
                         <div className="relative">
-                          <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                          <Users
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                            size={18}
+                          />
                           <select
                             name="gender"
                             value={formData.gender}
@@ -541,10 +594,15 @@ export default function ExpoRegisterForm() {
                             className="w-full p-3.5 pl-11 pr-10 bg-gray-50 border-2 border-gray-200 rounded-xl appearance-none focus:bg-white focus:border-purple-400 transition-all outline-none text-gray-700"
                           >
                             {genderOptions.map((opt) => (
-                              <option key={opt.id} value={opt.id}>{opt.label}</option>
+                              <option key={opt.id} value={opt.id}>
+                                {opt.label}
+                              </option>
                             ))}
                           </select>
-                          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                          <ChevronDown
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                            size={18}
+                          />
                         </div>
                       </div>
 
@@ -553,8 +611,15 @@ export default function ExpoRegisterForm() {
                         <div className="flex items-start gap-3 mb-4">
                           <StepBadge n={5} />
                           <div>
-                            <h3 className="text-base font-semibold text-gray-900">วันเกิด <span className="text-sm font-normal text-gray-400">(Date of Birth)</span></h3>
-                            <span className="text-xs text-red-500">* จำเป็นต้องตอบ</span>
+                            <h3 className="text-base font-semibold text-gray-900">
+                              วันเกิด{" "}
+                              <span className="text-sm font-normal text-gray-400">
+                                (Date of Birth)
+                              </span>
+                            </h3>
+                            <span className="text-xs text-red-500">
+                              * จำเป็นต้องตอบ
+                            </span>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -596,14 +661,27 @@ export default function ExpoRegisterForm() {
                   className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
                 >
                   <div className="flex items-start gap-3 mb-4">
-                    <StepBadge n={!isSurveyOnly ? (token ? index + 2 : index + 6) : index + 1} />
+                    <StepBadge
+                      n={
+                        !isSurveyOnly
+                          ? token
+                            ? index + 2
+                            : index + 6
+                          : index + 1
+                      }
+                    />
                     <div className="flex-1">
-                      <h3 className="text-base font-semibold text-gray-900 leading-relaxed">{q.question}</h3>
+                      <h3 className="text-base font-semibold text-gray-900 leading-relaxed">
+                        {q.question}
+                      </h3>
                       {q.questionType === "MULTIPLE" && (
-                        <span className="text-xs text-blue-600 font-medium">* เลือกได้หลายคำตอบ</span>
+                        <span className="text-xs text-blue-600 font-medium">
+                          * เลือกได้หลายคำตอบ
+                        </span>
                       )}
                     </div>
-                    {(q.questionType === "MULTIPLE" || q.questionType === "SINGLE") && (
+                    {(q.questionType === "MULTIPLE" ||
+                      q.questionType === "SINGLE") && (
                       <div className="flex-shrink-0 p-2 bg-green-50 rounded-lg">
                         <CheckSquare className="w-4 h-4 text-green-600" />
                       </div>
@@ -611,17 +689,24 @@ export default function ExpoRegisterForm() {
                   </div>
 
                   <div className="mt-3 space-y-2">
-                    {(q.questionType === "SINGLE" || q.questionType === "MULTIPLE") &&
+                    {(q.questionType === "SINGLE" ||
+                      q.questionType === "MULTIPLE") &&
                       q.choices.map((choice, cIdx) => (
                         <label
                           key={cIdx}
                           className="flex items-center gap-3 p-3.5 border-2 border-gray-200 rounded-xl bg-gray-50 hover:bg-green-50 hover:border-green-300 transition-all cursor-pointer group"
                         >
                           <input
-                            type={q.questionType === "MULTIPLE" ? "checkbox" : "radio"}
+                            type={
+                              q.questionType === "MULTIPLE"
+                                ? "checkbox"
+                                : "radio"
+                            }
                             name={`question-${q.id}`}
                             value={choice}
-                            onChange={() => handleSurveyChange(q.id, choice, q.questionType)}
+                            onChange={() =>
+                              handleSurveyChange(q.id, choice, q.questionType)
+                            }
                             checked={
                               formData.surveyAnswers
                                 .find((a) => a.questionId === q.id)
@@ -629,7 +714,9 @@ export default function ExpoRegisterForm() {
                             }
                             className="w-4 h-4 flex-shrink-0 accent-green-600"
                           />
-                          <span className="text-gray-700 group-hover:text-gray-900 text-sm transition-colors">{choice}</span>
+                          <span className="text-gray-700 group-hover:text-gray-900 text-sm transition-colors">
+                            {choice}
+                          </span>
                         </label>
                       ))}
 
@@ -638,9 +725,13 @@ export default function ExpoRegisterForm() {
                         type="text"
                         placeholder="พิมพ์คำตอบของคุณที่นี่..."
                         value={
-                          formData.surveyAnswers.find((a) => a.questionId === q.id)?.answers[0] || ""
+                          formData.surveyAnswers.find(
+                            (a) => a.questionId === q.id,
+                          )?.answers[0] || ""
                         }
-                        onChange={(e) => handleSurveyChange(q.id, e.target.value, "TEXT")}
+                        onChange={(e) =>
+                          handleSurveyChange(q.id, e.target.value, "TEXT")
+                        }
                         className="w-full p-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700 focus:border-purple-400 focus:bg-white transition-all outline-none"
                       />
                     )}
@@ -650,20 +741,28 @@ export default function ExpoRegisterForm() {
 
               {/* ─── Terms & Conditions ─── */}
               {!isSurveyOnly && (
-                <div className={`bg-white rounded-xl border-2 p-6 shadow-sm transition-all ${formData.agreeTerms ? "border-purple-400 bg-purple-50/30" : "border-gray-200"}`}>
+                <div
+                  className={`bg-white rounded-xl border-2 p-6 shadow-sm transition-all ${formData.agreeTerms ? "border-purple-400 bg-purple-50/30" : "border-gray-200"}`}
+                >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
                       <Shield className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">ข้อกำหนดและเงื่อนไข</h3>
-                    <span className="text-xs text-red-500 font-medium">* จำเป็น</span>
+                    <h3 className="font-semibold text-gray-900">
+                      ข้อกำหนดและเงื่อนไข
+                    </h3>
+                    <span className="text-xs text-red-500 font-medium">
+                      * จำเป็น
+                    </span>
                   </div>
 
                   <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
                     <div className="flex items-start gap-3">
                       <ScrollText className="w-5 h-5 text-purple-500 mt-0.5 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 mb-1">นโยบายความเป็นส่วนตัวและการใช้ข้อมูล</p>
+                        <p className="text-sm font-medium text-gray-800 mb-1">
+                          นโยบายความเป็นส่วนตัวและการใช้ข้อมูล
+                        </p>
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">
                           ข้อมูลส่วนบุคคลของท่านจะถูกรวบรวมและใช้เพื่อวัตถุประสงค์ในการลงทะเบียนและการจัดการอีเว้นท์...
                         </p>
@@ -682,7 +781,12 @@ export default function ExpoRegisterForm() {
                     <input
                       type="checkbox"
                       checked={formData.agreeTerms}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, agreeTerms: e.target.checked }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          agreeTerms: e.target.checked,
+                        }))
+                      }
                       className="w-5 h-5 mt-0.5 rounded accent-purple-600 flex-shrink-0"
                     />
                     <span className="text-sm text-gray-700 leading-relaxed">
@@ -709,19 +813,33 @@ export default function ExpoRegisterForm() {
                   />
                   <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[85vh]">
                     <div className="flex items-center justify-between px-6 py-5 border-b shrink-0">
-                      <h2 className="text-lg font-bold text-gray-900">ข้อกำหนดและเงื่อนไข</h2>
-                      <button onClick={() => setShowTermsModal(false)} className="text-gray-400 hover:text-gray-700 transition">
+                      <h2 className="text-lg font-bold text-gray-900">
+                        ข้อกำหนดและเงื่อนไข
+                      </h2>
+                      <button
+                        onClick={() => setShowTermsModal(false)}
+                        className="text-gray-400 hover:text-gray-700 transition"
+                      >
                         <X size={20} />
                       </button>
                     </div>
                     <div className="overflow-y-auto px-6 py-5 flex-1 text-sm text-gray-700 space-y-4">
                       <section>
-                        <h3 className="font-bold mb-2">1. การเก็บรวบรวมข้อมูลส่วนบุคคล</h3>
-                        <p>ระบบจะเก็บรวบรวมข้อมูลส่วนบุคคลของท่านเพื่อใช้ในการดำเนินการที่เกี่ยวข้องกับการจัดงานนี้เท่านั้น</p>
+                        <h3 className="font-bold mb-2">
+                          1. การเก็บรวบรวมข้อมูลส่วนบุคคล
+                        </h3>
+                        <p>
+                          ระบบจะเก็บรวบรวมข้อมูลส่วนบุคคลของท่านเพื่อใช้ในการดำเนินการที่เกี่ยวข้องกับการจัดงานนี้เท่านั้น
+                        </p>
                       </section>
                       <section>
-                        <h3 className="font-bold mb-2">2. วัตถุประสงค์ในการใช้ข้อมูล</h3>
-                        <p>เพื่อยืนยันการลงทะเบียน การสื่อสาร และการวิเคราะห์ปรับปรุงการจัดงาน</p>
+                        <h3 className="font-bold mb-2">
+                          2. วัตถุประสงค์ในการใช้ข้อมูล
+                        </h3>
+                        <p>
+                          เพื่อยืนยันการลงทะเบียน การสื่อสาร
+                          และการวิเคราะห์ปรับปรุงการจัดงาน
+                        </p>
                       </section>
                     </div>
                     <div className="px-6 py-4 border-t flex gap-3 shrink-0">
@@ -733,7 +851,10 @@ export default function ExpoRegisterForm() {
                       </button>
                       <button
                         onClick={() => {
-                          setFormData((prev) => ({ ...prev, agreeTerms: true }));
+                          setFormData((prev) => ({
+                            ...prev,
+                            agreeTerms: true,
+                          }));
                           setShowTermsModal(false);
                         }}
                         className="flex-1 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold hover:opacity-90 transition"
@@ -749,10 +870,12 @@ export default function ExpoRegisterForm() {
               <div className="flex justify-center pt-2 pb-10">
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
+                  disabled={
+                    isSubmitting || (!isSurveyOnly && !formData.agreeTerms)
+                  }
                   className={`w-full md:w-auto flex items-center justify-center gap-2 font-semibold py-4 px-12 md:px-24 rounded-full shadow-lg transition-all text-base ${
-                    isSubmitting
-                      ? "bg-gradient-to-r from-purple-400 to-blue-400 text-white cursor-not-allowed"
+                    isSubmitting || (!isSurveyOnly && !formData.agreeTerms)
+                      ? "bg-gradient-to-r from-purple-400 to-blue-400 text-white cursor-not-allowed opacity-60"
                       : "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white hover:scale-105 active:scale-95"
                   }`}
                 >
@@ -761,12 +884,13 @@ export default function ExpoRegisterForm() {
                       <Loader2 className="w-5 h-5 animate-spin" />
                       {isSurveyOnly ? "กำลังส่งคำตอบ..." : "กำลังลงทะเบียน..."}
                     </>
+                  ) : isSurveyOnly ? (
+                    "ส่งคำตอบ"
                   ) : (
-                    isSurveyOnly ? "ส่งคำตอบ" : "ลงทะเบียน"
+                    "ลงทะเบียน"
                   )}
                 </button>
               </div>
-
             </div>
           </div>
         </div>
