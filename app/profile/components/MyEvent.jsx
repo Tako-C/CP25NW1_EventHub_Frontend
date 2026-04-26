@@ -73,7 +73,6 @@ export default function MyEventPage({ events }) {
             const isStaffOrOrganizer = ["STAFF", "ORGANIZER"].includes(
               event.eventRole?.toUpperCase(),
             );
-            console.log(event)
             return (
               <div
                 key={index}
@@ -81,7 +80,6 @@ export default function MyEventPage({ events }) {
               >
                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-purple-500 rounded-l-2xl"></div>
 
-                {/* Event image */}
                 <div className="flex-shrink-0 w-full sm:w-40 md:w-48 h-44 sm:h-32 md:h-36 bg-gray-100 rounded-xl overflow-hidden relative">
                   <EventCardImage
                     imageCard={event.imageCard}
@@ -96,7 +94,6 @@ export default function MyEventPage({ events }) {
                   )}
                 </div>
 
-                {/* Event info */}
                 <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -131,7 +128,6 @@ export default function MyEventPage({ events }) {
                     </div>
                   </div>
 
-                  {/* Action buttons */}
                   <div className="flex flex-wrap gap-2 mt-3">
                     {isStaffOrOrganizer ? (
                       <button
@@ -151,11 +147,11 @@ export default function MyEventPage({ events }) {
                       </button>
                     ) : event.postSurveyCompleted ? (
                       <div className="flex items-center gap-1.5 text-green-600 bg-green-50 px-3 py-2 rounded-lg text-sm font-medium border border-green-100">
-                        <span>✓</span> ส่งความคิดเห็นแล้ว
+                        <span>✓</span> ส่งความคิดเห็นหลังเข้าร่วมงานแล้ว
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5 text-gray-400 bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
-                        ยังไม่เปิดรับความคิดเห็น
+                        ยังไม่เปิดรับความคิดเห็นหลังเข้าร่วมงาน
                       </div>
                     )}
 
@@ -165,18 +161,17 @@ export default function MyEventPage({ events }) {
                         className="flex items-center gap-1.5 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all active:scale-95"
                       >
                         <MessageSquare size={14} />
-                        Pre-Survey
+                        แบบทดสอบก่อนเข้าร่วมงาน
                       </button>
                     )}
                     {event.hasPreSurvey && event.preSurveyCompleted && (
                       <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-3 py-2 rounded-lg text-sm font-medium border border-blue-100">
-                        <span>✓</span> ทำ Pre-Survey แล้ว
+                        <span>✓</span> ทำแบบทดสอบก่อนเข้าร่วมงานแล้ว
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* QR Code (ORGANIZER only) */}
                 {event.eventRole?.toUpperCase() !== "ORGANIZER" && event.eventRole?.toUpperCase() !== "STAFF"  && (
                   <>
                     <div className="sm:hidden w-full h-px bg-gray-100"></div>

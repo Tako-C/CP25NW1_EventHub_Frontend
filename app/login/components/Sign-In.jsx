@@ -186,9 +186,9 @@ export default function SignInPage({
 
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}
+                  {/* <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-4 h-4 rounded text-purple-600 border-gray-300 focus:ring-purple-500 cursor-pointer" />
-                  <span className="text-sm text-gray-600">จดจำฉันไว้</span>
+                  <span className="text-sm text-gray-600">จดจำฉันไว้</span> */}
                 </label>
                 <button type="button" onClick={handleForgotPassword} className="text-sm text-purple-600 hover:text-purple-700 font-medium">ลืมรหัสผ่าน?</button>
               </div>
