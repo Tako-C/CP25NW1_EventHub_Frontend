@@ -1,14 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { Upload, X, Save, ArrowLeft } from "lucide-react";
-import { Spin } from "antd";
+import { Spin, message } from "antd";
 import { RewardImage } from "@/utils/getImage";
 import { formatForInput, formatToISO } from "@/utils/format";
 import CropModal from "../ImageCrop/CropModal";
 
-// RewardCard ใช้ w-32 h-32 → 1:1
-// RewardEventCard ใช้ full-width h-64 → ใกล้เคียง 16:9
-// เลือก 1:1 เพราะรูปนี้แสดงใน RewardCard เป็นหลัก และ crop แบบ square ยัง safe ใน container ทุกแบบ
 const REWARD_IMAGE_ASPECT = { ratio: 1 / 1, label: "1:1" };
 
 const REQUIREMENT_TYPES = [
@@ -40,7 +37,6 @@ export default function RewardForm({
   const [imagePreview, setImagePreview] = useState(null);
   const [currentImagePath, setCurrentImagePath] = useState(null);
 
-  // --- Crop Modal State ---
   const [cropState, setCropState] = useState({
     open: false,
     src: null,
@@ -61,18 +57,24 @@ export default function RewardForm({
     }
   }, [initialData]);
 
-  // เปิด CropModal แทนการ preview ทันที
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) return;
-    if (file.size / 1024 / 1024 > 5) return;
+    if (!file.type.startsWith("image/")) {
+      message.error("อัปโหลดเฉพาะไฟล์รูปภาพ");
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+
+    if (file.size / 1024 / 1024 > 5) {
+      message.error(`"${file.name}" ใหญ่เกิน 5MB`);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
 
     const src = URL.createObjectURL(file);
     setCropState({ open: true, src, fileName: file.name });
-
-    // reset input ให้เลือกไฟล์เดิมซ้ำได้
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -136,7 +138,11 @@ export default function RewardForm({
             className="bg-indigo-600 text-white px-10 py-3 rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50"
           >
             {isLoading ? <Spin size="small" /> : <Save size={18} />}
-            {isLoading ? "SAVING..." : isEditMode ? "SAVE CHANGES" : "CREATE REWARD"}
+            {isLoading
+              ? "SAVING..."
+              : isEditMode
+                ? "SAVE CHANGES"
+                : "CREATE REWARD"}
           </button>
         </div>
 
