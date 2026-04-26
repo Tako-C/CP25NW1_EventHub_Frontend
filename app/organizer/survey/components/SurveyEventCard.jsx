@@ -43,7 +43,7 @@ export default function SurveyEventCard({ event, onClick }) {
         {/* Survey badges */}
         <div className="flex gap-3 pt-3 border-t border-gray-100 mt-auto">
           <div className="flex items-center gap-1.5 flex-1">
-            {event.hasPreSurvey
+            {event.hasPreSurvey && event.statusOnPreSurvey === "active"
               ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
               : <XCircle className="w-4 h-4 text-gray-300 flex-shrink-0" />}
             <span className={`text-sm font-medium ${event.hasPreSurvey ? "text-gray-700" : "text-gray-400"}`}>

@@ -65,7 +65,7 @@ export default function Navbar({ token }) {
     if (!data?.event || !Array.isArray(data.event)) return [];
     const pendingList = [];
     data.event.forEach((event) => {
-      if (event.hasPreSurvey && !event.preSurveyCompleted && !event.isEnded) {
+      if (event.hasPreSurvey && !event.preSurveyCompleted && !event.isEnded && event.statusOnPreSurvey === "active") {
         pendingList.push({ ...event, surveyType: "pre", surveyLabel: "Pre-event survey awaiting" });
       }
       if (event.hasPostSurvey && !event.postSurveyCompleted && event.isEnded) {

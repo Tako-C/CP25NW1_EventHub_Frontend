@@ -155,7 +155,7 @@ export default function MyEventPage({ events }) {
                       </div>
                     )}
 
-                    {event.hasPreSurvey && !event.preSurveyCompleted && (
+                    {event.hasPreSurvey && !event.preSurveyCompleted && event.statusOnPreSurvey === "active" && (
                       <button
                         onClick={() => router.push(`/event/${event?.eventId}/registration?mode=survey-only`)}
                         className="flex items-center gap-1.5 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition-all active:scale-95"

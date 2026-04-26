@@ -117,7 +117,7 @@ export default function ExpoRegisterForm() {
       let preRes = null;
       if (res?.statusCode === 200) {
         setEventDetail(res?.data);
-        if (res?.data?.hasPreSurvey === true) {
+        if (res?.data?.hasPreSurvey === true && res?.data?.statusOnPreSurvey === "active") {
           preRes = await getDataNoToken(`/events/${id}/surveys/pre`);
         }
         setSurveys({

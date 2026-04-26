@@ -46,55 +46,30 @@ export default function EventSurveysDetailPage() {
   };
 
   const fetchEventAndSurveys = async () => {
-
     try {
-
       const eventRes = await getDataNoToken(`events/${id}`);
-
       let preRes = null;
-
       let postRes = null;
-
+      console.log(eventRes)
       if (eventRes?.statusCode === 200) setEvent(eventRes.data);
-
-
-
       if (eventRes?.data?.hasPreSurvey) preRes = await getDataNoToken(`events/${id}/surveys/pre`);
-
       if (eventRes?.data?.hasPostSurvey) postRes = await getDataNoToken(`events/${id}/surveys/post`);
 
-
-
       setSurveys({
-
         pre: {
-
-          visitor: preRes?.data?.visitor.find((r) => r.status = "ACTIVE") || null,
-
-          exhibitor: preRes?.data?.exhibitor.find((r) => r.status = "ACTIVE") || null,
-
+          visitor: preRes?.data?.visitor.find((r) => r.status !== "DELETED") || null,
+          exhibitor: preRes?.data?.exhibitor.find((r) => r.status !== "DELETED") || null,
         },
-
         post: {
-
-          visitor: postRes?.data?.visitor.find((r) => r.status = "ACTIVE") || null,
-
-          exhibitor: postRes?.data?.exhibitor.find((r) => r.status = "ACTIVE") || null,
-
+          visitor: postRes?.data?.visitor.find((r) => r.status !== "DELETED") || null,
+          exhibitor: postRes?.data?.exhibitor.find((r) => r.status !== "DELETED") || null,
         },
-
       });
-
     } catch (error) {
-
       showNotification(`ไม่สามารถโหลดข้อมูลได้: ${error}`, true);
-
     } finally {
-
       setLoading(false);
-
     }
-
   };
 
   useEffect(() => {
