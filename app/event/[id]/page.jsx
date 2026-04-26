@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { MapPin, Calendar, ChevronDown, Tag, ArrowLeft } from "lucide-react";
 import { FormatDate } from "@/utils/format";
-import { getDataNoToken } from "@/libs/fetch";
+import { getDataNoToken, getData } from "@/libs/fetch";
 import { EventCardImage } from "@/utils/getImage";
 
 export default function Page() {
@@ -12,11 +12,17 @@ export default function Page() {
   const router = useRouter();
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [eventData, setEventData] = useState(null);
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
 
   const isEventPast = eventData?.eventStatus === "FINISHED";
 
   const fetchData = async () => {
     const res = await getDataNoToken(`events/${id}`);
+    const eventRegis = await getData(`users/me/registered-events`);
+    const registered = eventRegis?.data?.some(
+      (event) => String(event.eventId) === String(id),
+    );
+    setIsAlreadyRegistered(registered);
     setEventData(res.data);
   };
 
@@ -41,14 +47,14 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       {/* ─── Hero Banner ─── */}
       <div className="relative h-[50vh] md:h-[60vh] overflow-hidden bg-slate-900">
-
         {/* Background image — full opacity with dark overlay */}
         <div className={`absolute inset-0 ${isEventPast ? "grayscale" : ""}`}>
           <EventCardImage
-            imageCard={eventData?.images?.imgDetail || eventData?.images?.imgCard}
+            imageCard={
+              eventData?.images?.imgDetail || eventData?.images?.imgCard
+            }
             eventName={eventData?.eventName}
           />
         </div>
@@ -73,7 +79,6 @@ export default function Page() {
         {/* Hero content — bottom aligned */}
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 z-10">
           <div className="max-w-4xl mx-auto">
-
             {/* Event type badge */}
             {eventData?.eventTypeId?.eventTypeName && (
               <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/20 text-white/90 text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
@@ -89,12 +94,15 @@ export default function Page() {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-white/85 text-sm md:text-base">
               <div className="flex items-center gap-2">
                 <MapPin size={16} className="text-purple-300 flex-shrink-0" />
-                <span className="font-medium">{eventData?.location || "—"}</span>
+                <span className="font-medium">
+                  {eventData?.location || "—"}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Calendar size={16} className="text-purple-300 flex-shrink-0" />
                 <span className="font-medium">
-                  {FormatDate(eventData?.startDate)} – {FormatDate(eventData?.endDate)}
+                  {FormatDate(eventData?.startDate)} –{" "}
+                  {FormatDate(eventData?.endDate)}
                 </span>
               </div>
             </div>
@@ -110,6 +118,10 @@ export default function Page() {
               <p className="text-sm text-red-600 font-medium">
                 งานนี้สิ้นสุดแล้ว ไม่สามารถลงทะเบียนได้
               </p>
+            ) : isAlreadyRegistered ? ( 
+              <p className="text-sm text-green-600 font-medium">
+                คุณได้ลงทะเบียนเข้าอีเว้นท์นี้แล้ว
+              </p>
             ) : (
               <p className="text-sm text-gray-500">
                 กดปุ่มเพื่อลงทะเบียนเข้าร่วมงานนี้
@@ -121,14 +133,18 @@ export default function Page() {
             onClick={() => {
               if (!isEventPast) router.push(`/event/${id}/registration`);
             }}
-            disabled={isEventPast}
+            disabled={isEventPast || isAlreadyRegistered}
             className={`w-full sm:w-auto font-semibold px-10 py-3.5 rounded-full shadow-md transition-all text-base ${
-              isEventPast
+              isEventPast || isAlreadyRegistered
                 ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white hover:scale-105 active:scale-95 hover:shadow-purple-200 hover:shadow-lg"
             }`}
           >
-            {isEventPast ? "Registration Closed" : "Register Now"}
+            {isEventPast
+              ? "Registration Closed"
+              : isAlreadyRegistered
+                ? "Registered"
+                : "Register Now"}
           </button>
         </div>
       </div>
@@ -140,7 +156,9 @@ export default function Page() {
             onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
             className="flex items-center justify-between w-full px-6 py-5 hover:bg-gray-50 transition-colors"
           >
-            <h2 className="text-lg md:text-xl font-bold text-gray-900">รายละเอียดกิจกรรม</h2>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">
+              รายละเอียดกิจกรรม
+            </h2>
             <ChevronDown
               className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${
                 isDescriptionOpen ? "rotate-180" : ""
@@ -161,7 +179,9 @@ export default function Page() {
         {eventData?.images?.imgMap && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-100">
-              <h2 className="text-lg md:text-xl font-bold text-gray-900">แผนที่สถานที่จัดงาน</h2>
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">
+                แผนที่สถานที่จัดงาน
+              </h2>
             </div>
             <div className="overflow-hidden">
               <EventCardImage
