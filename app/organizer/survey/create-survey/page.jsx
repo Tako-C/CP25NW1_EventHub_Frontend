@@ -4,18 +4,11 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Plus, Eye, Save, AlertTriangle, Lock } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createSurvey, getDataNoToken } from "@/libs/fetch";
-import QuestionEditor from "@/components/Survey/QuestionEditor"; // <-- เรียกจากส่วนกลาง
-import SurveyPreview from "@/components/Survey/SurveyPreview"; // <-- เรียกจากส่วนกลาง
+import QuestionEditor from "@/components/Survey/QuestionEditor";
+import SurveyPreview from "@/components/Survey/SurveyPreview";
 import Notification from "@/components/Notification/Notification";
 
 const DISABLED_STATUSES = ["ACTIVE", "INACTIVE"];
-
-const STATUS_LABEL = {
-  ACTIVE: "กำลังดำเนินการ (Active)",
-  INACTIVE: "ยังไม่เริ่ม (Inactive)",
-  FINISHED: "สิ้นสุดแล้ว (Finished)",
-  DELETED: "ถูกลบแล้ว (Deleted)",
-};
 
 export default function CreateSurveyPage() {
   const searchParams = useSearchParams();
@@ -26,7 +19,6 @@ export default function CreateSurveyPage() {
 
   const [eventData, setEventData] = useState(null);
   const [eventLoading, setEventLoading] = useState(true);
-
   const [surveyTitle, setSurveyTitle] = useState("");
   const [surveyDescription, setSurveyDescription] = useState("");
 
@@ -34,7 +26,7 @@ export default function CreateSurveyPage() {
     if (searchParams.get("type") === "post") {
       return [
         {
-          questionType: "SINGLE", // ใช้ค่า API ตรงๆ 
+          questionType: "SINGLE",
           question: "ความพึงพอใจโดยรวม",
           choices: ["1", "2", "3", "4", "5"],
           kpiType: "satisfaction",
@@ -52,12 +44,7 @@ export default function CreateSurveyPage() {
 
   const [showPreview, setShowPreview] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  const [notification, setNotification] = useState({
-    isVisible: false,
-    isError: false,
-    message: "",
-  });
+  const [notification, setNotification] = useState({ isVisible: false, isError: false, message: "" });
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -71,7 +58,6 @@ export default function CreateSurveyPage() {
         setEventLoading(false);
       }
     };
-
     if (eventId) fetchEvent();
   }, [eventId]);
 
@@ -114,14 +100,15 @@ export default function CreateSurveyPage() {
 
   const handleSave = () => {
     if (isCreateDisabled) return;
-
     if (!surveyTitle.trim()) return showNotification("กรุณาระบุชื่อแบบสำรวจ", true);
     if (!surveyDescription.trim()) return showNotification("กรุณากรอกรายละเอียดของแบบสำรวจ", true);
     if (questions.length === 0) return showNotification("ต้องมีคำถามอย่างน้อย 1 ข้อ", true);
     if (questions.length > 10) return showNotification("มีคำถามได้ไม่เกิน 10 ข้อ", true);
 
     if (surveyType === "post") {
-      const hasSuggestion = questions.some(q => q.question.includes("ข้อเสนอแนะ") || q.question.toLowerCase().includes("suggestion"));
+      const hasSuggestion = questions.some(
+        (q) => q.question.includes("ข้อเสนอแนะ") || q.question.toLowerCase().includes("suggestion")
+      );
       if (!hasSuggestion) {
         return showNotification("กรุณาเพิ่มคำถามสำหรับ 'ข้อเสนอแนะ' (แบบข้อความสั้น) ก่อนบันทึก", true);
       }
@@ -142,21 +129,17 @@ export default function CreateSurveyPage() {
 
   const handleConfirmSave = async () => {
     setShowConfirmModal(false);
-
     const eventDetail = {
       name: surveyTitle || "",
       description: surveyDescription || "",
       type: surveyTypeFunction() || "",
     };
-
-    // ไม่ต้องแปลงอะไรแล้ว ส่ง q ไปได้เลย!
     const formattedQuestions = questions.map((q) => ({
       question: q.question,
       questionType: q.questionType,
       choices: q.choices || [],
       kpiType: q.kpiType || null,
     }));
-
     try {
       const res = await createSurvey(eventDetail, eventId, formattedQuestions);
       if (res.statusCode === 200 || res.statusCode === 201) {
@@ -168,6 +151,8 @@ export default function CreateSurveyPage() {
     }
   };
 
+  const remainingSlots = Math.max(0, 5 - questions.length);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Notification isVisible={notification.isVisible} onClose={closeNotification} isError={notification.isError} message={notification.message} />
@@ -176,14 +161,18 @@ export default function CreateSurveyPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConfirmModal(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
-            <div className="flex items-center justify-center w-14 h-14 bg-amber-100 rounded-full mx-auto mb-4"><AlertTriangle className="w-7 h-7 text-amber-500" /></div>
+            <div className="flex items-center justify-center w-14 h-14 bg-amber-100 rounded-full mx-auto mb-4">
+              <AlertTriangle className="w-7 h-7 text-amber-500" />
+            </div>
             <h2 className="text-xl font-bold text-gray-900 text-center mb-2">ยืนยันการสร้างแบบสำรวจ</h2>
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
               <p className="text-sm text-amber-800 text-center font-medium">⚠️ เมื่ออีเว้นท์เริ่มต้นแล้ว คุณจะไม่สามารถแก้ไขแบบสำรวจนี้ได้อีก</p>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setShowConfirmModal(false)} className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 text-gray-700 font-semibold hover:bg-gray-50">ยกเลิก</button>
-              <button onClick={handleConfirmSave} className="flex-1 px-4 py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 flex items-center justify-center gap-2"><Save className="w-4 h-4" /> ยืนยันสร้าง</button>
+              <button onClick={handleConfirmSave} className="flex-1 px-4 py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 flex items-center justify-center gap-2">
+                <Save className="w-4 h-4" /> ยืนยันสร้าง
+              </button>
             </div>
           </div>
         </div>
@@ -193,22 +182,31 @@ export default function CreateSurveyPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => router.back()} className="text-gray-600 hover:text-gray-900"><ArrowLeft className="w-6 h-6" /></button>
+              <button onClick={() => router.back()} className="text-gray-600 hover:text-gray-900">
+                <ArrowLeft className="w-6 h-6" />
+              </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">สร้างแบบสำรวจ</h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <div className="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-semibold inline-block">{surveyType === "pre" ? "Pre-Event Survey" : "Post-Event Survey"}</div>
+                  <div className="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-semibold inline-block">
+                    {surveyType === "pre" ? "Pre-Event Survey" : "Post-Event Survey"}
+                  </div>
                 </div>
               </div>
             </div>
-
             <div className="flex items-center gap-3">
-              <button onClick={() => setShowPreview(!showPreview)} className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${showPreview ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
+              <button
+                onClick={() => setShowPreview(!showPreview)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${showPreview ? "bg-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+              >
                 <Eye className="w-5 h-5" /> {showPreview ? "แก้ไข" : "ดูตัวอย่าง"}
               </button>
-
               <div className="relative group">
-                <button onClick={handleSave} disabled={isCreateDisabled} className={`flex items-center gap-2 px-6 py-2 rounded-lg font-semibold transition-all ${isCreateDisabled ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white hover:bg-green-700"}`}>
+                <button
+                  onClick={handleSave}
+                  disabled={isCreateDisabled}
+                  className={`flex items-center gap-2 px-6 py-2 rounded-lg font-semibold transition-all ${isCreateDisabled ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-green-600 text-white hover:bg-green-700"}`}
+                >
                   {isCreateDisabled ? <Lock className="w-5 h-5" /> : <Save className="w-5 h-5" />} บันทึก
                 </button>
               </div>
@@ -220,20 +218,87 @@ export default function CreateSurveyPage() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         {!showPreview ? (
           <>
+            {/* Survey Info */}
             <div className="bg-white rounded-xl border-2 border-gray-200 p-6 mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">ข้อมูลแบบสำรวจ</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อแบบสำรวจ <span className="text-red-500">*</span></label>
-                  <input type="text" value={surveyTitle} onChange={(e) => setSurveyTitle(e.target.value)} disabled={isCreateDisabled} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    ชื่อแบบสำรวจ <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={surveyTitle}
+                    onChange={(e) => setSurveyTitle(e.target.value)}
+                    disabled={isCreateDisabled}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">คำอธิบาย</label>
-                  <textarea value={surveyDescription} onChange={(e) => setSurveyDescription(e.target.value)} disabled={isCreateDisabled} rows={3} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100" />
+                  <textarea
+                    value={surveyDescription}
+                    onChange={(e) => setSurveyDescription(e.target.value)}
+                    disabled={isCreateDisabled}
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
+                  />
                 </div>
               </div>
             </div>
 
+            {/* ── Info Box คำแนะนำ ── */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm font-bold">
+                  💡
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-blue-800 mb-3">คำแนะนำการสร้างแบบสำรวจ</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-blue-700">
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="font-semibold text-blue-800 mb-1">📋 จำนวนคำถาม</div>
+                      <div>แนะนำ <span className="font-bold text-blue-600">5–8 ข้อ</span> เพื่อให้ผู้ตอบไม่รู้สึกเบื่อ</div>
+                      <div className="mt-1 text-blue-400">สูงสุดไม่เกิน 10 ข้อ</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="font-semibold text-blue-800 mb-1">✏️ จำนวนตัวเลือก</div>
+                      <div>แนะนำ <span className="font-bold text-blue-600">3–5 ตัวเลือก</span> ต่อคำถาม</div>
+                      <div className="mt-1 text-blue-400">สูงสุดไม่เกิน 10 ตัวเลือก</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="font-semibold text-blue-800 mb-1">🎯 หัวข้อที่ควรมี</div>
+                      {surveyType === "pre" ? (
+                        <ul className="space-y-0.5">
+                          <li>• วัตถุประสงค์การเข้าร่วม</li>
+                          <li>• ช่องทางที่รู้จักงาน</li>
+                          <li>• ความคาดหวังจากงาน</li>
+                        </ul>
+                      ) : (
+                        <ul className="space-y-0.5">
+                          <li>• ความพึงพอใจโดยรวม ⭐</li>
+                          <li>• ประสบการณ์เข้าร่วมงาน</li>
+                          <li>• ข้อเสนอแนะ <span className="text-red-500">(ต้องมี)</span></li>
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-blue-600 bg-blue-100 rounded-lg px-3 py-2">
+                    <span>📍</span>
+                    <span>
+                      เพิ่มคำถามได้ที่ปุ่ม <strong>"+ เพิ่มคำถาม"</strong> ด้านล่าง ·{" "}
+                      {remainingSlots > 0 ? (
+                        <>เพิ่มได้อีก <strong>{remainingSlots} ข้อ</strong> (แนะนำไม่เกิน 5 ข้อ)</>
+                      ) : (
+                        <>ครบ 5 ข้อแล้ว — <strong>ยังเพิ่มได้ถึง 10 ข้อ</strong>หากจำเป็น</>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Question List */}
             <div className="space-y-4 mb-6">
               {questions.map((question, index) => (
                 <QuestionEditor
@@ -248,14 +313,33 @@ export default function CreateSurveyPage() {
               ))}
             </div>
 
-            {questions?.length < 10 && (
-              <button onClick={handleAddQuestion} disabled={isCreateDisabled} className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 flex items-center justify-center gap-2 font-semibold disabled:opacity-40">
+            {/* ปุ่มเพิ่มคำถาม: ซ่อนเมื่อถึง 5 ข้อ แสดง subdued เมื่อ 5-9 */}
+            {questions.length < 5 && (
+              <button
+                onClick={handleAddQuestion}
+                disabled={isCreateDisabled}
+                className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:border-purple-500 hover:text-purple-600 hover:bg-purple-50 flex items-center justify-center gap-2 font-semibold disabled:opacity-40"
+              >
                 <Plus className="w-5 h-5" /> เพิ่มคำถาม
+              </button>
+            )}
+            {questions.length >= 5 && questions.length < 10 && (
+              <button
+                onClick={handleAddQuestion}
+                disabled={isCreateDisabled}
+                className="w-full py-3 border border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-gray-400 hover:text-gray-500 flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-40"
+              >
+                <Plus className="w-4 h-4" /> เพิ่มคำถาม (เกินที่แนะนำ · {questions.length}/10)
               </button>
             )}
           </>
         ) : (
-          <SurveyPreview surveyTitle={surveyTitle} surveyDescription={surveyDescription} questions={questions} surveyType={surveyType} />
+          <SurveyPreview
+            surveyTitle={surveyTitle}
+            surveyDescription={surveyDescription}
+            questions={questions}
+            surveyType={surveyType}
+          />
         )}
       </div>
     </div>

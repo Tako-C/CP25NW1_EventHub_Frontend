@@ -101,7 +101,7 @@ export default function QuestionEditor({
                 </div>
               ))}
               
-              {!isLockedPost && questions.choices?.length < 10 && (
+              {!isLockedPost && questions.choices?.length < 5 && (
                 <button
                   onClick={() => {
                     onUpdate(index, "choices", [...(questions.choices || []), ""]);
