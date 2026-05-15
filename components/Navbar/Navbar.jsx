@@ -23,6 +23,11 @@ import {
 import Cookie from "js-cookie";
 import { getData, getDataNoToken } from "@/libs/fetch";
 
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+
 export default function Navbar({ token }) {
   const router = useRouter();
   const pathName = usePathname();
@@ -65,10 +70,17 @@ export default function Navbar({ token }) {
     if (!data?.event || !Array.isArray(data.event)) return [];
     const pendingList = [];
     data.event.forEach((event) => {
-      if (event.hasPreSurvey && !event.preSurveyCompleted && !event.isEnded && event.statusOnPreSurvey === "active") {
+      // if (event.hasPreSurvey && !event.preSurveyCompleted && !event.isEnded && event.statusOnPreSurvey === "active") {
+      if (event.hasPreSurvey && !event.preSurveyCompleted && !event.isEnded && event.statusOnPreSurvey === "active" && (!event.eventRole || ["VISITOR", "EXHIBITOR"].includes(event.eventRole.toUpperCase()))) {
         pendingList.push({ ...event, surveyType: "pre", surveyLabel: "Pre-event survey awaiting" });
       }
-      if (event.hasPostSurvey && !event.postSurveyCompleted && event.isEnded && (event?.statusOnPostVisitorSurvey === "active" || event?.statusOnPostExhibitorSurvey === "active")) {
+      const now = dayjs();
+      const eventStartDate = dayjs.utc(event.startDate || event.dateStart).local();
+
+      if (event.hasPostSurvey && !event.postSurveyCompleted && !now.isBefore(eventStartDate) && (
+        ((!event.eventRole || event.eventRole.toUpperCase() === "VISITOR") && event?.statusOnPostVisitorSurvey === "active") ||
+        (event.eventRole?.toUpperCase() === "EXHIBITOR" && event?.statusOnPostExhibitorSurvey === "active")
+      )) {
         pendingList.push({ ...event, surveyType: "post", surveyLabel: "Post-event survey awaiting" });
       }
     });

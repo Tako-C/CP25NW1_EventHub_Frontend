@@ -27,15 +27,15 @@ export default function CreateAdminSurveyPage() {
       return [
         {
           questionType: "SINGLE",
-          question: "ความพึงพอใจโดยรวม",
+          question: "โดยรวมแล้วท่านพึงพอใจกับงานครั้งนี้ในระดับใด (1 คือ น้อยที่สุด - 5 คือ มากที่สุด)",
           choices: ["1", "2", "3", "4", "5"],
-          kpiType: "satisfaction",
+          kpiType: "SATISFACTION",
         },
         {
           question: "ท่านเคยเข้าร่วมงานนี้มาก่อนหรือไม่?",
           questionType: "SINGLE",
           choices: ["มากกว่า 2 ครั้ง", "1 ครั้ง", "ไม่เคย"],
-          kpiType: "returning",
+          kpiType: "RETURNNING",
         },
       ];
     }
