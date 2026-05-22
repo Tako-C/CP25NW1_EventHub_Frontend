@@ -25,7 +25,7 @@ export default function QuestionEditor({
 
   const getPlaceholder = () => {
     if (surveyType === "post") {
-      if (index === 0) return "ความพึงพอใจโดยรวม";
+      if (index === 0) return "โดยรวมแล้วท่านพึงพอใจกับงานครั้งนี้ในระดับใด (1 คือ น้อยที่สุด - 5 คือ มากที่สุด)";
       if (index === 1) return "ท่านเคยเข้าร่วมงานนี้มาก่อนหรือไม่?";
     }
     return "พิมพ์คำถามของคุณที่นี่...";

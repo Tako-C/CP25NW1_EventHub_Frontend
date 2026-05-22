@@ -6,6 +6,7 @@ import { MapPin, Calendar, ChevronDown, Tag, ArrowLeft } from "lucide-react";
 import { FormatDate } from "@/utils/format";
 import { getDataNoToken, getData } from "@/libs/fetch";
 import { EventCardImage } from "@/utils/getImage";
+import Cookies from "js-cookie";
 
 export default function Page() {
   const { id } = useParams();
@@ -13,16 +14,19 @@ export default function Page() {
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [eventData, setEventData] = useState(null);
   const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
+  const token = Cookies.get("token");
 
   const isEventPast = eventData?.eventStatus === "FINISHED";
 
   const fetchData = async () => {
     const res = await getDataNoToken(`events/${id}`);
-    const eventRegis = await getData(`users/me/registered-events`);
-    const registered = eventRegis?.data?.some(
-      (event) => String(event.eventId) === String(id),
-    );
-    setIsAlreadyRegistered(registered);
+    if (token) {
+      const eventRegis = await getData(`users/me/registered-events`);
+      const registered = eventRegis?.data?.some(
+        (event) => String(event.eventId) === String(id),
+      );
+      setIsAlreadyRegistered(registered);
+    }
     setEventData(res.data);
   };
 
@@ -118,7 +122,7 @@ export default function Page() {
               <p className="text-sm text-red-600 font-medium">
                 งานนี้สิ้นสุดแล้ว ไม่สามารถลงทะเบียนได้
               </p>
-            ) : isAlreadyRegistered ? ( 
+            ) : isAlreadyRegistered ? (
               <p className="text-sm text-green-600 font-medium">
                 คุณได้ลงทะเบียนเข้าอีเว้นท์นี้แล้ว
               </p>

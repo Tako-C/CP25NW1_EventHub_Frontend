@@ -26,16 +26,16 @@ export default function CreateSurveyPage() {
     if (searchParams.get("type") === "post") {
       return [
         {
+          question: "โดยรวมแล้วท่านพึงพอใจกับงานครั้งนี้ในระดับใด (1 คือ น้อยที่สุด - 5 คือ มากที่สุด)",
           questionType: "SINGLE",
-          question: "ความพึงพอใจโดยรวม",
           choices: ["1", "2", "3", "4", "5"],
-          kpiType: "satisfaction",
+          kpiType: "SATISFACTION",
         },
         {
           question: "ท่านเคยเข้าร่วมงานนี้มาก่อนหรือไม่?",
           questionType: "SINGLE",
           choices: ["มากกว่า 2 ครั้ง", "1 ครั้ง", "ไม่เคย"],
-          kpiType: "returning",
+          kpiType: "RETURNING",
         },
       ];
     }
