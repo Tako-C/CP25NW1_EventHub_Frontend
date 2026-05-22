@@ -69,6 +69,22 @@ function getRateBadgeColor(rate) {
   return "error";
 }
 
+// ─── RESPONSIVE DRAWER HOOK ───────────────────────────────────────────────────
+
+function useDrawerConfig() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth < 640);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+  // antd Drawer deprecated width/height — use size + rootStyle/style instead
+  return isMobile
+    ? { placement: "bottom", size: "default", rootStyle: { height: "85vh" } }
+    : { placement: "right", size: "large", rootStyle: {} };
+}
+
 // ─── HISTORY DRAWER ITEM ──────────────────────────────────────────────────────
 
 function HistoryItem({ item, isActive, onClick }) {
@@ -164,9 +180,15 @@ function ResultView({ rawResult, fromHistory, historyDate, onReanalyze, onClear 
               ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1 text-sm">{children}</ul>,
               ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1 text-sm">{children}</ol>,
               li: ({ children }) => <li className="text-gray-700">{children}</li>,
-              table: ({ children }) => <table className="w-full text-sm border-collapse mb-4 border border-gray-200 rounded-lg overflow-hidden">{children}</table>,
+              table: ({ children }) => (
+                <div className="overflow-x-auto mb-4">
+                  <table className="w-full text-sm border-collapse border border-gray-200 rounded-lg overflow-hidden">
+                    {children}
+                  </table>
+                </div>
+              ),
               thead: ({ children }) => <thead className="bg-purple-50 text-gray-700">{children}</thead>,
-              th: ({ children }) => <th className="text-left px-3 py-2 border border-gray-200 font-semibold">{children}</th>,
+              th: ({ children }) => <th className="text-left px-3 py-2 border border-gray-200 font-semibold whitespace-nowrap">{children}</th>,
               td: ({ children }) => <td className="px-3 py-2 border border-gray-200 align-top">{children}</td>,
               hr: () => <hr className="my-4 border-purple-100" />,
               blockquote: ({ children }) => (
@@ -197,6 +219,9 @@ export default function AnalysisPanel({ eventId, eventData }) {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeHistoryItem, setActiveHistoryItem] = useState(null);
+
+  // ── Responsive drawer config ──
+  const drawerConfig = useDrawerConfig();
 
   // ─── Load history via GET /ai/analysis/:id ────────────────────────────────
   const loadHistory = useCallback(async () => {
@@ -234,7 +259,6 @@ export default function AnalysisPanel({ eventId, eventData }) {
     try {
       const res = await getDataNoToken(`ai/summary/${eventId}`);
       setResult(typeof res === "string" ? res : JSON.stringify(res));
-      // Refresh history so the new entry shows up in the drawer
       await loadHistory();
     } catch (err) {
       console.error("Analysis error:", err);
@@ -339,7 +363,7 @@ export default function AnalysisPanel({ eventId, eventData }) {
         />
       )}
 
-      {/* ─── History Drawer ─── */}
+      {/* ─── History Drawer — responsive placement + size ─── */}
       <Drawer
         title={
           <div className="flex items-center gap-2 text-[#7C3AED] font-bold">
@@ -350,13 +374,15 @@ export default function AnalysisPanel({ eventId, eventData }) {
             </span>
           </div>
         }
-        placement="right"
-        size={380}
+        placement={drawerConfig.placement}
+        size={drawerConfig.size}
+        rootStyle={drawerConfig.rootStyle}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         styles={{
-          body: { padding: "16px", background: "#faf5ff" },
+          body: { padding: "16px", background: "#faf5ff", overflowY: "auto" },
           header: { background: "#f5f0ff", borderBottom: "1px solid #ede9fe" },
+          wrapper: { maxWidth: "100vw", maxHeight: "100dvh" },
         }}
         footer={
           <div className="flex justify-center py-1">

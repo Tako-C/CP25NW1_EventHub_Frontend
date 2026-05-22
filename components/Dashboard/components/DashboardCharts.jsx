@@ -55,6 +55,20 @@ export const STANDARD_KEYWORDS = [
 
 const getPalette = (palette) => ({ ...PALETTE, ...(palette || {}) });
 
+// ─── RESPONSIVE HEIGHT HOOK ───────────────────────────────────────────────────
+function useChartHeight(desktopHeight = 260) {
+  const [height, setHeight] = useState(desktopHeight);
+  useEffect(() => {
+    const update = () => {
+      setHeight(window.innerWidth < 640 ? Math.round(desktopHeight * 0.72) : desktopHeight);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [desktopHeight]);
+  return height;
+}
+
 // ─── HELPER: กรอง hourly slots ที่ว่างออก ────────────────────────────────────
 function filterHourlyData(hourlyStats) {
   if (!hourlyStats || !hourlyStats.length) return [];
@@ -76,6 +90,7 @@ function filterHourlyData(hourlyStats) {
 
 export const RegistrationByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
+  const height = useChartHeight(240);
 
   const filtered = filterHourlyData(data?.hourlyStats);
   const chartData = filtered.map((h) => ({
@@ -107,9 +122,13 @@ export const RegistrationByTimeChart = ({ palette, data }) => {
           style: { fill: "#1E40AF", fontSize: 13, fontWeight: 600 },
         }}
         legend={false}
-        height={240}
+        height={height}
         xAxis={{
-          label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } },
+          label: {
+            autoRotate: true,
+            autoHide: false,
+            style: { fontSize: 12, fill: "#475569" },
+          },
           title: { text: "ช่วงเวลา", style: { fontSize: 13, fontWeight: 600 } },
         }}
         yAxis={{
@@ -124,6 +143,7 @@ export const RegistrationByTimeChart = ({ palette, data }) => {
 
 export const CheckinByTimeChart = ({ palette, data }) => {
   const p = getPalette(palette);
+  const height = useChartHeight(240);
 
   const filtered = filterHourlyData(data?.hourlyStats);
   const chartData = filtered.map((h) => ({
@@ -159,9 +179,13 @@ export const CheckinByTimeChart = ({ palette, data }) => {
           style: { fill: darkTeal, fontSize: 12, fontWeight: 700 },
         }}
         legend={false}
-        height={240}
+        height={height}
         xAxis={{
-          label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } },
+          label: {
+            autoRotate: true,
+            autoHide: false,
+            style: { fontSize: 12, fill: "#475569" },
+          },
           title: { text: "ช่วงเวลา", style: { fontSize: 13, fontWeight: 600 } },
         }}
         yAxis={{
@@ -176,6 +200,7 @@ export const CheckinByTimeChart = ({ palette, data }) => {
 
 export const OccupationChart = ({ palette, data }) => {
   const p = getPalette(palette);
+  const height = useChartHeight(260);
   const chartData = (data || []).map((d) => ({
     occupation: d.jobName,
     count: d.total,
@@ -202,9 +227,13 @@ export const OccupationChart = ({ palette, data }) => {
           fontWeight: 700,
         }),
       }}
-      height={260}
+      height={height}
       xAxis={{
-        label: { autoRotate: true, style: { fontSize: 10 } },
+        label: {
+          autoRotate: true,
+          autoHide: false,
+          style: { fontSize: 10 },
+        },
         title: { text: "อาชีพ" },
       }}
       yAxis={{ title: { text: "จำนวนคน" } }}
@@ -218,6 +247,7 @@ export const OccupationChart = ({ palette, data }) => {
 
 export const ProvinceChart = ({ palette, data }) => {
   const p = getPalette(palette);
+  const height = useChartHeight(260);
   const chartData = (data || []).map((d) => ({
     province: d.cityName,
     count: d.total,
@@ -244,9 +274,13 @@ export const ProvinceChart = ({ palette, data }) => {
           fontWeight: 700,
         }),
       }}
-      height={260}
+      height={height}
       xAxis={{
-        label: { autoRotate: true, style: { fontSize: 10 } },
+        label: {
+          autoRotate: true,
+          autoHide: false,
+          style: { fontSize: 10 },
+        },
         title: { text: "จังหวัด" },
       }}
       yAxis={{ title: { text: "จำนวนคน" } }}
@@ -333,6 +367,7 @@ export const RolePieChart = ({ palette, data }) => {
 
 export const AgeChart = ({ palette, data }) => {
   const p = getPalette(palette);
+  const height = useChartHeight(240);
   const chartData = (data || []).map((d) => ({
     age: d.ageRange,
     value: d.total,
@@ -359,8 +394,15 @@ export const AgeChart = ({ palette, data }) => {
           fontWeight: 700,
         }),
       }}
-      height={240}
-      xAxis={{ title: { text: "ช่วงอายุ" } }}
+      height={height}
+      xAxis={{
+        label: {
+          autoRotate: true,
+          autoHide: false,
+          style: { fontSize: 12 },
+        },
+        title: { text: "ช่วงอายุ" },
+      }}
       yAxis={{ title: { text: "จำนวนคน" } }}
       tooltip={(datum) => ({ name: datum.age, value: `${datum.value} คน` })}
     />
@@ -441,6 +483,7 @@ export const GenderPieChart = ({ palette, data }) => {
 };
 
 export const VisitorSubmittedChart = ({ palette, data }) => {
+  const height = useChartHeight(220);
   const filtered = filterHourlyData(data?.hourlyPostSurveyStats);
   const chartData = filtered.map((h) => ({
     time: h.hourRange,
@@ -470,8 +513,14 @@ export const VisitorSubmittedChart = ({ palette, data }) => {
           style: { fill: "#fff", fontSize: 12, fontWeight: 600 },
         }}
         legend={false}
-        height={220}
-        xAxis={{ label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } } }}
+        height={height}
+        xAxis={{
+          label: {
+            autoRotate: true,
+            autoHide: false,
+            style: { fontSize: 12, fill: "#475569" },
+          },
+        }}
         yAxis={{ minLimit: 0, title: { text: "จำนวนคน", style: { fontSize: 12 } } }}
         tooltip={(datum) => ({ name: "Visitor ส่ง Survey", value: `${datum.value} คน` })}
       />
@@ -480,6 +529,7 @@ export const VisitorSubmittedChart = ({ palette, data }) => {
 };
 
 export const ExhibitorSubmittedChart = ({ palette, data }) => {
+  const height = useChartHeight(220);
   const filtered = filterHourlyData(data?.hourlyPostSurveyStats);
   const chartData = filtered.map((h) => ({
     time: h.hourRange,
@@ -509,8 +559,14 @@ export const ExhibitorSubmittedChart = ({ palette, data }) => {
           style: { fill: color, fontSize: 12, fontWeight: 600 },
         }}
         legend={false}
-        height={220}
-        xAxis={{ label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } } }}
+        height={height}
+        xAxis={{
+          label: {
+            autoRotate: true,
+            autoHide: false,
+            style: { fontSize: 12, fill: "#475569" },
+          },
+        }}
         yAxis={{ minLimit: 0, title: { text: "จำนวนคน", style: { fontSize: 12 } } }}
         tooltip={(datum) => ({ name: "Exhibitor ส่ง Survey", value: `${datum.value} คน` })}
       />
@@ -519,6 +575,7 @@ export const ExhibitorSubmittedChart = ({ palette, data }) => {
 };
 
 export const PreSurveySubmittedChart = ({ data }) => {
+  const height = useChartHeight(220);
   const filtered = filterHourlyData(data || []);
   const chartData = filtered.map((h) => ({
     time: h.hourRange,
@@ -549,8 +606,14 @@ export const PreSurveySubmittedChart = ({ data }) => {
           formatter: (d) => d.value,
         }}
         legend={false}
-        height={220}
-        xAxis={{ label: { autoRotate: true, style: { fontSize: 12, fill: "#475569" } } }}
+        height={height}
+        xAxis={{
+          label: {
+            autoRotate: true,
+            autoHide: false,
+            style: { fontSize: 12, fill: "#475569" },
+          },
+        }}
         yAxis={{ minLimit: 0, title: { text: "จำนวนคน", style: { fontSize: 12 } } }}
         tooltip={(datum) => ({ name: "Pre-Survey ส่งแล้ว", value: `${datum.value} คน` })}
       />
@@ -612,6 +675,7 @@ export const SatisfactionWidget = ({ data, title, color = "#6366F1" }) => {
 
 export const AnswerRatioChart = ({ palette, data }) => {
   const p = getPalette(palette);
+  const height = useChartHeight(260);
 
   if (!data || !data.length)
     return <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>;
@@ -636,8 +700,14 @@ export const AnswerRatioChart = ({ palette, data }) => {
       isStack
       label={false}
       legend={{ position: "top-right" }}
-      height={260}
-      xAxis={{ label: { style: { fontSize: 11 } } }}
+      height={height}
+      xAxis={{
+        label: {
+          autoRotate: true,
+          autoHide: false,
+          style: { fontSize: 11 },
+        },
+      }}
       yAxis={{ title: { text: "จำนวนคน" } }}
     />
   );
@@ -763,12 +833,136 @@ const suggestionColumns = [
   },
 ];
 
+// ─── MOBILE CARD ROW ──────────────────────────────────────────────────────────
+
+const MobileSuggestionCard = ({ item }) => {
+  const roleColor = item.responderRole === "VISITOR" ? "blue" : "purple";
+  const sColor = sentimentColor[item.sentiment];
+  return (
+    <div className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-slate-400 font-medium">#{item.no}</span>
+        <div className="flex items-center gap-2">
+          <Tag color={roleColor} className="m-0">{item.responderRole}</Tag>
+          {item.sentiment && (
+            <Tag color={sColor} className="m-0">
+              {item.sentiment === "POSITIVE" ? "😊" : item.sentiment === "NEUTRAL" ? "😐" : "😞"}{" "}
+              {item.sentiment}
+            </Tag>
+          )}
+        </div>
+      </div>
+
+      <p className="text-sm text-slate-700 leading-relaxed">{item.answer}</p>
+
+      <div className="flex flex-wrap items-center gap-2 mt-1">
+        {item.surveysType && (
+          <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">
+            {item.surveysType}
+          </span>
+        )}
+        {item.keyword && <Tag color="geekblue" className="m-0">{item.keyword}</Tag>}
+      </div>
+    </div>
+  );
+};
+
+// ─── MOBILE SUGGESTION LIST WITH PAGINATION ──────────────────────────────────
+
+const MOBILE_PAGE_SIZE = 8;
+
+const MobileSuggestionList = ({ data }) => {
+  const [page, setPage] = useState(1);
+
+  // Reset page when data changes (filter applied)
+  useEffect(() => { setPage(1); }, [data]);
+
+  const totalPages = Math.ceil((data?.length ?? 0) / MOBILE_PAGE_SIZE);
+  const startIndex = (page - 1) * MOBILE_PAGE_SIZE;
+  const items = (data ?? []).slice(startIndex, startIndex + MOBILE_PAGE_SIZE);
+
+  return (
+    <div>
+      <div className="flex flex-col gap-3">
+        {items.length === 0 ? (
+          <div className="text-center py-10 text-gray-400">ไม่มีข้อมูล</div>
+        ) : (
+          items.map((item) => <MobileSuggestionCard key={item.key} item={item} />)
+        )}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
+          <span className="text-xs text-gray-500">
+            {startIndex + 1}–{Math.min(startIndex + MOBILE_PAGE_SIZE, data.length)}{" "}
+            จาก {data.length}
+          </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-xs"
+            >
+              ‹
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => {
+                if (totalPages <= 5) return true;
+                if (p === 1 || p === totalPages) return true;
+                return Math.abs(p - page) <= 1;
+              })
+              .reduce((acc, p, idx, arr) => {
+                if (idx > 0 && p - arr[idx - 1] > 1) acc.push("...");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, idx) =>
+                p === "..." ? (
+                  <span key={`e-${idx}`} className="text-xs text-gray-400 px-1">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
+                      page === p
+                        ? "bg-indigo-600 text-white shadow-sm"
+                        : "bg-white border border-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 disabled:opacity-40 disabled:cursor-not-allowed text-xs"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const SuggestionTable = ({ data }) => {
   const [selectedKeyword, setSelectedKeyword] = useState(null);
   const [selectedSentiment, setSelectedSentiment] = useState(null);
-  // ── Fix: render Select เฉพาะ client-side เพื่อแก้ hydration mismatch ──────
+  const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+
+  useEffect(() => {
+    setMounted(true);
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const filteredData = (data || []).filter((item) => {
     const keywordMatch = !selectedKeyword || item.keyword === selectedKeyword;
@@ -849,14 +1043,21 @@ export const SuggestionTable = ({ data }) => {
         </div>
       </div>
 
-      <Table
-        columns={suggestionColumns}
-        dataSource={tableData}
-        pagination={{ pageSize: 10 }}
-        bordered
-        rowKey="key"
-        size="small"
-      />
+      {/* ─── Mobile: card list with pagination / Desktop: scrollable table ─── */}
+      {mounted && isMobile ? (
+        <MobileSuggestionList data={tableData} />
+      ) : (
+        <div className="overflow-x-auto">
+          <Table
+            columns={suggestionColumns}
+            dataSource={tableData}
+            pagination={{ pageSize: 5 }}
+            bordered
+            rowKey="key"
+            size="small"
+          />
+        </div>
+      )}
     </Card>
   );
 };
